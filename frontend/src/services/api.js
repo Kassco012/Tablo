@@ -1,9 +1,26 @@
 ﻿import axios from 'axios';
 
+// Определяем базовый URL API
+const getApiUrl = () => {
+    // В продакшене используем текущий хост
+    if (process.env.NODE_ENV === 'production') {
+        return `${window.location.protocol}//${window.location.host}/api`;
+    }
+
+    // В разработке используем заданный URL или локальный
+    return process.env.REACT_APP_API_URL || 'http://10.35.3.117:5001/api';
+};
+
+console.log('API Configuration:', {
+    NODE_ENV: process.env.NODE_ENV,
+    REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+    computed_url: getApiUrl()
+});
+
 // Базовая конфигурация API
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
-    timeout: 10000,
+    baseURL: getApiUrl(),
+    timeout: 15000, // Увеличиваем таймаут
     headers: {
         'Content-Type': 'application/json',
     },
@@ -19,7 +36,7 @@ api.interceptors.request.use(
 
         // Логирование запросов в режиме разработки
         if (process.env.NODE_ENV === 'development') {
-            console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+            console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
         }
 
         return config;
@@ -35,13 +52,13 @@ api.interceptors.response.use(
     (response) => {
         // Логирование успешных ответов в режиме разработки
         if (process.env.NODE_ENV === 'development') {
-            console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+            console.log('API Response:', response.status, response.config.url, response.data);
         }
 
         return response;
     },
     (error) => {
-        console.error('❌ Response Error:', error);
+        console.error('API Error:', error);
 
         // Обработка различных типов ошибок
         if (error.response) {
@@ -50,11 +67,9 @@ api.interceptors.response.use(
 
             switch (status) {
                 case 401:
-                    // Неавторизованный доступ - удаляем токен и перенаправляем
+                    // Неавторизованный доступ - удаляем токен
                     localStorage.removeItem('authToken');
-                    if (window.location.pathname !== '/') {
-                        window.location.href = '/';
-                    }
+                    // Не перенаправляем автоматически, позволяем компоненту обработать
                     break;
 
                 case 403:
@@ -87,7 +102,8 @@ api.interceptors.response.use(
             // Запрос был отправлен, но ответ не получен
             console.error('🌐 Сеть недоступна или сервер не отвечает');
             return Promise.reject({
-                message: 'Сервер недоступен. Проверьте подключение к интернету.'
+                message: 'Сервер недоступен. Проверьте подключение к сети.',
+                network: true
             });
         } else {
             // Что-то пошло не так при настройке запроса
@@ -98,6 +114,18 @@ api.interceptors.response.use(
         }
     }
 );
+
+// Функция проверки здоровья API
+export const checkApiHealth = async () => {
+    try {
+        const response = await api.get('/health');
+        console.log('API Health Check успешен:', response.data);
+        return true;
+    } catch (error) {
+        console.error('API Health Check неуспешен:', error);
+        return false;
+    }
+};
 
 // Вспомогательные функции для различных типов запросов
 export const apiHelpers = {
@@ -130,40 +158,6 @@ export const createCancelToken = () => axios.CancelToken.source();
 
 // Функция проверки отмены запроса
 export const isCancel = (error) => axios.isCancel(error);
-
-// Функция для загрузки файлов
-export const uploadFile = (file, onProgress) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return api.post('/upload', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-            if (onProgress && progressEvent.total) {
-                const percentCompleted = Math.round(
-                    (progressEvent.loaded * 100) / progressEvent.total
-                );
-                onProgress(percentCompleted);
-            }
-        },
-    });
-};
-
-// Функция для скачивания файлов
-export const downloadFile = (url, filename) => {
-    return api.get(url, {
-        responseType: 'blob',
-    }).then((response) => {
-        const blob = new Blob([response.data]);
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = filename;
-        link.click();
-        window.URL.revokeObjectURL(link.href);
-    });
-};
 
 // Функция для повторных попыток запроса
 export const retryRequest = async (requestFn, maxRetries = 3, delay = 1000) => {

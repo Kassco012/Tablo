@@ -25,59 +25,86 @@ export const EquipmentProvider = ({ children }) => {
 
     const fetchEquipment = useCallback(async () => {
         try {
+            console.log('🔄 Загрузка оборудования...');
             setError(null);
             const response = await api.get('/equipment');
-            setEquipment(response.data);
+
+            // Проверяем что данные приходят в правильном формате
+            let equipmentData = response.data;
+            console.log('📦 Получены данные оборудования:', equipmentData);
+
+            // Если данные не массив, пытаемся извлечь массив
+            if (!Array.isArray(equipmentData)) {
+                if (equipmentData && Array.isArray(equipmentData.equipment)) {
+                    equipmentData = equipmentData.equipment;
+                } else if (equipmentData && Array.isArray(equipmentData.data)) {
+                    equipmentData = equipmentData.data;
+                } else {
+                    console.error('❌ Данные оборудования не являются массивом:', equipmentData);
+                    equipmentData = [];
+                }
+            }
+
+            setEquipment(equipmentData);
+            console.log('✅ Оборудование обновлено, количество:', equipmentData.length);
+
         } catch (error) {
-            console.error('Error fetching equipment:', error);
+            console.error('❌ Ошибка загрузки оборудования:', error);
             setError(error.response?.data?.message || 'Ошибка загрузки оборудования');
+            // Устанавливаем пустой массив при ошибке
+            setEquipment([]);
         }
     }, []);
 
     const fetchStats = useCallback(async () => {
         try {
+            console.log('📊 Загрузка статистики...');
             const response = await api.get('/equipment/stats');
             setStats(response.data);
+            console.log('✅ Статистика обновлена:', response.data);
         } catch (error) {
-            console.error('Error fetching stats:', error);
+            console.error('❌ Ошибка загрузки статистики:', error);
             // Если статистика не загрузилась, вычисляем её локально
             const localStats = {
                 in_repair: 0,
                 ready: 0,
                 waiting: 0,
                 scheduled: 0,
-                total: equipment.length
+                total: Array.isArray(equipment) ? equipment.length : 0
             };
 
-            equipment.forEach(item => {
-                if (localStats[item.status] !== undefined) {
-                    localStats[item.status]++;
-                }
-            });
+            if (Array.isArray(equipment)) {
+                equipment.forEach(item => {
+                    if (localStats[item.status] !== undefined) {
+                        localStats[item.status]++;
+                    }
+                });
+            }
 
             setStats(localStats);
+            console.log('📊 Статистика вычислена локально:', localStats);
         }
     }, [equipment]);
 
     const refreshData = useCallback(async () => {
+        console.log('🔄 Обновление данных...');
         setLoading(true);
         try {
-            await Promise.all([
-                fetchEquipment(),
-                fetchStats()
-            ]);
+            await fetchEquipment();
+            // Статистика будет обновлена автоматически через useEffect
         } finally {
             setLoading(false);
         }
-    }, [fetchEquipment, fetchStats]);
+    }, [fetchEquipment]);
 
     useEffect(() => {
+        console.log('📊 Инициализация EquipmentProvider');
         refreshData();
     }, []);
 
     useEffect(() => {
         // Пересчитываем статистику при изменении оборудования
-        if (equipment.length > 0) {
+        if (Array.isArray(equipment) && equipment.length > 0) {
             fetchStats();
         }
     }, [equipment, fetchStats]);
@@ -87,11 +114,12 @@ export const EquipmentProvider = ({ children }) => {
             const response = await api.put(`/equipment/${id}`, updateData);
 
             // Обновляем локальное состояние
-            setEquipment(prev =>
-                prev.map(item =>
+            setEquipment(prev => {
+                if (!Array.isArray(prev)) return [];
+                return prev.map(item =>
                     item.id === id ? { ...item, ...response.data.equipment } : item
-                )
-            );
+                );
+            });
 
             return response.data;
         } catch (error) {
@@ -112,7 +140,10 @@ export const EquipmentProvider = ({ children }) => {
     const deleteEquipment = async (id) => {
         try {
             await api.delete(`/equipment/${id}`);
-            setEquipment(prev => prev.filter(item => item.id !== id));
+            setEquipment(prev => {
+                if (!Array.isArray(prev)) return [];
+                return prev.filter(item => item.id !== id);
+            });
             return { message: 'Оборудование удалено успешно' };
         } catch (error) {
             throw error.response?.data || { message: 'Ошибка удаления оборудования' };
@@ -120,22 +151,23 @@ export const EquipmentProvider = ({ children }) => {
     };
 
     const getEquipmentById = (id) => {
-        return equipment.find(item => item.id === id);
+        return Array.isArray(equipment) ? equipment.find(item => item.id === id) : null;
     };
 
     const getEquipmentByStatus = (status) => {
-        return equipment.filter(item => item.status === status);
+        return Array.isArray(equipment) ? equipment.filter(item => item.status === status) : [];
     };
 
     const getEquipmentByType = (type) => {
-        return equipment.filter(item => item.type === type);
+        return Array.isArray(equipment) ? equipment.filter(item => item.type === type) : [];
     };
 
     const getEquipmentByPriority = (priority) => {
-        return equipment.filter(item => item.priority === priority);
+        return Array.isArray(equipment) ? equipment.filter(item => item.priority === priority) : [];
     };
 
     const getCriticalEquipment = () => {
+        if (!Array.isArray(equipment)) return [];
         return equipment.filter(item =>
             item.priority === 'critical' ||
             (item.status === 'waiting' && item.delay_hours > 4)
@@ -143,7 +175,7 @@ export const EquipmentProvider = ({ children }) => {
     };
 
     const value = {
-        equipment,
+        equipment: Array.isArray(equipment) ? equipment : [],
         stats,
         loading,
         error,

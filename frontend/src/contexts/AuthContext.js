@@ -1,5 +1,5 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import api, { checkApiHealth } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -14,31 +14,55 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [apiAvailable, setApiAvailable] = useState(false);
 
     useEffect(() => {
-        checkAuth();
+        initializeAuth();
     }, []);
 
-    const checkAuth = async () => {
+    const initializeAuth = async () => {
         try {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                setLoading(false);
-                return;
-            }
+            // Сначала проверяем доступность API
+            const isApiHealthy = await checkApiHealth();
+            setApiAvailable(isApiHealthy);
 
-            const response = await api.get('/auth/verify');
-            setUser(response.data.user);
+            if (isApiHealthy) {
+                console.log('✅ API доступен');
+                await checkAuth();
+            } else {
+                console.error('❌ API недоступен');
+            }
         } catch (error) {
-            console.error('Auth check failed:', error);
-            localStorage.removeItem('authToken');
+            console.error('❌ Ошибка инициализации:', error);
+            setApiAvailable(false);
         } finally {
             setLoading(false);
         }
     };
 
+    const checkAuth = async () => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                console.log('🔐 Токен не найден');
+                return;
+            }
+
+            console.log('🔐 Проверка токена...');
+            const response = await api.get('/auth/verify');
+            setUser(response.data.user);
+            console.log('✅ Токен валиден, пользователь:', response.data.user);
+        } catch (error) {
+            console.error('❌ Токен недействителен:', error);
+            localStorage.removeItem('authToken');
+            setUser(null);
+        }
+    };
+
     const login = async (username, password) => {
         try {
+            console.log('🔐 Попытка входа для пользователя:', username);
+
             const response = await api.post('/auth/login', {
                 username,
                 password
@@ -48,14 +72,25 @@ export const AuthProvider = ({ children }) => {
 
             localStorage.setItem('authToken', token);
             setUser(userData);
+            console.log('✅ Успешная авторизация через API:', userData);
 
             return userData;
         } catch (error) {
-            throw error.response?.data || { message: 'Ошибка входа' };
+            console.error('❌ Ошибка авторизации:', error);
+
+            // Обрабатываем различные типы ошибок
+            if (error.network) {
+                throw { message: 'Нет соединения с сервером' };
+            } else if (error.status === 401) {
+                throw { message: 'Неверные учетные данные' };
+            } else {
+                throw { message: error.message || 'Ошибка входа' };
+            }
         }
     };
 
     const logout = () => {
+        console.log('🔐 Выход из системы');
         localStorage.removeItem('authToken');
         setUser(null);
     };
@@ -72,10 +107,12 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         loading,
+        apiAvailable,
         login,
         logout,
         register,
-        checkAuth
+        checkAuth,
+        initializeAuth
     };
 
     return (
