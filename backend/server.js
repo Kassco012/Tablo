@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const equipmentRoutes = require('./routes/equipment');
+const archiveRoutes = require('./routes/archive'); // Новый маршрут архива
 const { initializeDatabase } = require('./config/database');
 
 const app = express();
@@ -89,6 +90,7 @@ if (process.env.NODE_ENV === 'development') {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/equipment', equipmentRoutes);
+app.use('/api/archive', archiveRoutes); // Новый маршрут для архива
 
 // Health check с подробной информацией
 app.get('/api/health', (req, res) => {
@@ -102,6 +104,12 @@ app.get('/api/health', (req, res) => {
         port: PORT,
         cors_origins: process.env.CORS_ORIGINS?.split(',') || ['default'],
         database: 'SQLite (Connected)',
+        features: {
+            equipment_management: true,
+            archive_system: true,
+            user_authentication: true,
+            real_time_updates: true
+        },
         memory: {
             used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
             total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
@@ -119,6 +127,36 @@ app.get('/api/server-stats', (req, res) => {
         platform: process.platform,
         node_version: process.version,
         pid: process.pid
+    });
+});
+
+// API документация (простая)
+app.get('/api/docs', (req, res) => {
+    res.json({
+        title: 'MMA Equipment Monitoring API',
+        version: '1.0.0',
+        endpoints: {
+            authentication: {
+                'POST /api/auth/login': 'Авторизация пользователя',
+                'GET /api/auth/verify': 'Проверка токена',
+                'POST /api/auth/logout': 'Выход из системы'
+            },
+            equipment: {
+                'GET /api/equipment': 'Список всего оборудования',
+                'GET /api/equipment/:id': 'Информация об оборудовании',
+                'GET /api/equipment/stats': 'Статистика оборудования',
+                'PUT /api/equipment/:id': 'Обновление оборудования',
+                'POST /api/equipment': 'Создание оборудования',
+                'DELETE /api/equipment/:id': 'Удаление оборудования',
+                'PUT /api/equipment/:id/change-id': 'Изменение ID оборудования'
+            },
+            archive: {
+                'POST /api/archive/launch/:id': 'Запуск техники (архивирование)',
+                'GET /api/archive': 'Список архивных записей',
+                'GET /api/archive/stats': 'Статистика архива',
+                'POST /api/archive/restore/:id': 'Восстановление из архива (admin)'
+            }
+        }
     });
 });
 
@@ -147,7 +185,14 @@ app.use('*', (req, res) => {
         message: 'Маршрут не найден',
         path: req.originalUrl,
         method: req.method,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        available_endpoints: [
+            '/api/health',
+            '/api/docs',
+            '/api/auth/*',
+            '/api/equipment/*',
+            '/api/archive/*'
+        ]
     });
 });
 
@@ -156,6 +201,7 @@ async function startServer() {
     try {
         await initializeDatabase();
         console.log('✅ База данных инициализирована');
+        console.log('📊 Создана таблица архива equipment_archive');
 
         app.listen(PORT, HOST, () => {
             console.log('='.repeat(60));
@@ -165,8 +211,10 @@ async function startServer() {
             console.log(`🔗 Локальный доступ: http://localhost:${PORT}`);
             console.log(`🔗 Сетевой доступ: http://${HOST}:${PORT}`);
             console.log(`🏥 Health check: http://${HOST}:${PORT}/api/health`);
+            console.log(`📚 API docs: http://${HOST}:${PORT}/api/docs`);
             console.log(`⚙️ Режим: ${process.env.NODE_ENV}`);
             console.log(`🌍 CORS Origins: ${process.env.CORS_ORIGINS || 'default'}`);
+            console.log(`🗂️ Архивная система: включена`);
             console.log('='.repeat(60));
         });
     } catch (error) {

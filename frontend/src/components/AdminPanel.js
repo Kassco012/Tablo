@@ -195,6 +195,9 @@ const AdminPanel = () => {
                                         <tr key={item.id}>
                                             <td>
                                                 <span className="equipment-id">{item.id}</span>
+                                                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
+                                                    Редактируемый
+                                                </div>
                                             </td>
                                             <td>
                                                 <div className="type-model">
@@ -253,6 +256,7 @@ const AdminPanel = () => {
                                                     <button
                                                         className="edit-button"
                                                         onClick={() => setSelectedEquipment(item)}
+                                                        title="Редактировать (включая ID)"
                                                     >
                                                         ✏️
                                                     </button>
@@ -260,6 +264,7 @@ const AdminPanel = () => {
                                                         <button
                                                             className="delete-button"
                                                             onClick={() => handleDeleteEquipment(item.id)}
+                                                            title="Удалить"
                                                         >
                                                             🗑️
                                                         </button>
@@ -271,6 +276,23 @@ const AdminPanel = () => {
                                 </tbody>
                             </table>
                         </div>
+
+                        {equipment.length === 0 && (
+                            <div style={{
+                                textAlign: 'center',
+                                padding: '40px',
+                                color: 'rgba(255,255,255,0.6)'
+                            }}>
+                                <p>Оборудование не найдено</p>
+                                <button
+                                    className="create-button"
+                                    onClick={() => setShowCreateModal(true)}
+                                    style={{ marginTop: '20px' }}
+                                >
+                                    + Добавить первое оборудование
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -352,6 +374,20 @@ const AdminPanel = () => {
                 {activeTab === 'settings' && (
                     <div className="settings-panel">
                         <h3>Настройки системы</h3>
+
+                        <div className="settings-section">
+                            <h4>Редактирование оборудования</h4>
+                            <p>✅ Диспетчеры и администраторы могут изменять:</p>
+                            <ul style={{ color: 'rgba(255,255,255,0.8)', marginLeft: '20px' }}>
+                                <li>ID оборудования (с подтверждением)</li>
+                                <li>Тип и модель</li>
+                                <li>Статус и приоритет</li>
+                                <li>Время планового и фактического ремонта</li>
+                                <li>Назначение механиков</li>
+                                <li>Прогресс выполнения работ</li>
+                            </ul>
+                        </div>
+
                         <div className="settings-section">
                             <h4>Автообновление</h4>
                             <p>Данные обновляются автоматически каждые 60 секунд</p>
@@ -399,6 +435,9 @@ const AdminPanel = () => {
                                         placeholder="EX001, LD001, ..."
                                         required
                                     />
+                                    <small style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>
+                                        ID можно будет изменить позже через редактирование
+                                    </small>
                                 </div>
 
                                 <div className="form-group">

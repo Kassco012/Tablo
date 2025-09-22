@@ -2,12 +2,16 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useEquipment } from '../contexts/EquipmentContext';
 import EquipmentTable from './EquipmentTable';
+import { toast } from 'react-toastify';
+import api from '../services/api';
 
 const Dashboard = ({ onLoginClick }) => {
     const { user, logout } = useAuth();
     const { equipment, stats, loading, error, refreshData } = useEquipment();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [selectedEquipment, setSelectedEquipment] = useState(null);
+    const [launchingIds, setLaunchingIds] = useState(new Set()); // Для отслеживания процесса запуска
+    const [showLaunchConfirm, setShowLaunchConfirm] = useState(null);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -22,6 +26,51 @@ const Dashboard = ({ onLoginClick }) => {
         const interval = setInterval(refreshData, 30000);
         return () => clearInterval(interval);
     }, [refreshData]);
+
+    const handleLaunchEquipment = async (equipmentItem) => {
+        // Проверяем права доступа
+        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher')) {
+            toast.error('Недостаточно прав для запуска техники');
+            return;
+        }
+
+        // Проверяем статус (можно запускать только готовую или запланированную технику)
+        if (equipmentItem.status !== 'ready' && equipmentItem.status !== 'scheduled') {
+            toast.error('Можно запускать только готовую или запланированную технику');
+            return;
+        }
+
+        setShowLaunchConfirm(equipmentItem);
+    };
+
+    const confirmLaunch = async () => {
+        if (!showLaunchConfirm) return;
+
+        const equipmentId = showLaunchConfirm.id;
+        setLaunchingIds(prev => new Set(prev.add(equipmentId)));
+
+        try {
+            const response = await api.post(`/archive/launch/${equipmentId}`, {
+                completion_reason: 'launched'
+            });
+
+            toast.success(`Техника ${equipmentId} успешно запущена в работу!`);
+            setShowLaunchConfirm(null);
+
+            // Обновляем данные
+            await refreshData();
+
+        } catch (error) {
+            console.error('Error launching equipment:', error);
+            toast.error(error.message || 'Ошибка запуска техники');
+        } finally {
+            setLaunchingIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(equipmentId);
+                return newSet;
+            });
+        }
+    };
 
     const formatTime = (timeString) => {
         if (!timeString) return '-';
@@ -51,6 +100,10 @@ const Dashboard = ({ onLoginClick }) => {
 
     const getEquipmentTypeText = (type) => {
         return type === 'excavator' ? 'Экскаватор' : 'Погрузчик';
+    };
+
+    const canLaunch = (equipmentItem) => {
+        return equipmentItem.status === 'ready' || equipmentItem.status === 'scheduled';
     };
 
     if (loading) {
@@ -113,13 +166,26 @@ const Dashboard = ({ onLoginClick }) => {
                                 {user.fullName || user.username}
                             </span>
                             {(user.role === 'admin' || user.role === 'dispatcher') && (
-                                <button
-                                    className="login-button"
-                                    onClick={() => window.location.href = '/admin'}
-                                    style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                                >
-                                    Админка
-                                </button>
+                                <>
+                                    <button
+                                        className="login-button"
+                                        onClick={() => window.location.href = '/admin'}
+                                        style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+                                    >
+                                        Админка
+                                    </button>
+                                    <button
+                                        className="login-button"
+                                        onClick={() => window.location.href = '/archive'}
+                                        style={{
+                                            padding: '8px 16px',
+                                            fontSize: '0.9rem',
+                                            background: 'rgba(108, 117, 125, 0.8)'
+                                        }}
+                                    >
+                                        Архив
+                                    </button>
+                                </>
                             )}
                             <button
                                 className="login-button"
@@ -181,13 +247,14 @@ const Dashboard = ({ onLoginClick }) => {
                             <th>Неисправность</th>
                             <th>Механик</th>
                             <th>Прогресс</th>
+                            <th>Действие</th>
                         </tr>
                     </thead>
                     <tbody>
                         {equipment.map((item) => (
                             <tr
                                 key={item.id}
-                                onClick={() => setSelectedEquipment(item)}
+                                onClick={() => user ? setSelectedEquipment(item) : null}
                                 style={{ cursor: user ? 'pointer' : 'default' }}
                             >
                                 <td>
@@ -240,6 +307,70 @@ const Dashboard = ({ onLoginClick }) => {
                                         </div>
                                     </div>
                                 </td>
+                                <td>
+                                    {user && (user.role === 'admin' || user.role === 'dispatcher') && (
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                            {canLaunch(item) ? (
+                                                <button
+                                                    className="launch-button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Предотвращаем открытие модального окна
+                                                        handleLaunchEquipment(item);
+                                                    }}
+                                                    disabled={launchingIds.has(item.id)}
+                                                    style={{
+                                                        background: launchingIds.has(item.id)
+                                                            ? 'rgba(40, 167, 69, 0.5)'
+                                                            : 'linear-gradient(135deg, #28a745, #20c997)',
+                                                        border: 'none',
+                                                        color: 'white',
+                                                        padding: '8px 16px',
+                                                        borderRadius: '6px',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '600',
+                                                        cursor: launchingIds.has(item.id) ? 'not-allowed' : 'pointer',
+                                                        transition: 'all 0.3s ease',
+                                                        minWidth: '80px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '5px'
+                                                    }}
+                                                    title="Запустить технику в работу"
+                                                >
+                                                    {launchingIds.has(item.id) ? (
+                                                        <>
+                                                            <div style={{
+                                                                width: '12px',
+                                                                height: '12px',
+                                                                border: '2px solid rgba(255,255,255,0.3)',
+                                                                borderLeft: '2px solid white',
+                                                                borderRadius: '50%',
+                                                                animation: 'spin 1s linear infinite'
+                                                            }}></div>
+                                                            Запуск...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            ▶️ ЗАПУСК
+                                                        </>
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <span
+                                                    style={{
+                                                        color: 'rgba(255,255,255,0.5)',
+                                                        fontSize: '0.8rem',
+                                                        fontStyle: 'italic'
+                                                    }}
+                                                    title="Нельзя запустить в текущем статусе"
+                                                >
+                                                    -
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -260,14 +391,93 @@ const Dashboard = ({ onLoginClick }) => {
                 borderRadius: '20px'
             }}>
                 <div className="status-dot"></div>
-                <span>Критические задачи требуют внимания</span>
+                <span>Готовую технику можно запустить в работу</span>
                 <span style={{ marginLeft: '10px' }}>
                     Обновлено: {currentTime.toLocaleTimeString('ru-RU')}
                     | Автообновление каждые 30 сек
                 </span>
             </div>
 
-            {selectedEquipment && user && (
+            {/* Модальное окно подтверждения запуска */}
+            {showLaunchConfirm && (
+                <div className="modal-backdrop" onClick={() => setShowLaunchConfirm(null)}>
+                    <div className="modal-content" style={{ maxWidth: '500px' }}>
+                        <div className="modal-header">
+                            <h3>🚀 Подтверждение запуска</h3>
+                            <button
+                                className="close-button"
+                                onClick={() => setShowLaunchConfirm(null)}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div style={{ padding: '25px' }}>
+                            <p style={{ fontSize: '1.1rem', marginBottom: '15px' }}>
+                                Отправить технику <strong>{showLaunchConfirm.id}</strong> в работу?
+                            </p>
+                            <div style={{
+                                background: 'rgba(40, 167, 69, 0.1)',
+                                padding: '15px',
+                                borderRadius: '8px',
+                                marginBottom: '20px'
+                            }}>
+                                <div><strong>Тип:</strong> {getEquipmentTypeText(showLaunchConfirm.type)}</div>
+                                <div><strong>Модель:</strong> {showLaunchConfirm.model}</div>
+                                <div><strong>Статус:</strong> {getStatusText(showLaunchConfirm.status)}</div>
+                                <div><strong>Механик:</strong> {showLaunchConfirm.mechanic_name || 'Не назначен'}</div>
+                            </div>
+                            <p style={{
+                                fontSize: '0.9rem',
+                                color: 'rgba(255,255,255,0.7)',
+                                marginBottom: '25px'
+                            }}>
+                                ⚠️ После запуска техника переместится в архив и исчезнет из списка.
+                            </p>
+                            <div style={{
+                                display: 'flex',
+                                gap: '15px',
+                                justifyContent: 'flex-end'
+                            }}>
+                                <button
+                                    type="button"
+                                    className="cancel-button"
+                                    onClick={() => setShowLaunchConfirm(null)}
+                                    style={{
+                                        background: 'rgba(255, 255, 255, 0.1)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        color: 'rgba(255, 255, 255, 0.8)',
+                                        padding: '12px 24px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={confirmLaunch}
+                                    style={{
+                                        background: 'linear-gradient(135deg, #28a745, #20c997)',
+                                        border: 'none',
+                                        color: 'white',
+                                        padding: '12px 24px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    🚀 Запустить в работу
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {selectedEquipment && (
                 <EquipmentTable
                     equipment={selectedEquipment}
                     isOpen={!!selectedEquipment}

@@ -7,6 +7,9 @@ import './EquipmentTable.css';
 const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const { user } = useAuth();
     const [formData, setFormData] = useState({
+        id: '',
+        type: '',
+        model: '',
         status: '',
         priority: '',
         planned_start: '',
@@ -21,10 +24,15 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState([]);
     const [activeTab, setActiveTab] = useState('edit');
+    const [showIdChangeConfirm, setShowIdChangeConfirm] = useState(false);
+    const [originalId, setOriginalId] = useState('');
 
     useEffect(() => {
         if (equipment) {
-            setFormData({
+            const equipmentData = {
+                id: equipment.id || '',
+                type: equipment.type || '',
+                model: equipment.model || '',
                 status: equipment.status || '',
                 priority: equipment.priority || '',
                 planned_start: equipment.planned_start || '',
@@ -35,7 +43,10 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                 malfunction: equipment.malfunction || '',
                 mechanic_name: equipment.mechanic_name || '',
                 progress: equipment.progress || 0
-            });
+            };
+
+            setFormData(equipmentData);
+            setOriginalId(equipment.id);
 
             // Загружаем историю изменений
             if (user && (user.role === 'admin' || user.role === 'dispatcher')) {
@@ -53,6 +64,38 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         }
     };
 
+    const handleIdChange = async () => {
+        if (!formData.id || formData.id.trim() === '') {
+            toast.error('ID не может быть пустым');
+            return;
+        }
+
+        if (formData.id === originalId) {
+            toast.info('ID не изменился');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await api.put(`/equipment/${originalId}/change-id`, {
+                newId: formData.id.trim()
+            });
+
+            toast.success('ID оборудования изменен успешно!');
+            setOriginalId(formData.id);
+            setShowIdChangeConfirm(false);
+            onSave();
+            // Не закрываем модальное окно, чтобы пользователь мог продолжить редактирование
+        } catch (error) {
+            console.error('Error changing ID:', error);
+            toast.error(error.response?.data?.message || 'Ошибка изменения ID');
+            // Возвращаем старый ID в случае ошибки
+            setFormData(prev => ({ ...prev, id: originalId }));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -61,14 +104,43 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             return;
         }
 
+        // Проверяем, изменился ли ID
+        if (formData.id !== originalId) {
+            setShowIdChangeConfirm(true);
+            return;
+        }
+
+        await saveEquipmentData();
+    };
+
+    const saveEquipmentData = async () => {
         setLoading(true);
 
         try {
-            await api.put(`/equipment/${equipment.id}`, formData);
+            // Используем актуальный ID (который может быть изменен)
+            const currentId = formData.id || originalId;
+
+            const updateData = {
+                type: formData.type,
+                model: formData.model,
+                status: formData.status,
+                priority: formData.priority,
+                planned_start: formData.planned_start,
+                planned_end: formData.planned_end,
+                actual_start: formData.actual_start,
+                actual_end: formData.actual_end,
+                delay_hours: formData.delay_hours,
+                malfunction: formData.malfunction,
+                mechanic_name: formData.mechanic_name,
+                progress: formData.progress
+            };
+
+            await api.put(`/equipment/${currentId}`, updateData);
             toast.success('Данные обновлены успешно!');
             onSave();
             onClose();
         } catch (error) {
+            console.error('Error updating equipment:', error);
             toast.error(error.response?.data?.message || 'Ошибка обновления данных');
         } finally {
             setLoading(false);
@@ -114,6 +186,9 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             'update_status': 'Изменение статуса',
             'update_progress': 'Обновление прогресса',
             'update_mechanic_name': 'Назначение механика',
+            'update_type': 'Изменение типа',
+            'update_model': 'Изменение модели',
+            'change_id': 'Изменение ID',
             'delete': 'Удаление'
         };
         return actionMap[action] || action;
@@ -128,7 +203,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             <div className="modal-content equipment-modal">
                 <div className="modal-header">
                     <div>
-                        <h2>Оборудование {equipment.id}</h2>
+                        <h2>Оборудование {originalId}</h2>
                         <p className="equipment-subtitle">
                             {getEquipmentTypeText(equipment.type)} {equipment.model}
                         </p>
@@ -167,6 +242,21 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                     {activeTab === 'view' && (
                         <div className="view-content">
                             <div className="info-grid">
+                                <div className="info-item">
+                                    <label>ID:</label>
+                                    <span className="equipment-id">{equipment.id}</span>
+                                </div>
+
+                                <div className="info-item">
+                                    <label>Тип:</label>
+                                    <span>{getEquipmentTypeText(equipment.type)}</span>
+                                </div>
+
+                                <div className="info-item">
+                                    <label>Модель:</label>
+                                    <span>{equipment.model}</span>
+                                </div>
+
                                 <div className="info-item">
                                     <label>Статус:</label>
                                     <span className={`status-badge ${equipment.status}`}>
@@ -225,6 +315,69 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                     {activeTab === 'edit' && canEdit && (
                         <form onSubmit={handleSubmit} className="edit-form">
                             <div className="form-grid">
+                                <div className="form-group">
+                                    <label>ID оборудования</label>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <input
+                                            type="text"
+                                            name="id"
+                                            value={formData.id}
+                                            onChange={handleChange}
+                                            disabled={loading}
+                                            placeholder="Например: EX001, LD002"
+                                            style={{ flex: 1 }}
+                                        />
+                                        {formData.id !== originalId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowIdChangeConfirm(true)}
+                                                disabled={loading}
+                                                style={{
+                                                    background: '#ffc107',
+                                                    color: '#000',
+                                                    border: 'none',
+                                                    padding: '8px 12px',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.8rem'
+                                                }}
+                                            >
+                                                Изменить ID
+                                            </button>
+                                        )}
+                                    </div>
+                                    {formData.id !== originalId && (
+                                        <small style={{ color: '#ffc107', fontSize: '0.8rem' }}>
+                                            ⚠️ ID будет изменен. Нажмите "Изменить ID" для подтверждения.
+                                        </small>
+                                    )}
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Тип</label>
+                                    <select
+                                        name="type"
+                                        value={formData.type}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                    >
+                                        <option value="excavator">Экскаватор</option>
+                                        <option value="loader">Погрузчик</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Модель</label>
+                                    <input
+                                        type="text"
+                                        name="model"
+                                        value={formData.model}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                        placeholder="Например: CAT 320D, Volvo L120H"
+                                    />
+                                </div>
+
                                 <div className="form-group">
                                     <label>Статус</label>
                                     <select
@@ -403,14 +556,80 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                         </div>
                     )}
                 </div>
+
+                {/* Модальное окно подтверждения изменения ID */}
+                {showIdChangeConfirm && (
+                    <div className="modal-backdrop" onClick={(e) => {
+                        if (e.target === e.currentTarget) setShowIdChangeConfirm(false);
+                    }}>
+                        <div className="modal-content" style={{ maxWidth: '500px' }}>
+                            <div className="modal-header">
+                                <h3>Изменение ID оборудования</h3>
+                                <button
+                                    className="close-button"
+                                    onClick={() => setShowIdChangeConfirm(false)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <div style={{ padding: '20px' }}>
+                                <p>Вы уверены, что хотите изменить ID оборудования?</p>
+                                <div style={{
+                                    background: 'rgba(255, 193, 7, 0.1)',
+                                    padding: '15px',
+                                    borderRadius: '8px',
+                                    margin: '15px 0'
+                                }}>
+                                    <strong>Старый ID:</strong> {originalId}<br />
+                                    <strong>Новый ID:</strong> {formData.id}
+                                </div>
+                                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
+                                    ⚠️ Это действие изменит ID оборудования во всей системе и истории.
+                                </p>
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '10px',
+                                    justifyContent: 'flex-end',
+                                    marginTop: '20px'
+                                }}>
+                                    <button
+                                        type="button"
+                                        className="cancel-button"
+                                        onClick={() => {
+                                            setFormData(prev => ({ ...prev, id: originalId }));
+                                            setShowIdChangeConfirm(false);
+                                        }}
+                                        disabled={loading}
+                                    >
+                                        Отмена
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleIdChange}
+                                        disabled={loading}
+                                        style={{
+                                            background: '#ffc107',
+                                            color: '#000',
+                                            border: 'none',
+                                            padding: '10px 20px',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        {loading ? 'Изменение...' : 'Подтвердить изменение ID'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
 export default EquipmentTable;
-
-
 
 
 

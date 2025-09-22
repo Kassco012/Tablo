@@ -8,7 +8,7 @@ const getApiUrl = () => {
     }
 
     // В разработке используем заданный URL или локальный
-    return process.env.REACT_APP_API_URL || 'http://10.35.3.117:5001/api';
+    return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 };
 
 console.log('API Configuration:', {
@@ -78,6 +78,10 @@ api.interceptors.response.use(
 
                 case 404:
                     console.warn('🔍 Ресурс не найден');
+                    break;
+
+                case 409:
+                    console.warn('⚠️ Конфликт данных (например, дублирующийся ID)');
                     break;
 
                 case 422:
@@ -150,7 +154,31 @@ export const apiHelpers = {
         update: (id, data) => api.put(`/equipment/${id}`, data),
         delete: (id) => api.delete(`/equipment/${id}`),
         getHistory: (id) => api.get(`/equipment/${id}/history`),
+
+        // Новый метод для изменения ID
+        changeId: (oldId, newId) => api.put(`/equipment/${oldId}/change-id`, { newId }),
+
+        // Bulk операции (для будущего использования)
+        bulkUpdate: (updates) => api.put('/equipment/bulk', updates),
+        exportData: () => api.get('/equipment/export', { responseType: 'blob' }),
+        importData: (file) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return api.post('/equipment/import', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+        }
     },
+
+    // Статистика и отчеты
+    reports: {
+        getEquipmentStats: () => api.get('/equipment/stats'),
+        getDetailedReport: (startDate, endDate) => api.get('/reports/detailed', {
+            params: { startDate, endDate }
+        }),
+        getMaintenanceSchedule: () => api.get('/reports/maintenance-schedule'),
+        getDowntimeReport: () => api.get('/reports/downtime')
+    }
 };
 
 // Функция для создания отмены запроса
@@ -182,6 +210,68 @@ export const retryRequest = async (requestFn, maxRetries = 3, delay = 1000) => {
     }
 
     throw lastError;
+};
+
+// Утилиты для валидации
+export const validation = {
+    isValidEquipmentId: (id) => {
+        return /^[A-Z]{2}\d{3}$/.test(id); // Например: EX001, LD002
+    },
+
+    isValidTime: (time) => {
+        return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
+    },
+
+    isValidProgress: (progress) => {
+        const num = parseInt(progress);
+        return !isNaN(num) && num >= 0 && num <= 100;
+    }
+};
+
+// Утилиты для форматирования
+export const formatters = {
+    equipmentId: (id) => id?.toUpperCase(),
+
+    time: (timeString) => {
+        if (!timeString) return '';
+        // Обеспечиваем формат HH:MM
+        const parts = timeString.split(':');
+        if (parts.length === 2) {
+            const hours = parts[0].padStart(2, '0');
+            const minutes = parts[1].padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+        return timeString;
+    },
+
+    status: (status) => {
+        const statusMap = {
+            'in_repair': 'В ремонте',
+            'ready': 'Готово',
+            'waiting': 'Ожидание',
+            'scheduled': 'Запланировано'
+        };
+        return statusMap[status] || status;
+    },
+
+    priority: (priority) => {
+        const priorityMap = {
+            'low': 'Низкий',
+            'normal': 'Обычный',
+            'medium': 'Средний',
+            'high': 'Высокий',
+            'critical': 'Критический'
+        };
+        return priorityMap[priority] || priority;
+    },
+
+    equipmentType: (type) => {
+        const typeMap = {
+            'excavator': 'Экскаватор',
+            'loader': 'Погрузчик'
+        };
+        return typeMap[type] || type;
+    }
 };
 
 export default api;

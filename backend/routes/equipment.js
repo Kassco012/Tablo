@@ -81,6 +81,137 @@ router.get('/:id', (req, res) => {
     );
 });
 
+// Новый маршрут для изменения ID оборудования
+router.put('/:id/change-id', authenticateToken, (req, res) => {
+    const db = getDatabase();
+    const { id: oldId } = req.params;
+    const { newId } = req.body;
+
+    // Проверяем права доступа
+    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {
+        return res.status(403).json({ message: 'Недостаточно прав доступа' });
+    }
+
+    if (!newId || newId.trim() === '') {
+        return res.status(400).json({ message: 'Новый ID не может быть пустым' });
+    }
+
+    if (oldId === newId) {
+        return res.status(400).json({ message: 'Новый ID должен отличаться от текущего' });
+    }
+
+    // Проверяем, не существует ли уже оборудование с таким ID
+    db.get('SELECT id FROM equipment WHERE id = ?', [newId], (err, existingEquipment) => {
+        if (err) {
+            return res.status(500).json({ message: 'Ошибка проверки ID' });
+        }
+
+        if (existingEquipment) {
+            return res.status(409).json({ message: 'Оборудование с таким ID уже существует' });
+        }
+
+        // Получаем старые данные для истории
+        db.get('SELECT * FROM equipment WHERE id = ?', [oldId], (err, oldData) => {
+            if (err) {
+                return res.status(500).json({ message: 'Ошибка получения данных' });
+            }
+
+            if (!oldData) {
+                return res.status(404).json({ message: 'Оборудование не найдено' });
+            }
+
+            // Начинаем транзакцию
+            db.serialize(() => {
+                db.run('BEGIN TRANSACTION');
+
+                // Создаем новую запись с новым ID
+                const insertQuery = `
+                    INSERT INTO equipment 
+                    (id, type, model, status, priority, planned_start, planned_end, 
+                     actual_start, actual_end, delay_hours, malfunction, mechanic_name, 
+                     progress, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                `;
+
+                db.run(insertQuery, [
+                    newId, oldData.type, oldData.model, oldData.status, oldData.priority,
+                    oldData.planned_start, oldData.planned_end, oldData.actual_start, oldData.actual_end,
+                    oldData.delay_hours, oldData.malfunction, oldData.mechanic_name,
+                    oldData.progress, oldData.created_at
+                ], function (insertErr) {
+                    if (insertErr) {
+                        db.run('ROLLBACK');
+                        console.error('Error inserting new equipment:', insertErr);
+                        return res.status(500).json({ message: 'Ошибка создания записи с новым ID' });
+                    }
+
+                    // Копируем историю с новым equipment_id
+                    db.run(`
+                        INSERT INTO equipment_history 
+                        (equipment_id, user_id, action, old_value, new_value, timestamp)
+                        SELECT ?, user_id, action, old_value, new_value, timestamp
+                        FROM equipment_history 
+                        WHERE equipment_id = ?
+                    `, [newId, oldId], function (historyErr) {
+                        if (historyErr) {
+                            console.error('Error copying history:', historyErr);
+                            // Не прерываем транзакцию из-за ошибки копирования истории
+                        }
+
+                        // Добавляем запись об изменении ID
+                        db.run(
+                            'INSERT INTO equipment_history (equipment_id, user_id, action, old_value, new_value) VALUES (?, ?, ?, ?, ?)',
+                            [newId, req.user.userId, 'change_id', oldId, newId],
+                            function (logErr) {
+                                if (logErr) {
+                                    console.error('Error logging ID change:', logErr);
+                                }
+
+                                // Удаляем старые записи
+                                db.run('DELETE FROM equipment_history WHERE equipment_id = ?', [oldId], function (deleteHistoryErr) {
+                                    if (deleteHistoryErr) {
+                                        console.error('Error deleting old history:', deleteHistoryErr);
+                                    }
+
+                                    db.run('DELETE FROM equipment WHERE id = ?', [oldId], function (deleteErr) {
+                                        if (deleteErr) {
+                                            db.run('ROLLBACK');
+                                            console.error('Error deleting old equipment:', deleteErr);
+                                            return res.status(500).json({ message: 'Ошибка удаления старой записи' });
+                                        }
+
+                                        // Коммитим транзакцию
+                                        db.run('COMMIT', function (commitErr) {
+                                            if (commitErr) {
+                                                console.error('Error committing transaction:', commitErr);
+                                                return res.status(500).json({ message: 'Ошибка сохранения изменений' });
+                                            }
+
+                                            // Получаем обновленные данные
+                                            db.get('SELECT * FROM equipment WHERE id = ?', [newId], (err, updatedEquipment) => {
+                                                if (err) {
+                                                    return res.status(500).json({ message: 'Ошибка получения обновленных данных' });
+                                                }
+
+                                                res.json({
+                                                    message: 'ID оборудования изменен успешно',
+                                                    equipment: updatedEquipment,
+                                                    oldId: oldId,
+                                                    newId: newId
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
+                            }
+                        );
+                    });
+                });
+            });
+        });
+    });
+});
+
 // Обновление оборудования (требует авторизации)
 router.put('/:id', authenticateToken, (req, res) => {
     const db = getDatabase();
@@ -95,7 +226,9 @@ router.put('/:id', authenticateToken, (req, res) => {
         delay_hours,
         malfunction,
         mechanic_name,
-        progress
+        progress,
+        type,
+        model
     } = req.body;
 
     // Проверяем права доступа
@@ -113,9 +246,11 @@ router.put('/:id', authenticateToken, (req, res) => {
             return res.status(404).json({ message: 'Оборудование не найдено' });
         }
 
-        // Обновляем данные
+        // Обновляем данные (включая type и model)
         const query = `
       UPDATE equipment SET 
+        type = COALESCE(?, type),
+        model = COALESCE(?, model),
         status = COALESCE(?, status),
         priority = COALESCE(?, priority),
         planned_start = COALESCE(?, planned_start),
@@ -133,7 +268,7 @@ router.put('/:id', authenticateToken, (req, res) => {
         db.run(
             query,
             [
-                status, priority, planned_start, planned_end, actual_start,
+                type, model, status, priority, planned_start, planned_end, actual_start,
                 actual_end, delay_hours, malfunction, mechanic_name, progress, id
             ],
             function (err) {
@@ -148,6 +283,12 @@ router.put('/:id', authenticateToken, (req, res) => {
 
                 // Записываем в историю значимые изменения
                 const changes = [];
+                if (type && type !== oldData.type) {
+                    changes.push({ field: 'type', old: oldData.type, new: type });
+                }
+                if (model && model !== oldData.model) {
+                    changes.push({ field: 'model', old: oldData.model, new: model });
+                }
                 if (status && status !== oldData.status) {
                     changes.push({ field: 'status', old: oldData.status, new: status });
                 }
@@ -191,6 +332,9 @@ router.put('/:id', authenticateToken, (req, res) => {
         );
     });
 });
+
+// Остальные маршруты остаются без изменений...
+// (создание, удаление, история)
 
 // Создание нового оборудования (только для админов)
 router.post('/', authenticateToken, (req, res) => {

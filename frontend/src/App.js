@@ -25,7 +25,7 @@ function AppContent() {
         return (
             <div className="loading-screen">
                 <div className="loading-spinner"></div>
-                <p>Загрузка...</p>
+                <p>Загрузка системы...</p>
             </div>
         );
     }
@@ -44,6 +44,14 @@ function AppContent() {
                     element={
                         user && (user.role === 'admin' || user.role === 'dispatcher')
                             ? <AdminPanel />
+                            : <Navigate to="/" replace />
+                    }
+                />
+                <Route
+                    path="/archive"
+                    element={
+                        user && (user.role === 'admin' || user.role === 'dispatcher')
+                            ? <Archive />
                             : <Navigate to="/" replace />
                     }
                 />
@@ -69,6 +77,12 @@ function AppContent() {
                 draggable
                 pauseOnHover
                 theme="dark"
+                toastStyle={{
+                    background: 'linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#ffffff'
+                }}
             />
         </div>
     );
