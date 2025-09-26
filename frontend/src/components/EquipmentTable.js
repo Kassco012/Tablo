@@ -1,4 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿// frontend/src/components/EquipmentTable.js - обновленная версия с участками
+
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -10,6 +12,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         id: '',
         type: '',
         model: '',
+        section: '',
         status: '',
         priority: '',
         planned_start: '',
@@ -27,12 +30,23 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const [showIdChangeConfirm, setShowIdChangeConfirm] = useState(false);
     const [originalId, setOriginalId] = useState('');
 
+    // Список участков
+    const SECTIONS = [
+        'колесные техники',
+        'гусеничные техники',
+        'шиномонтажные работы',
+        'капитальный ремонт',
+        'энергоучасток',
+        'легкотоннажные техники'
+    ];
+
     useEffect(() => {
         if (equipment) {
             const equipmentData = {
                 id: equipment.id || '',
                 type: equipment.type || '',
                 model: equipment.model || '',
+                section: equipment.section || 'колесные техники',
                 status: equipment.status || '',
                 priority: equipment.priority || '',
                 planned_start: equipment.planned_start || '',
@@ -48,7 +62,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             setFormData(equipmentData);
             setOriginalId(equipment.id);
 
-            // Загружаем историю изменений
             if (user && (user.role === 'admin' || user.role === 'dispatcher')) {
                 loadHistory();
             }
@@ -85,11 +98,9 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             setOriginalId(formData.id);
             setShowIdChangeConfirm(false);
             onSave();
-            // Не закрываем модальное окно, чтобы пользователь мог продолжить редактирование
         } catch (error) {
             console.error('Error changing ID:', error);
             toast.error(error.response?.data?.message || 'Ошибка изменения ID');
-            // Возвращаем старый ID в случае ошибки
             setFormData(prev => ({ ...prev, id: originalId }));
         } finally {
             setLoading(false);
@@ -104,7 +115,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             return;
         }
 
-        // Проверяем, изменился ли ID
         if (formData.id !== originalId) {
             setShowIdChangeConfirm(true);
             return;
@@ -117,12 +127,12 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         setLoading(true);
 
         try {
-            // Используем актуальный ID (который может быть изменен)
             const currentId = formData.id || originalId;
 
             const updateData = {
                 type: formData.type,
                 model: formData.model,
+                section: formData.section,
                 status: formData.status,
                 priority: formData.priority,
                 planned_start: formData.planned_start,
@@ -163,16 +173,21 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
 
     const getStatusText = (status) => {
         const statusMap = {
-            'in_repair': 'В ремонте',
-            'ready': 'Готово',
-            'waiting': 'Ожидание',
-            'scheduled': 'Запланировано'
+            'Down': 'Не работает',
+            'Ready': 'Готова',
+            'Standby': 'Ожидание',
+            'Delay': 'Задержка',
+            'Shiftchange': 'Смена'
         };
         return statusMap[status] || status;
     };
 
     const getEquipmentTypeText = (type) => {
         return type === 'excavator' ? 'Экскаватор' : 'Погрузчик';
+    };
+
+    const getSectionText = (section) => {
+        return section || 'Не указан';
     };
 
     const formatDateTime = (dateString) => {
@@ -188,6 +203,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             'update_mechanic_name': 'Назначение механика',
             'update_type': 'Изменение типа',
             'update_model': 'Изменение модели',
+            'update_section': 'Изменение участка',
             'change_id': 'Изменение ID',
             'delete': 'Удаление'
         };
@@ -206,6 +222,9 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                         <h2>Оборудование {originalId}</h2>
                         <p className="equipment-subtitle">
                             {getEquipmentTypeText(equipment.type)} {equipment.model}
+                        </p>
+                        <p className="equipment-subtitle" style={{ color: '#4facfe' }}>
+                            Участок: {getSectionText(equipment.section)}
                         </p>
                     </div>
                     <button className="close-button" onClick={onClose}>
@@ -248,6 +267,20 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                 </div>
 
                                 <div className="info-item">
+                                    <label>Участок:</label>
+                                    <span style={{
+                                        background: 'rgba(79, 172, 254, 0.1)',
+                                        color: '#4facfe',
+                                        padding: '4px 8px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.9rem',
+                                        fontWeight: '500'
+                                    }}>
+                                        {getSectionText(equipment.section)}
+                                    </span>
+                                </div>
+
+                                <div className="info-item">
                                     <label>Тип:</label>
                                     <span>{getEquipmentTypeText(equipment.type)}</span>
                                 </div>
@@ -261,13 +294,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     <label>Статус:</label>
                                     <span className={`status-badge ${equipment.status}`}>
                                         {getStatusText(equipment.status)}
-                                    </span>
-                                </div>
-
-                                <div className="info-item">
-                                    <label>Приоритет:</label>
-                                    <span className={`priority-badge ${equipment.priority}`}>
-                                        {equipment.priority}
                                     </span>
                                 </div>
 
@@ -354,6 +380,22 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                 </div>
 
                                 <div className="form-group">
+                                    <label>Участок</label>
+                                    <select
+                                        name="section"
+                                        value={formData.section}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                    >
+                                        {SECTIONS.map(section => (
+                                            <option key={section} value={section}>
+                                                {getSectionText(section)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
                                     <label>Тип</label>
                                     <select
                                         name="type"
@@ -386,10 +428,11 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         onChange={handleChange}
                                         disabled={loading}
                                     >
-                                        <option value="ready">Готово</option>
-                                        <option value="in_repair">В ремонте</option>
-                                        <option value="waiting">Ожидание</option>
-                                        <option value="scheduled">Запланировано</option>
+                                        <option value="Ready">Готово</option>
+                                        <option value="Down">Не работает</option>
+                                        <option value="Standby">Ожидание</option>
+                                        <option value="Delay">Задержка</option>
+                                        <option value="Shiftchange">Смена</option>
                                     </select>
                                 </div>
 
@@ -581,7 +624,8 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     margin: '15px 0'
                                 }}>
                                     <strong>Старый ID:</strong> {originalId}<br />
-                                    <strong>Новый ID:</strong> {formData.id}
+                                    <strong>Новый ID:</strong> {formData.id}<br />
+                                    <strong>Участок:</strong> {getSectionText(formData.section)}
                                 </div>
                                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
                                     ⚠️ Это действие изменит ID оборудования во всей системе и истории.
@@ -630,15 +674,3 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
 };
 
 export default EquipmentTable;
-
-
-
-
-
-
-
-
-
-
-
-

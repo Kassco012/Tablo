@@ -1,4 +1,4 @@
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -168,20 +168,20 @@ body {
         box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
     }
 
-/* Stats Cards */
+/* Stats Cards - УМЕНЬШЕННЫЕ */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
 }
 
 .stat-card {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 25px;
+    border-radius: 12px;
+    padding: 18px;
     text-align: center;
     transition: all 0.3s ease;
     position: relative;
@@ -194,13 +194,13 @@ body {
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 3px;
         background: linear-gradient(90deg, var(--card-color), transparent);
     }
 
     .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         border-color: var(--card-color);
     }
 
@@ -221,22 +221,22 @@ body {
     }
 
     .stat-card h3 {
-        font-size: 1.1rem;
-        margin-bottom: 15px;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
         color: rgba(255, 255, 255, 0.8);
         font-weight: 500;
     }
 
     .stat-card .number {
-        font-size: 3rem;
+        font-size: 2.2rem;
         font-weight: bold;
         color: var(--card-color);
-        margin-bottom: 10px;
-        text-shadow: 0 0 20px rgba(var(--card-color), 0.3);
+        margin-bottom: 8px;
+        text-shadow: 0 0 15px rgba(var(--card-color), 0.3);
     }
 
     .stat-card .label {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         color: rgba(255, 255, 255, 0.6);
     }
 
@@ -470,8 +470,24 @@ body {
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
+        gap: 12px;
     }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+        .stat-card .number {
+            font-size: 2rem;
+        }
+
+        .stat-card h3 {
+            font-size: 0.85rem;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+        }
 
     .equipment-section {
         overflow-x: auto;
@@ -484,8 +500,17 @@ body {
 
 @media (max-width: 480px) {
     .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+        .stat-card .number {
+            font-size: 1.8rem;
+        }
 
     .current-time .time {
         font-size: 1.5rem;

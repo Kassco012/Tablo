@@ -5,13 +5,277 @@ import EquipmentTable from './EquipmentTable';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 
+// Компонент пользовательского dropdown
+const UserProfileDropdown = ({ user }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const dropdownRef = React.useRef(null);
+
+    // Закрывать dropdown при клике вне его
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const getRoleText = (role) => {
+        const roleMap = {
+            'admin': 'Администратор',
+            'dispatcher': 'Диспетчер',
+            'mechanic': 'Механик',
+            'viewer': 'Наблюдатель'
+        };
+        return roleMap[role] || role;
+    };
+
+    const getRoleColor = (role) => {
+        const colorMap = {
+            'admin': '#dc3545',
+            'dispatcher': '#ffc107',
+            'mechanic': '#28a745',
+            'viewer': '#6c757d'
+        };
+        return colorMap[role] || '#6c757d';
+    };
+
+    return (
+        <div
+            ref={dropdownRef}
+            style={{
+                position: 'relative',
+                display: 'inline-block'
+            }}
+        >
+            {/* Кнопка пользователя */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    color: 'white'
+                }}
+                onMouseOver={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                    e.target.style.transform = 'scale(1.05)';
+                }}
+                onMouseOut={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.transform = 'scale(1)';
+                }}
+                title="Информация о пользователе"
+            >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+            </button>
+
+            {/* Dropdown меню */}
+            {isOpen && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '45px',
+                        right: '0',
+                        background: 'rgba(30, 39, 46, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        padding: '15px',
+                        minWidth: '220px',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                        backdropFilter: 'blur(10px)',
+                        zIndex: 1000,
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
+                    {/* Заголовок */}
+                    <div style={{
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        paddingBottom: '12px',
+                        marginBottom: '12px'
+                    }}>
+                        <div style={{
+                            fontSize: '0.9rem',
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            marginBottom: '4px'
+                        }}>
+                            Авторизован как:
+                        </div>
+                        <div style={{
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            color: '#ffffff',
+                            marginBottom: '6px'
+                        }}>
+                            {user.fullName || user.username}
+                        </div>
+                    </div>
+
+                    {/* Информация о пользователе */}
+                    <div style={{ marginBottom: '12px' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginBottom: '8px'
+                        }}>
+                            <span style={{
+                                fontSize: '0.85rem',
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }}>
+                                Роль:
+                            </span>
+                            <span style={{
+                                background: getRoleColor(user.role),
+                                color: 'white',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600'
+                            }}>
+                                {getRoleText(user.role)}
+                            </span>
+                        </div>
+
+                        {user.email && (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginBottom: '6px'
+                            }}>
+                                <span style={{
+                                    fontSize: '0.85rem',
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }}>
+                                    Email:
+                                </span>
+                                <span style={{
+                                    fontSize: '0.85rem',
+                                    color: '#4facfe'
+                                }}>
+                                    {user.email}
+                                </span>
+                            </div>
+                        )}
+
+                        <div style={{
+                            fontSize: '0.75rem',
+                            color: 'rgba(255, 255, 255, 0.5)',
+                            marginTop: '8px'
+                        }}>
+                            Сессия активна с {new Date().toLocaleTimeString('ru-RU', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Статус подключения */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        background: 'rgba(40, 167, 69, 0.1)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(40, 167, 69, 0.2)'
+                    }}>
+                        <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#28a745',
+                            animation: 'pulse 2s infinite'
+                        }}></div>
+                        <span style={{
+                            fontSize: '0.8rem',
+                            color: '#28a745',
+                            fontWeight: '500'
+                        }}>
+                            Подключение активно
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            {/* CSS анимации */}
+            <style jsx>{`
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                @keyframes pulse {
+                    0% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                    50% {
+                        transform: scale(1.2);
+                        opacity: 0.7;
+                    }
+                    100% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                }
+
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                .compact-button:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                }
+            `}</style>
+        </div>
+    );
+};
+
 const Dashboard = ({ onLoginClick }) => {
     const { user, logout } = useAuth();
     const { equipment, stats, loading, error, refreshData } = useEquipment();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [selectedEquipment, setSelectedEquipment] = useState(null);
-    const [launchingIds, setLaunchingIds] = useState(new Set()); // Для отслеживания процесса запуска
+    const [launchingIds, setLaunchingIds] = useState(new Set());
     const [showLaunchConfirm, setShowLaunchConfirm] = useState(null);
+
+    // Состояния для фильтрации
+    const [selectedSection, setSelectedSection] = useState('');
+    const [sections, setSections] = useState([]);
+    const [filteredEquipment, setFilteredEquipment] = useState([]);
+
+    // Список участков
+    const SECTIONS = [
+        'колесные техники',
+        'гусеничные техники',
+        'шиномонтажные работы',
+        'капитальный ремонт',
+        'энергоучасток',
+        'легкотоннажные техники'
+    ];
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -22,19 +286,37 @@ const Dashboard = ({ onLoginClick }) => {
     }, []);
 
     useEffect(() => {
-        // Обновляем данные каждые 30 секунд
         const interval = setInterval(refreshData, 30000);
         return () => clearInterval(interval);
     }, [refreshData]);
 
+    useEffect(() => {
+        loadSections();
+    }, []);
+
+    useEffect(() => {
+        if (selectedSection) {
+            setFilteredEquipment(equipment.filter(item => item.section === selectedSection));
+        } else {
+            setFilteredEquipment(equipment);
+        }
+    }, [equipment, selectedSection]);
+
+    const loadSections = async () => {
+        try {
+            const response = await api.get('/equipment/sections');
+            setSections(response.data);
+        } catch (error) {
+            console.error('Error loading sections:', error);
+        }
+    };
+
     const handleLaunchEquipment = async (equipmentItem) => {
-        // Проверяем права доступа
         if (!user || (user.role !== 'admin' && user.role !== 'dispatcher')) {
             toast.error('Недостаточно прав для запуска техники');
             return;
         }
 
-        // Проверяем статус (можно запускать только готовую или запланированную технику)
         if (equipmentItem.status !== 'ready' && equipmentItem.status !== 'scheduled') {
             toast.error('Можно запускать только готовую или запланированную технику');
             return;
@@ -56,8 +338,6 @@ const Dashboard = ({ onLoginClick }) => {
 
             toast.success(`Техника ${equipmentId} успешно запущена в работу!`);
             setShowLaunchConfirm(null);
-
-            // Обновляем данные
             await refreshData();
 
         } catch (error) {
@@ -79,31 +359,30 @@ const Dashboard = ({ onLoginClick }) => {
 
     const getStatusText = (status) => {
         const statusMap = {
-            'in_repair': 'В ремонте',
-            'ready': 'Готово',
-            'waiting': 'Ожидание',
-            'scheduled': 'Запланировано'
+            'Down': 'Не работает',
+            'Ready': 'Готова',
+            'Standby': 'Ожидание',
+            'Delay': 'Задержка',
+            'Shiftchange': 'Смена'
         };
         return statusMap[status] || status;
     };
 
-    const getPriorityText = (priority) => {
-        const priorityMap = {
-            'low': 'Низкий',
-            'normal': 'Обычный',
-            'medium': 'Средний',
-            'high': 'Высокий',
-            'critical': 'Критический'
-        };
-        return priorityMap[priority] || priority;
-    };
 
     const getEquipmentTypeText = (type) => {
         return type === 'excavator' ? 'Экскаватор' : 'Погрузчик';
     };
 
+    const getSectionText = (section) => {
+        return section || 'Не указан';
+    };
+
     const canLaunch = (equipmentItem) => {
         return equipmentItem.status === 'ready' || equipmentItem.status === 'scheduled';
+    };
+
+    const clearFilter = () => {
+        setSelectedSection('');
     };
 
     if (loading) {
@@ -133,8 +412,6 @@ const Dashboard = ({ onLoginClick }) => {
         <div className="dashboard">
             <div className="dashboard-header">
                 <div className="header-left">
-                    <h1>MMA АКТОГАЙ - МОНИТОРИНГ ТЕХНИКИ</h1>
-                    <p>Ремонт экскаваторов и погрузчиков</p>
                 </div>
 
                 <div className="header-right">
@@ -155,49 +432,133 @@ const Dashboard = ({ onLoginClick }) => {
                         </div>
                     </div>
 
-                    <div className="system-status">
-                        <div className="status-dot"></div>
-                        <span>Система активна</span>
-                    </div>
+                    {/*<div className="system-status">*/}
+                    {/*    <div className="status-dot"></div>*/}
+                    {/*    <span>Система активна</span>*/}
+                    {/*</div>*/}
 
-                    {user ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.8)' }}>
-                                {user.fullName || user.username}
-                            </span>
-                            {(user.role === 'admin' || user.role === 'dispatcher') && (
-                                <>
-                                    <button
-                                        className="login-button"
-                                        onClick={() => window.location.href = '/admin'}
-                                        style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                                    >
-                                        Админка
-                                    </button>
-                                    <button
-                                        className="login-button"
-                                        onClick={() => window.location.href = '/archive'}
-                                        style={{
-                                            padding: '8px 16px',
-                                            fontSize: '0.9rem',
-                                            background: 'rgba(108, 117, 125, 0.8)'
-                                        }}
-                                    >
-                                        Архив
-                                    </button>
-                                </>
-                            )}
+                    {/* КОМПАКТНЫЙ ФИЛЬТР УЧАСТКОВ */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{
+                            fontSize: '0.9rem',
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            Фильтр по участкам:
+                        </span>
+                        <select
+                            value={selectedSection}
+                            onChange={(e) => setSelectedSection(e.target.value)}
+                            style={{
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                color: '#ffffff',
+                                fontSize: '0.9rem',
+                                minWidth: '160px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="">Все участки</option>
+                            {SECTIONS.map(section => (
+                                <option key={section} value={section}>
+                                    {getSectionText(section)}
+                                    {sections.find(s => s.section === section) &&
+                                        ` (${sections.find(s => s.section === section).total})`
+                                    }
+                                </option>
+                            ))}
+                        </select>
+                        {selectedSection && (
                             <button
-                                className="login-button"
-                                onClick={logout}
+                                onClick={clearFilter}
                                 style={{
-                                    background: 'rgba(220, 53, 69, 0.8)',
-                                    padding: '8px 16px',
-                                    fontSize: '0.9rem'
+                                    background: 'rgba(255, 255, 255, 0.1)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onMouseOver={(e) => {
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
                                 }}
                             >
-                                Выход
+                                ✕
                             </button>
+                        )}
+                    </div>
+
+                    {/* КОМПАКТНЫЙ ПОЛЬЗОВАТЕЛЬСКИЙ БЛОК */}
+                    {user ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {/* Группа кнопок управления */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {(user.role === 'admin' || user.role === 'dispatcher') && (
+                                    <>
+                                        <button
+                                            className="compact-button"
+                                            onClick={() => window.location.href = '/admin'}
+                                            title="Панель администратора"
+                                            style={{
+                                                background: 'rgba(0, 123, 255, 0.8)',
+                                                border: 'none',
+                                                color: 'white',
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                fontSize: '0.8rem',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            Админка
+                                        </button>
+                                        <button
+                                            className="compact-button"
+                                            onClick={() => window.location.href = '/archive'}
+                                            title="Архив техники"
+                                            style={{
+                                                background: 'rgba(108, 117, 125, 0.8)',
+                                                border: 'none',
+                                                color: 'white',
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                fontSize: '0.8rem',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        >
+                                            Архив
+                                        </button>
+                                    </>
+                                )}
+                                <button
+                                    className="compact-button"
+                                    onClick={logout}
+                                    title="Выйти из системы"
+                                    style={{
+                                        background: 'rgba(220, 53, 69, 0.8)',
+                                        border: 'none',
+                                        color: 'white',
+                                        padding: '8px 12px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.8rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                >
+                                    Выход
+                                </button>
+                            </div>
+
+                            {/* Компактный пользовательский блок */}
+                            <UserProfileDropdown user={user} />
                         </div>
                     ) : (
                         <button className="login-button" onClick={onLoginClick}>
@@ -210,25 +571,45 @@ const Dashboard = ({ onLoginClick }) => {
             <div className="stats-grid">
                 <div className="stat-card repair">
                     <h3>В РЕМОНТЕ</h3>
-                    <div className="number">{stats.in_repair || 0}</div>
+                    <div className="number">
+                        {selectedSection
+                            ? filteredEquipment.filter(item => item.status === 'in_repair').length
+                            : stats.in_repair || 0
+                        }
+                    </div>
                     <div className="label">единиц техники</div>
                 </div>
 
                 <div className="stat-card ready">
                     <h3>ГОТОВО</h3>
-                    <div className="number">{stats.ready || 0}</div>
+                    <div className="number">
+                        {selectedSection
+                            ? filteredEquipment.filter(item => item.status === 'ready').length
+                            : stats.ready || 0
+                        }
+                    </div>
                     <div className="label">единиц техники</div>
                 </div>
 
                 <div className="stat-card waiting">
                     <h3>ОЖИДАНИЕ</h3>
-                    <div className="number">{stats.waiting || 0}</div>
+                    <div className="number">
+                        {selectedSection
+                            ? filteredEquipment.filter(item => item.status === 'waiting').length
+                            : stats.waiting || 0
+                        }
+                    </div>
                     <div className="label">единиц техники</div>
                 </div>
 
                 <div className="stat-card total">
                     <h3>ВСЕГО</h3>
-                    <div className="number">{stats.total || 0}</div>
+                    <div className="number">
+                        {selectedSection
+                            ? filteredEquipment.length
+                            : stats.total || 0
+                        }
+                    </div>
                     <div className="label">единиц техники</div>
                 </div>
             </div>
@@ -238,20 +619,18 @@ const Dashboard = ({ onLoginClick }) => {
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Участок</th>
                             <th>Тип/Модель</th>
                             <th>План/Факт</th>
                             <th>Доп. время</th>
-                            <th>Окончание</th>
                             <th>Статус</th>
-                            <th>Приоритет</th>
                             <th>Неисправность</th>
                             <th>Механик</th>
-                            <th>Прогресс</th>
                             <th>Действие</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {equipment.map((item) => (
+                        {filteredEquipment.map((item) => (
                             <tr
                                 key={item.id}
                                 onClick={() => user ? setSelectedEquipment(item) : null}
@@ -259,6 +638,20 @@ const Dashboard = ({ onLoginClick }) => {
                             >
                                 <td>
                                     <span className="equipment-id">{item.id}</span>
+                                </td>
+                                <td>
+                                    <div style={{
+                                        fontSize: '0.85rem',
+                                        fontWeight: '500',
+                                        color: '#4facfe',
+                                        background: 'rgba(79, 172, 254, 0.1)',
+                                        padding: '4px 8px',
+                                        borderRadius: '6px',
+                                        textAlign: 'center',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {getSectionText(item.section)}
+                                    </div>
                                 </td>
                                 <td>
                                     <div className="equipment-type">
@@ -283,30 +676,13 @@ const Dashboard = ({ onLoginClick }) => {
                                         {item.delay_hours > 0 ? `+${item.delay_hours}ч` : '-'}
                                     </span>
                                 </td>
-                                <td>{formatTime(item.planned_end)}</td>
                                 <td>
                                     <span className={`status-badge ${item.status}`}>
                                         {getStatusText(item.status)}
                                     </span>
                                 </td>
-                                <td>
-                                    <span className={`priority-badge ${item.priority}`}>
-                                        {getPriorityText(item.priority)}
-                                    </span>
-                                </td>
                                 <td>{item.malfunction || '-'}</td>
                                 <td>{item.mechanic_name || '-'}</td>
-                                <td>
-                                    <div className="progress-container">
-                                        <div className="progress-text">{item.progress}%</div>
-                                        <div className="progress-bar">
-                                            <div
-                                                className="progress-fill"
-                                                style={{ width: `${item.progress}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </td>
                                 <td>
                                     {user && (user.role === 'admin' || user.role === 'dispatcher') && (
                                         <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -314,7 +690,7 @@ const Dashboard = ({ onLoginClick }) => {
                                                 <button
                                                     className="launch-button"
                                                     onClick={(e) => {
-                                                        e.stopPropagation(); // Предотвращаем открытие модального окна
+                                                        e.stopPropagation();
                                                         handleLaunchEquipment(item);
                                                     }}
                                                     disabled={launchingIds.has(item.id)}
@@ -351,9 +727,7 @@ const Dashboard = ({ onLoginClick }) => {
                                                             Запуск...
                                                         </>
                                                     ) : (
-                                                        <>
-                                                            ЗАПУСК
-                                                        </>
+                                                        <>ЗАПУСК</>
                                                     )}
                                                 </button>
                                             ) : (
@@ -377,6 +751,7 @@ const Dashboard = ({ onLoginClick }) => {
                 </table>
             </div>
 
+            {/* Компактный индикатор внизу */}
             <div style={{
                 position: 'fixed',
                 bottom: '20px',
@@ -387,18 +762,25 @@ const Dashboard = ({ onLoginClick }) => {
                 fontSize: '0.8rem',
                 color: 'rgba(255,255,255,0.6)',
                 background: 'rgba(0,0,0,0.5)',
-                padding: '10px 15px',
-                borderRadius: '20px'
+                padding: '8px 12px',
+                borderRadius: '16px'
             }}>
                 <div className="status-dot"></div>
-                <span>Готовую технику можно запустить в работу</span>
-                <span style={{ marginLeft: '10px' }}>
-                    Обновлено: {currentTime.toLocaleTimeString('ru-RU')}
-                    | Автообновление каждые 30 сек
-                </span>
+                <span>Показано: {filteredEquipment.length} из {equipment.length}</span>
+                {selectedSection && (
+                    <span style={{
+                        marginLeft: '5px',
+                        padding: '2px 6px',
+                        background: 'rgba(79, 172, 254, 0.2)',
+                        borderRadius: '4px',
+                        fontSize: '0.7rem'
+                    }}>
+                        {getSectionText(selectedSection)}
+                    </span>
+                )}
             </div>
 
-            {/* Модальное окно подтверждения запуска */}
+            {/* Модальные окна */}
             {showLaunchConfirm && (
                 <div className="modal-backdrop" onClick={() => setShowLaunchConfirm(null)}>
                     <div className="modal-content" style={{ maxWidth: '500px' }}>
@@ -421,6 +803,7 @@ const Dashboard = ({ onLoginClick }) => {
                                 borderRadius: '8px',
                                 marginBottom: '20px'
                             }}>
+                                <div><strong>Участок:</strong> {getSectionText(showLaunchConfirm.section)}</div>
                                 <div><strong>Тип:</strong> {getEquipmentTypeText(showLaunchConfirm.type)}</div>
                                 <div><strong>Модель:</strong> {showLaunchConfirm.model}</div>
                                 <div><strong>Статус:</strong> {getStatusText(showLaunchConfirm.status)}</div>

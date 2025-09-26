@@ -16,32 +16,39 @@ const StatusCards = ({ stats, loading }) => {
 
     const cards = [
         {
-            key: 'in_repair',
-            title: 'В РЕМОНТЕ',
-            value: stats.in_repair || 0,
-            className: 'repair',
-            icon: '🔧'
+            key: 'down',
+            title: 'DOWN',
+            value: stats.down || 0,
+            className: 'down',
+            icon: ''
         },
         {
             key: 'ready',
-            title: 'ГОТОВО',
+            title: 'READY',
             value: stats.ready || 0,
             className: 'ready',
-            icon: '✅'
+            icon: ''
         },
         {
-            key: 'waiting',
-            title: 'ОЖИДАНИЕ',
-            value: stats.waiting || 0,
-            className: 'waiting',
-            icon: '⏳'
+            key: 'delay',
+            title: 'DELAY',
+            value: stats.delay || 0,
+            className: 'delay',
+            icon: ''
+        },
+        {
+            key: 'standby',
+            title: 'STANDBY',
+            value: stats.standby || 0,
+            className: 'standby',
+            icon: ''
         },
         {
             key: 'total',
             title: 'ВСЕГО',
             value: stats.total || 0,
             className: 'total',
-            icon: '📊'
+            icon: ''
         }
     ];
 

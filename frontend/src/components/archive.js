@@ -134,7 +134,6 @@ const Archive = () => {
                 'Модель': item.model,
                 'Механик': item.mechanic_name || '-',
                 'Прогресс (%)': item.progress || 0,
-                'Приоритет': getPriorityText(item.priority),
                 'Плановое начало': item.planned_start || '-',
                 'Плановое окончание': item.planned_end || '-',
                 'Фактическое начало': item.actual_start || '-',
