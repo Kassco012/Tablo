@@ -1,26 +1,44 @@
 ﻿import axios from 'axios';
 
-// Определяем базовый URL API
+// Определяем базовый URL API с правильной логикой для разных сред
 const getApiUrl = () => {
+    // Проверяем специальную переменную для принудительного localhost (для разработки)
+    if (process.env.REACT_APP_FORCE_LOCAL === 'true') {
+        return 'http://localhost:5001/api';
+    }
+
     // В продакшене используем текущий хост
     if (process.env.NODE_ENV === 'production') {
         return `${window.location.protocol}//${window.location.host}/api`;
     }
 
-    // В разработке используем заданный URL или локальный
-    return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+    // В разработке используем заданный URL или localhost
+    if (process.env.REACT_APP_API_URL) {
+        return process.env.REACT_APP_API_URL;
+    }
+
+    // Автоматическое определение для локальной разработки
+    const currentHost = window.location.hostname;
+    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+        return 'http://localhost:5001/api';
+    } else {
+        // Для сетевого доступа (например 10.35.3.117)
+        return `http://${currentHost}:5001/api`;
+    }
 };
 
 console.log('API Configuration:', {
     NODE_ENV: process.env.NODE_ENV,
     REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+    REACT_APP_FORCE_LOCAL: process.env.REACT_APP_FORCE_LOCAL,
+    window_hostname: window.location.hostname,
     computed_url: getApiUrl()
 });
 
 // Базовая конфигурация API
 const api = axios.create({
     baseURL: getApiUrl(),
-    timeout: 15000, // Увеличиваем таймаут
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -36,7 +54,7 @@ api.interceptors.request.use(
 
         // Логирование запросов в режиме разработки
         if (process.env.NODE_ENV === 'development') {
-            console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
+            console.log('🔄 API Request:', config.method?.toUpperCase(), config.url, config.data);
         }
 
         return config;
@@ -52,13 +70,13 @@ api.interceptors.response.use(
     (response) => {
         // Логирование успешных ответов в режиме разработки
         if (process.env.NODE_ENV === 'development') {
-            console.log('API Response:', response.status, response.config.url, response.data);
+            console.log('✅ API Response:', response.status, response.config.url, response.data);
         }
 
         return response;
     },
     (error) => {
-        console.error('API Error:', error);
+        console.error('❌ API Error:', error);
 
         // Обработка различных типов ошибок
         if (error.response) {
@@ -69,7 +87,7 @@ api.interceptors.response.use(
                 case 401:
                     // Неавторизованный доступ - удаляем токен
                     localStorage.removeItem('authToken');
-                    // Не перенаправляем автоматически, позволяем компоненту обработать
+                    console.warn('🔐 Токен недействителен, удален из localStorage');
                     break;
 
                 case 403:
@@ -123,10 +141,10 @@ api.interceptors.response.use(
 export const checkApiHealth = async () => {
     try {
         const response = await api.get('/health');
-        console.log('API Health Check успешен:', response.data);
+        console.log('✅ API Health Check успешен:', response.data);
         return true;
     } catch (error) {
-        console.error('API Health Check неуспешен:', error);
+        console.error('❌ API Health Check неуспешен:', error);
         return false;
     }
 };
@@ -154,30 +172,15 @@ export const apiHelpers = {
         update: (id, data) => api.put(`/equipment/${id}`, data),
         delete: (id) => api.delete(`/equipment/${id}`),
         getHistory: (id) => api.get(`/equipment/${id}/history`),
-
-        // Новый метод для изменения ID
         changeId: (oldId, newId) => api.put(`/equipment/${oldId}/change-id`, { newId }),
-
-        // Bulk операции (для будущего использования)
-        bulkUpdate: (updates) => api.put('/equipment/bulk', updates),
-        exportData: () => api.get('/equipment/export', { responseType: 'blob' }),
-        importData: (file) => {
-            const formData = new FormData();
-            formData.append('file', file);
-            return api.post('/equipment/import', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-        }
     },
 
-    // Статистика и отчеты
-    reports: {
-        getEquipmentStats: () => api.get('/equipment/stats'),
-        getDetailedReport: (startDate, endDate) => api.get('/reports/detailed', {
-            params: { startDate, endDate }
-        }),
-        getMaintenanceSchedule: () => api.get('/reports/maintenance-schedule'),
-        getDowntimeReport: () => api.get('/reports/downtime')
+    // Архив
+    archive: {
+        launch: (id, data) => api.post(`/archive/launch/${id}`, data),
+        getAll: (params) => api.get('/archive', { params }),
+        getStats: (params) => api.get('/archive/stats', { params }),
+        restore: (id) => api.post(`/archive/restore/${id}`), // для будущего использования
     }
 };
 
@@ -234,7 +237,6 @@ export const formatters = {
 
     time: (timeString) => {
         if (!timeString) return '';
-        // Обеспечиваем формат HH:MM
         const parts = timeString.split(':');
         if (parts.length === 2) {
             const hours = parts[0].padStart(2, '0');

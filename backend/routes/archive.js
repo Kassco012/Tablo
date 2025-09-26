@@ -4,7 +4,7 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Запуск техники (архивирование)
+// Запуск техники в работу (архивирование)
 router.post('/launch/:id', authenticateToken, (req, res) => {
     const db = getDatabase();
     const { id } = req.params;
@@ -26,10 +26,10 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
             return res.status(404).json({ message: 'Оборудование не найдено' });
         }
 
-        // Проверяем, можно ли запустить (только готовое или запланированное)
+        // Проверяем, что техника готова к запуску
         if (equipment.status !== 'ready' && equipment.status !== 'scheduled') {
             return res.status(400).json({
-                message: 'Можно запускать только готовое или запланированное оборудование'
+                message: 'Можно запускать только готовую или запланированную технику'
             });
         }
 
@@ -37,23 +37,21 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
         db.serialize(() => {
             db.run('BEGIN TRANSACTION');
 
-            // Архивируем оборудование
+            // Переносим в архив
             const archiveQuery = `
                 INSERT INTO equipment_archive 
                 (id, type, model, status, priority, planned_start, planned_end, 
                  actual_start, actual_end, delay_hours, malfunction, mechanic_name, 
-                 progress, created_at, updated_at, completed_date, completion_user, 
-                 archive_reason, original_table)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                        CURRENT_TIMESTAMP, ?, ?, 'equipment')
+                 progress, created_at, updated_at, completed_date, completion_user, archive_reason) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
             `;
 
             db.run(archiveQuery, [
                 equipment.id, equipment.type, equipment.model, 'launched', equipment.priority,
-                equipment.planned_start, equipment.planned_end, equipment.actual_start,
-                equipment.actual_end, equipment.delay_hours, equipment.malfunction,
-                equipment.mechanic_name, equipment.progress, equipment.created_at,
-                equipment.updated_at, req.user.userId, completion_reason
+                equipment.planned_start, equipment.planned_end, equipment.actual_start, equipment.actual_end,
+                equipment.delay_hours, equipment.malfunction, equipment.mechanic_name,
+                equipment.progress, equipment.created_at, equipment.updated_at,
+                req.user.userId, completion_reason
             ], function (archiveErr) {
                 if (archiveErr) {
                     db.run('ROLLBACK');
@@ -64,18 +62,18 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                 // Добавляем запись в историю
                 db.run(
                     'INSERT INTO equipment_history (equipment_id, user_id, action, new_value) VALUES (?, ?, ?, ?)',
-                    [id, req.user.userId, 'launch', 'Техника запущена в работу'],
+                    [equipment.id, req.user.userId, 'launch', completion_reason],
                     function (historyErr) {
                         if (historyErr) {
                             console.error('Error logging launch:', historyErr);
                         }
 
-                        // Удаляем из основной таблицы
+                        // Удаляем из активной таблицы
                         db.run('DELETE FROM equipment WHERE id = ?', [id], function (deleteErr) {
                             if (deleteErr) {
                                 db.run('ROLLBACK');
                                 console.error('Error deleting equipment:', deleteErr);
-                                return res.status(500).json({ message: 'Ошибка удаления оборудования' });
+                                return res.status(500).json({ message: 'Ошибка удаления из активной таблицы' });
                             }
 
                             // Коммитим транзакцию
@@ -86,9 +84,9 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                                 }
 
                                 res.json({
-                                    message: `Техника ${id} успешно запущена в работу`,
-                                    equipment: equipment,
-                                    archived: true
+                                    message: 'Техника успешно запущена в работу',
+                                    equipment_id: equipment.id,
+                                    archive_id: this.lastID
                                 });
                             });
                         });
@@ -101,49 +99,63 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
 
 // Получение архивных записей
 router.get('/', authenticateToken, (req, res) => {
+    // Проверяем права доступа
+    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {
+        return res.status(403).json({ message: 'Недостаточно прав доступа' });
+    }
+
     const db = getDatabase();
     const {
         page = 1,
         limit = 50,
-        start_date,
-        end_date,
         type,
         mechanic,
-        archive_reason
+        date_from,
+        date_to
     } = req.query;
 
-    let query = 'SELECT * FROM equipment_archive WHERE 1=1';
-    let params = [];
+    let query = `
+        SELECT 
+            ea.*,
+            u.username as completion_username,
+            u.full_name as completion_user_name
+        FROM equipment_archive ea
+        LEFT JOIN users u ON ea.completion_user = u.id
+    `;
+
+    const conditions = [];
+    const params = [];
 
     // Фильтры
-    if (start_date) {
-        query += ' AND DATE(completed_date) >= ?';
-        params.push(start_date);
-    }
-
-    if (end_date) {
-        query += ' AND DATE(completed_date) <= ?';
-        params.push(end_date);
-    }
-
     if (type) {
-        query += ' AND type = ?';
+        conditions.push('ea.type = ?');
         params.push(type);
     }
 
     if (mechanic) {
-        query += ' AND mechanic_name LIKE ?';
+        conditions.push('ea.mechanic_name LIKE ?');
         params.push(`%${mechanic}%`);
     }
 
-    if (archive_reason) {
-        query += ' AND archive_reason = ?';
-        params.push(archive_reason);
+    if (date_from) {
+        conditions.push('DATE(ea.completed_date) >= ?');
+        params.push(date_from);
     }
+
+    if (date_to) {
+        conditions.push('DATE(ea.completed_date) <= ?');
+        params.push(date_to);
+    }
+
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY ea.completed_date DESC';
 
     // Пагинация
     const offset = (page - 1) * limit;
-    query += ' ORDER BY completed_date DESC LIMIT ? OFFSET ?';
+    query += ` LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), parseInt(offset));
 
     db.all(query, params, (err, archives) => {
@@ -152,39 +164,20 @@ router.get('/', authenticateToken, (req, res) => {
             return res.status(500).json({ message: 'Ошибка получения архивных данных' });
         }
 
-        // Получаем общее количество записей для пагинации
-        let countQuery = 'SELECT COUNT(*) as total FROM equipment_archive WHERE 1=1';
-        let countParams = [];
+        // Получаем общее количество для пагинации
+        let countQuery = 'SELECT COUNT(*) as total FROM equipment_archive ea';
+        const countParams = [];
 
-        if (start_date) {
-            countQuery += ' AND DATE(completed_date) >= ?';
-            countParams.push(start_date);
-        }
-
-        if (end_date) {
-            countQuery += ' AND DATE(completed_date) <= ?';
-            countParams.push(end_date);
-        }
-
-        if (type) {
-            countQuery += ' AND type = ?';
-            countParams.push(type);
-        }
-
-        if (mechanic) {
-            countQuery += ' AND mechanic_name LIKE ?';
-            countParams.push(`%${mechanic}%`);
-        }
-
-        if (archive_reason) {
-            countQuery += ' AND archive_reason = ?';
-            countParams.push(archive_reason);
+        if (conditions.length > 0) {
+            countQuery += ' WHERE ' + conditions.join(' AND ');
+            // Убираем последние два параметра (limit и offset)
+            countParams.push(...params.slice(0, -2));
         }
 
         db.get(countQuery, countParams, (countErr, countResult) => {
             if (countErr) {
                 console.error('Error counting archives:', countErr);
-                return res.status(500).json({ message: 'Ошибка подсчета записей' });
+                return res.status(500).json({ message: 'Ошибка подсчета архивных данных' });
             }
 
             res.json({
@@ -200,70 +193,83 @@ router.get('/', authenticateToken, (req, res) => {
     });
 });
 
-// Получение статистики архива
+// Статистика архива
 router.get('/stats', authenticateToken, (req, res) => {
+    // Проверяем права доступа
+    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {
+        return res.status(403).json({ message: 'Недостаточно прав доступа' });
+    }
+
     const db = getDatabase();
-    const { start_date, end_date } = req.query;
+    const { date_from, date_to } = req.query;
 
     let query = `
         SELECT 
-            archive_reason,
-            COUNT(*) as count,
-            type
-        FROM equipment_archive 
-        WHERE 1=1
+            COUNT(*) as total_archived,
+            SUM(CASE WHEN archive_reason = 'launched' THEN 1 ELSE 0 END) as launched,
+            SUM(CASE WHEN archive_reason = 'completed' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN archive_reason = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+            AVG(progress) as avg_progress,
+            type,
+            COUNT(*) as type_count
+        FROM equipment_archive
     `;
-    let params = [];
 
-    if (start_date) {
-        query += ' AND DATE(completed_date) >= ?';
-        params.push(start_date);
+    const conditions = [];
+    const params = [];
+
+    if (date_from) {
+        conditions.push('DATE(completed_date) >= ?');
+        params.push(date_from);
     }
 
-    if (end_date) {
-        query += ' AND DATE(completed_date) <= ?';
-        params.push(end_date);
+    if (date_to) {
+        conditions.push('DATE(completed_date) <= ?');
+        params.push(date_to);
     }
 
-    query += ' GROUP BY archive_reason, type ORDER BY count DESC';
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+    }
 
-    db.all(query, params, (err, stats) => {
+    query += ' GROUP BY type';
+
+    db.all(query, params, (err, typeStats) => {
         if (err) {
             console.error('Error fetching archive stats:', err);
             return res.status(500).json({ message: 'Ошибка получения статистики архива' });
         }
 
         // Получаем общую статистику
-        let totalQuery = `
+        let summaryQuery = `
             SELECT 
                 COUNT(*) as total_archived,
-                COUNT(CASE WHEN archive_reason = 'launched' THEN 1 END) as launched,
-                COUNT(CASE WHEN archive_reason = 'completed' THEN 1 END) as completed,
-                COUNT(CASE WHEN archive_reason = 'cancelled' THEN 1 END) as cancelled
-            FROM equipment_archive 
-            WHERE 1=1
+                SUM(CASE WHEN archive_reason = 'launched' THEN 1 ELSE 0 END) as launched,
+                SUM(CASE WHEN archive_reason = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN archive_reason = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+                AVG(progress) as avg_progress
+            FROM equipment_archive
         `;
-        let totalParams = [];
 
-        if (start_date) {
-            totalQuery += ' AND DATE(completed_date) >= ?';
-            totalParams.push(start_date);
+        if (conditions.length > 0) {
+            summaryQuery += ' WHERE ' + conditions.join(' AND ');
         }
 
-        if (end_date) {
-            totalQuery += ' AND DATE(completed_date) <= ?';
-            totalParams.push(end_date);
-        }
-
-        db.get(totalQuery, totalParams, (totalErr, totalStats) => {
-            if (totalErr) {
-                console.error('Error fetching total stats:', totalErr);
-                return res.status(500).json({ message: 'Ошибка получения общей статистики' });
+        db.get(summaryQuery, params, (summaryErr, summary) => {
+            if (summaryErr) {
+                console.error('Error fetching archive summary:', summaryErr);
+                return res.status(500).json({ message: 'Ошибка получения сводной статистики' });
             }
 
             res.json({
-                detailed_stats: stats,
-                summary: totalStats
+                summary: {
+                    total_archived: summary.total_archived || 0,
+                    launched: summary.launched || 0,
+                    completed: summary.completed || 0,
+                    cancelled: summary.cancelled || 0,
+                    avg_progress: Math.round(summary.avg_progress || 0)
+                },
+                by_type: typeStats
             });
         });
     });

@@ -125,13 +125,13 @@ async function createDefaultData(database) {
     return new Promise((resolve, reject) => {
         const bcrypt = require('bcryptjs');
 
-        // Создаем администратора
-        const adminPassword = bcrypt.hashSync('admin123', 10);
-        const userPassword = bcrypt.hashSync('user123', 10);
+        // Создаем реальных пользователей
+        const adminPassword = bcrypt.hashSync('Kazmin2025', 10);
+        const dispatcherPassword = bcrypt.hashSync('Kazmin2025', 10);
 
         database.run(
             `INSERT OR IGNORE INTO users (username, password, role, full_name) VALUES (?, ?, ?, ?)`,
-            ['admin', adminPassword, 'admin', 'Главный диспетчер'],
+            ['timur.abitov@kazminerals.com', adminPassword, 'admin', 'Тимур Абитов'],
             function (err) {
                 if (err) console.error('Ошибка создания админа:', err);
             }
@@ -139,7 +139,7 @@ async function createDefaultData(database) {
 
         database.run(
             `INSERT OR IGNORE INTO users (username, password, role, full_name) VALUES (?, ?, ?, ?)`,
-            ['dispatcher', userPassword, 'dispatcher', 'Диспетчер смены'],
+            ['kassymzhan.nuraliyev@kazminerals.com', dispatcherPassword, 'dispatcher', 'Касымжан Нуралиев'],
             function (err) {
                 if (err) console.error('Ошибка создания диспетчера:', err);
             }

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
-
+import Archive from './components/archive';
 import Dashboard from './components/Dashboard';
 import LoginModal from './components/LoginModal';
 import AdminPanel from './components/AdminPanel';
@@ -51,7 +51,7 @@ function AppContent() {
                     path="/archive"
                     element={
                         user && (user.role === 'admin' || user.role === 'dispatcher')
-                            ? <Archive />
+                            ? <Archive/>
                             : <Navigate to="/" replace />
                     }
                 />

@@ -40,6 +40,18 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
         }
     };
 
+    const handleAccountClick = (username) => {
+        setFormData(prev => ({
+            ...prev,
+            username: username
+        }));
+        // Фокусируемся на поле пароля
+        setTimeout(() => {
+            const passwordField = document.getElementById('password');
+            if (passwordField) passwordField.focus();
+        }, 100);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -62,7 +74,7 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
                             value={formData.username}
                             onChange={handleChange}
                             required
-                            placeholder="Введите имя пользователя"
+                            placeholder="Введите email"
                             disabled={loading}
                         />
                     </div>
@@ -100,21 +112,25 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
                 </form>
 
                 <div className="login-info">
-                    <h3>Тестовые учетные данные:</h3>
+                    <h3>Доступные учетные записи:</h3>
                     <div className="test-accounts">
-                        <div className="account-info">
-                            <strong>Администратор:</strong>
-                            <br />
-                            Логин: admin
-                            <br />
-                            Пароль: admin123
+                        <div
+                            className="account-info"
+                            onClick={() => handleAccountClick('timur.abitov@kazminerals.com')}
+                        >
+                            <strong>Администратор</strong>
+                            <div className="login-label">Email:</div>
+                            <div className="login-value">timur.abitov@kazminerals.com</div>
+                            <div className="password-hint">Нажмите для автозаполнения логина</div>
                         </div>
-                        <div className="account-info">
-                            <strong>Диспетчер:</strong>
-                            <br />
-                            Логин: dispatcher
-                            <br />
-                            Пароль: user123
+                        <div
+                            className="account-info"
+                            onClick={() => handleAccountClick('kassymzhan.nuraliyev@kazminerals.com')}
+                        >
+                            <strong>Диспетчер</strong>
+                            <div className="login-label">Email:</div>
+                            <div className="login-value">kassymzhan.nuraliyev@kazminerals.com</div>
+                            <div className="password-hint">Нажмите для автозаполнения логина</div>
                         </div>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { useEquipment } from '../contexts/EquipmentContext';
 import EquipmentTable from './EquipmentTable';
+import Archive from './archive'; // Импортируем архив
 import './AdminPanel.css';
 
 const AdminPanel = () => {
@@ -149,6 +150,12 @@ const AdminPanel = () => {
                     onClick={() => setActiveTab('stats')}
                 >
                     Статистика
+                </button>
+                <button
+                    className={`tab ${activeTab === 'archive' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('archive')}
+                >
+                    Архив
                 </button>
                 <button
                     className={`tab ${activeTab === 'settings' ? 'active' : ''}`}
@@ -371,6 +378,13 @@ const AdminPanel = () => {
                     </div>
                 )}
 
+                {/* НОВАЯ ВКЛАДКА АРХИВА */}
+                {activeTab === 'archive' && (
+                    <div className="archive-tab-content">
+                        <Archive />
+                    </div>
+                )}
+
                 {activeTab === 'settings' && (
                     <div className="settings-panel">
                         <h3>Настройки системы</h3>
@@ -406,6 +420,12 @@ const AdminPanel = () => {
                             {user?.role === 'admin' && (
                                 <button disabled>Управление пользователями</button>
                             )}
+                        </div>
+
+                        <div className="settings-section">
+                            <h4>Архив техники</h4>
+                            <p>Архив содержит записи о запущенной и завершенной технике</p>
+                            <button onClick={() => setActiveTab('archive')}>Перейти к архиву</button>
                         </div>
                     </div>
                 )}

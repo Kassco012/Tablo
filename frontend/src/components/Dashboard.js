@@ -352,7 +352,7 @@ const Dashboard = ({ onLoginClick }) => {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            ▶️ ЗАПУСК
+                                                            ЗАПУСК
                                                         </>
                                                     )}
                                                 </button>

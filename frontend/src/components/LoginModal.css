@@ -1,4 +1,4 @@
-.modal-backdrop {
+﻿.modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -20,7 +20,7 @@
     border-radius: 20px;
     padding: 0;
     width: 90%;
-    max-width: 450px;
+    max-width: 600px; /* Увеличили с 450px */
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
@@ -90,7 +90,7 @@
     .form-group label {
         display: block;
         margin-bottom: 8px;
-        font-weight: 500;
+        font-weight: 700;
         color: rgba(255, 255, 255, 0.9);
         font-size: 0.95rem;
     }
@@ -105,6 +105,7 @@
         font-size: 1rem;
         transition: all 0.3s ease;
         backdrop-filter: blur(10px);
+        box-sizing: border-box; /* Исправляет проблемы с размерами */
     }
 
         .form-group input:focus {
@@ -169,6 +170,16 @@
     animation: spin 1s linear infinite;
 }
 
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 .login-info {
     padding: 25px 30px;
     background: rgba(255, 255, 255, 0.02);
@@ -183,30 +194,72 @@
     }
 
 .test-accounts {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
-    flex-wrap: wrap;
 }
 
 .account-info {
     background: rgba(255, 255, 255, 0.05);
-    padding: 15px;
+    padding: 20px; /* Увеличили отступы */
     border-radius: 12px;
-    font-size: 0.85rem;
-    line-height: 1.5;
+    font-size: 0.9rem; /* Увеличили размер шрифта */
+    line-height: 1.6;
     color: rgba(255, 255, 255, 0.7);
-    flex: 1;
-    min-width: 150px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
+
+    .account-info:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(79, 172, 254, 0.3);
+    }
 
     .account-info strong {
         color: #4facfe;
         display: block;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        font-size: 1rem;
+    }
+
+    .account-info .login-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+
+    .account-info .login-value {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        margin-bottom: 12px;
+        word-break: break-all;
+        font-family: monospace;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 6px 8px;
+        border-radius: 6px;
+    }
+
+    .account-info .password-hint {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        font-style: italic;
+        margin-top: 8px;
     }
 
 /* Responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-width: 90vw;
+    }
+
+    .test-accounts {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
 @media (max-width: 600px) {
     .modal-content {
         width: 95%;
@@ -225,11 +278,7 @@
         padding: 20px;
     }
 
-    .test-accounts {
-        flex-direction: column;
-    }
-
     .account-info {
-        min-width: auto;
+        padding: 15px;
     }
 }
