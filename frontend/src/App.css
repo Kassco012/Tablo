@@ -345,23 +345,28 @@ body {
     letter-spacing: 0.5px;
 }
 
-    .status-badge.in_repair {
-        background: linear-gradient(135deg, #4facfe, #00f2fe);
+    .status-badge.Down {
+        background: linear-gradient(135deg, #dc3545);
         color: white;
     }
 
-    .status-badge.ready {
+    .status-badge.Ready {
         background: linear-gradient(135deg, #28a745, #20c997);
         color: white;
     }
 
-    .status-badge.waiting {
+    .status-badge.Delay {
         background: linear-gradient(135deg, #dc3545, #fd7e14);
         color: white;
     }
 
-    .status-badge.scheduled {
+    .status-badge.Standby {
         background: linear-gradient(135deg, #ffc107, #fd7e14);
+        color: #000;
+    }
+
+    .status-badge.Shiftchange {
+        background: linear-gradient(135deg, #17a2b8 , #fd7e14);
         color: #000;
     }
 

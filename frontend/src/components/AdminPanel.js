@@ -354,7 +354,7 @@ const AdminPanel = () => {
                     <div className="stats-dashboard">
                         <div className="stats-cards">
                             <div className="stat-card-admin repair">
-                                <div className="stat-icon">🔧</div>
+                                <div className="stat-icon"></div>
                                 <div className="stat-info">
                                     <div className="stat-number">{stats.in_repair}</div>
                                     <div className="stat-label">Down</div>
@@ -362,7 +362,7 @@ const AdminPanel = () => {
                             </div>
 
                             <div className="stat-card-admin ready">
-                                <div className="stat-icon">✅</div>
+                                <div className="stat-icon"></div>
                                 <div className="stat-info">
                                     <div className="stat-number">{stats.ready}</div>
                                     <div className="stat-label">Ready</div>
@@ -370,7 +370,7 @@ const AdminPanel = () => {
                             </div>
 
                             <div className="stat-card-admin waiting">
-                                <div className="stat-icon">⏳</div>
+                                <div className="stat-icon"></div>
                                 <div className="stat-info">
                                     <div className="stat-number">{stats.waiting}</div>
                                     <div className="stat-label">Standby</div>
@@ -378,7 +378,7 @@ const AdminPanel = () => {
                             </div>
 
                             <div className="stat-card-admin total">
-                                <div className="stat-icon">📊</div>
+                                <div className="stat-icon"></div>
                                 <div className="stat-info">
                                     <div className="stat-number">{stats.total}</div>
                                     <div className="stat-label">Total</div>

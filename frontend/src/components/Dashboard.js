@@ -317,7 +317,7 @@ const Dashboard = ({ onLoginClick }) => {
             return;
         }
 
-        if (equipmentItem.status !== 'ready' && equipmentItem.status !== 'scheduled') {
+        if (equipmentItem.status !== 'Ready' && equipmentItem.status !== 'Standby') {
             toast.error('Можно запускать только готовую или запланированную технику');
             return;
         }
@@ -359,15 +359,14 @@ const Dashboard = ({ onLoginClick }) => {
 
     const getStatusText = (status) => {
         const statusMap = {
-            'Down': 'Не работает',
-            'Ready': 'Готова',
-            'Standby': 'Ожидание',
-            'Delay': 'Задержка',
-            'Shiftchange': 'Смена'
+            'Down': 'Down',
+            'Ready': 'Ready',
+            'Standby': 'Standby',
+            'Delay': 'Delay',
+            'Shiftchange': 'Shiftchange'
         };
         return statusMap[status] || status;
     };
-
 
     const getEquipmentTypeText = (type) => {
         return type === 'excavator' ? 'Экскаватор' : 'Погрузчик';
@@ -378,7 +377,7 @@ const Dashboard = ({ onLoginClick }) => {
     };
 
     const canLaunch = (equipmentItem) => {
-        return equipmentItem.status === 'ready' || equipmentItem.status === 'scheduled';
+        return equipmentItem.status === 'Ready' || equipmentItem.status === 'Standby';
     };
 
     const clearFilter = () => {
@@ -412,9 +411,6 @@ const Dashboard = ({ onLoginClick }) => {
         <div className="dashboard">
             <div className="dashboard-header">
                 <div className="header-left">
-                </div>
-
-                <div className="header-right">
                     <div className="current-time">
                         <div className="date">
                             {currentTime.toLocaleDateString('ru-RU', {
@@ -431,12 +427,9 @@ const Dashboard = ({ onLoginClick }) => {
                             })}
                         </div>
                     </div>
+                </div>
 
-                    {/*<div className="system-status">*/}
-                    {/*    <div className="status-dot"></div>*/}
-                    {/*    <span>Система активна</span>*/}
-                    {/*</div>*/}
-
+                <div className="header-right">
                     {/* КОМПАКТНЫЙ ФИЛЬТР УЧАСТКОВ */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{
@@ -570,21 +563,21 @@ const Dashboard = ({ onLoginClick }) => {
 
             <div className="stats-grid">
                 <div className="stat-card repair">
-                    <h3>В РЕМОНТЕ</h3>
+                    <h3>DOWN</h3>
                     <div className="number">
                         {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'in_repair').length
-                            : stats.in_repair || 0
+                            ? filteredEquipment.filter(item => item.status === 'Down').length
+                            : stats.down || 0
                         }
                     </div>
                     <div className="label">единиц техники</div>
                 </div>
 
                 <div className="stat-card ready">
-                    <h3>ГОТОВО</h3>
+                    <h3>READY</h3>
                     <div className="number">
                         {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'ready').length
+                            ? filteredEquipment.filter(item => item.status === 'Ready').length
                             : stats.ready || 0
                         }
                     </div>
@@ -592,22 +585,33 @@ const Dashboard = ({ onLoginClick }) => {
                 </div>
 
                 <div className="stat-card waiting">
-                    <h3>ОЖИДАНИЕ</h3>
+                    <h3>DELAY</h3>
                     <div className="number">
                         {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'waiting').length
-                            : stats.waiting || 0
+                            ? filteredEquipment.filter(item => item.status === 'Delay').length
+                            : stats.delay || 0
                         }
                     </div>
                     <div className="label">единиц техники</div>
                 </div>
 
-                <div className="stat-card total">
-                    <h3>ВСЕГО</h3>
+                <div className="stat-card standby">
+                    <h3>STANDBY</h3>
                     <div className="number">
                         {selectedSection
-                            ? filteredEquipment.length
-                            : stats.total || 0
+                            ? filteredEquipment.filter(item => item.status === 'Standby').length
+                            : stats.standby || 0
+                        }
+                    </div>
+                    <div className="label">единиц техники</div>
+                </div>
+
+                <div className="stat-card shiftchange">
+                    <h3>SHIFTCHANGE</h3>
+                    <div className="number">
+                        {selectedSection
+                            ? filteredEquipment.filter(item => item.status === 'Shiftchange').length
+                            : stats.shiftchange || 0
                         }
                     </div>
                     <div className="label">единиц техники</div>
@@ -814,7 +818,7 @@ const Dashboard = ({ onLoginClick }) => {
                                 color: 'rgba(255,255,255,0.7)',
                                 marginBottom: '25px'
                             }}>
-                                ⚠️ После запуска техника переместится в архив и исчезнет из списка.
+                                После запуска техника переместится в архив и исчезнет из списка.
                             </p>
                             <div style={{
                                 display: 'flex',
@@ -852,7 +856,7 @@ const Dashboard = ({ onLoginClick }) => {
                                         gap: '8px'
                                     }}
                                 >
-                                    🚀 Запустить в работу
+                                    Запустить в работу
                                 </button>
                             </div>
                         </div>

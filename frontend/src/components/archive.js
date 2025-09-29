@@ -313,7 +313,7 @@ const Archive = () => {
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     textAlign: 'center'
                 }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '5px' }}>🚀</div>
+                    <div style={{ fontSize: '2rem', marginBottom: '5px' }}></div>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4facfe' }}>
                         {stats.launched || 0}
                     </div>
@@ -329,7 +329,7 @@ const Archive = () => {
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     textAlign: 'center'
                 }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '5px' }}>✅</div>
+                    <div style={{ fontSize: '2rem', marginBottom: '5px' }}></div>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#28a745' }}>
                         {stats.completed || 0}
                     </div>
@@ -345,7 +345,7 @@ const Archive = () => {
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     textAlign: 'center'
                 }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '5px' }}>📁</div>
+                    <div style={{ fontSize: '2rem', marginBottom: '5px' }}></div>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6f42c1' }}>
                         {stats.total_archived || 0}
                     </div>
@@ -566,7 +566,7 @@ const Archive = () => {
                             </>
                         ) : (
                             <>
-                                📊 Экспорт в Excel ({filteredArchives.length})
+                                 Экспорт в Excel ({filteredArchives.length})
                             </>
                         )}
                     </button>
