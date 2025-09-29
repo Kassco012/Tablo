@@ -10,7 +10,6 @@ const UserProfileDropdown = ({ user }) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const dropdownRef = React.useRef(null);
 
-    // Закрывать dropdown при клике вне его
     React.useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,7 +51,6 @@ const UserProfileDropdown = ({ user }) => {
                 display: 'inline-block'
             }}
         >
-            {/* Кнопка пользователя */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
@@ -83,7 +81,6 @@ const UserProfileDropdown = ({ user }) => {
                 </svg>
             </button>
 
-            {/* Dropdown меню */}
             {isOpen && (
                 <div
                     style={{
@@ -101,7 +98,6 @@ const UserProfileDropdown = ({ user }) => {
                         animation: 'fadeIn 0.2s ease-out'
                     }}
                 >
-                    {/* Заголовок */}
                     <div style={{
                         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                         paddingBottom: '12px',
@@ -124,7 +120,6 @@ const UserProfileDropdown = ({ user }) => {
                         </div>
                     </div>
 
-                    {/* Информация о пользователе */}
                     <div style={{ marginBottom: '12px' }}>
                         <div style={{
                             display: 'flex',
@@ -184,7 +179,6 @@ const UserProfileDropdown = ({ user }) => {
                         </div>
                     </div>
 
-                    {/* Статус подключения */}
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -212,7 +206,6 @@ const UserProfileDropdown = ({ user }) => {
                 </div>
             )}
 
-            {/* CSS анимации */}
             <style jsx>{`
                 @keyframes fadeIn {
                     from {
@@ -262,12 +255,18 @@ const Dashboard = ({ onLoginClick }) => {
     const [launchingIds, setLaunchingIds] = useState(new Set());
     const [showLaunchConfirm, setShowLaunchConfirm] = useState(null);
 
+    // ПАГИНАЦИЯ
+    const ITEMS_PER_PAGE = 5;
+    const AUTO_SWITCH_INTERVAL = 10000;
+
+    const [currentPage, setCurrentPage] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+
     // Состояния для фильтрации
     const [selectedSection, setSelectedSection] = useState('');
     const [sections, setSections] = useState([]);
     const [filteredEquipment, setFilteredEquipment] = useState([]);
 
-    // Список участков
     const SECTIONS = [
         'колесные техники',
         'гусеничные техники',
@@ -277,10 +276,33 @@ const Dashboard = ({ onLoginClick }) => {
         'легкотоннажные техники'
     ];
 
+    const totalPages = Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE);
+    const currentEquipment = filteredEquipment.slice(
+        currentPage * ITEMS_PER_PAGE,
+        (currentPage + 1) * ITEMS_PER_PAGE
+    );
+
+    // Автоматическое переключение страниц
+    useEffect(() => {
+        if (isPaused || totalPages <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentPage(prev => (prev + 1) % totalPages);
+        }, AUTO_SWITCH_INTERVAL);
+
+        return () => clearInterval(interval);
+    }, [totalPages, isPaused]);
+
+    // Сброс на первую страницу при изменении фильтров
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [selectedSection, filteredEquipment.length]);
+
+    // ОБНОВЛЕНИЕ ВРЕМЕНИ КАЖДУЮ СЕКУНДУ
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 1000);
+        }, 1000); // Обновляем каждую секунду
 
         return () => clearInterval(timer);
     }, []);
@@ -332,7 +354,7 @@ const Dashboard = ({ onLoginClick }) => {
         setLaunchingIds(prev => new Set(prev.add(equipmentId)));
 
         try {
-            const response = await api.post(`/archive/launch/${equipmentId}`, {
+            await api.post(`/archive/launch/${equipmentId}`, {
                 completion_reason: 'launched'
             });
 
@@ -384,6 +406,15 @@ const Dashboard = ({ onLoginClick }) => {
         setSelectedSection('');
     };
 
+    const togglePause = () => {
+        setIsPaused(!isPaused);
+    };
+
+    const goToPage = (page) => {
+        setCurrentPage(page);
+        setIsPaused(true);
+    };
+
     if (loading) {
         return (
             <div className="loading-screen">
@@ -410,6 +441,7 @@ const Dashboard = ({ onLoginClick }) => {
     return (
         <div className="dashboard">
             <div className="dashboard-header">
+                {/* ВРЕМЯ ОТДЕЛЬНО СЛЕВА */}
                 <div className="header-left">
                     <div className="current-time">
                         <div className="date">
@@ -423,14 +455,15 @@ const Dashboard = ({ onLoginClick }) => {
                         <div className="time">
                             {currentTime.toLocaleTimeString('ru-RU', {
                                 hour: '2-digit',
-                                minute: '2-digit'
+                                minute: '2-digit',
+                                second: '2-digit' // ДОБАВИЛИ СЕКУНДЫ
                             })}
                         </div>
                     </div>
                 </div>
 
                 <div className="header-right">
-                    {/* КОМПАКТНЫЙ ФИЛЬТР УЧАСТКОВ */}
+                    {/* ФИЛЬТР УЧАСТКОВ */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{
                             fontSize: '0.9rem',
@@ -488,10 +521,9 @@ const Dashboard = ({ onLoginClick }) => {
                         )}
                     </div>
 
-                    {/* КОМПАКТНЫЙ ПОЛЬЗОВАТЕЛЬСКИЙ БЛОК */}
+                    {/* КНОПКИ И ПОЛЬЗОВАТЕЛЬ */}
                     {user ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {/* Группа кнопок управления */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 {(user.role === 'admin' || user.role === 'dispatcher') && (
                                     <>
@@ -549,8 +581,6 @@ const Dashboard = ({ onLoginClick }) => {
                                     Выход
                                 </button>
                             </div>
-
-                            {/* Компактный пользовательский блок */}
                             <UserProfileDropdown user={user} />
                         </div>
                     ) : (
@@ -561,6 +591,7 @@ const Dashboard = ({ onLoginClick }) => {
                 </div>
             </div>
 
+            {/* Остальной код остается без изменений */}
             <div className="stats-grid">
                 <div className="stat-card repair">
                     <h3>DOWN</h3>
@@ -634,11 +665,14 @@ const Dashboard = ({ onLoginClick }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredEquipment.map((item) => (
+                        {currentEquipment.map((item) => (
                             <tr
                                 key={item.id}
                                 onClick={() => user ? setSelectedEquipment(item) : null}
-                                style={{ cursor: user ? 'pointer' : 'default' }}
+                                style={{
+                                    cursor: user ? 'pointer' : 'default',
+                                    animation: 'fadeInUp 0.5s ease-out'
+                                }}
                             >
                                 <td>
                                     <span className="equipment-id">{item.id}</span>
@@ -751,11 +785,99 @@ const Dashboard = ({ onLoginClick }) => {
                                 </td>
                             </tr>
                         ))}
+
+                        {currentEquipment.length < ITEMS_PER_PAGE &&
+                            Array.from({ length: ITEMS_PER_PAGE - currentEquipment.length }, (_, i) => (
+                                <tr key={`empty-${i}`} style={{ opacity: 0.3 }}>
+                                    <td colSpan="9" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
+                                        -
+                                    </td>
+                                </tr>
+                            ))
+                        }
                     </tbody>
                 </table>
             </div>
 
-            {/* Компактный индикатор внизу */}
+            {totalPages > 1 && (
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '20px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    borderRadius: '12px',
+                    marginTop: '20px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}>
+                    <div style={{
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        color: '#4facfe'
+                    }}>
+                        Страница {currentPage + 1} из {totalPages}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        {Array.from({ length: totalPages }, (_, i) => (
+                            <div
+                                key={i}
+                                onClick={() => user && (user.role === 'admin' || user.role === 'dispatcher') ? goToPage(i) : null}
+                                style={{
+                                    width: currentPage === i ? '32px' : '12px',
+                                    height: '12px',
+                                    borderRadius: '6px',
+                                    background: currentPage === i
+                                        ? 'linear-gradient(135deg, #4facfe, #00f2fe)'
+                                        : 'rgba(255, 255, 255, 0.3)',
+                                    cursor: user && (user.role === 'admin' || user.role === 'dispatcher') ? 'pointer' : 'default',
+                                    transition: 'all 0.3s ease',
+                                    boxShadow: currentPage === i ? '0 0 15px rgba(79, 172, 254, 0.5)' : 'none',
+                                    opacity: user && (user.role === 'admin' || user.role === 'dispatcher') ? 1 : 0.5
+                                }}
+                            />
+                        ))}
+                    </div>
+
+                    {user && (user.role === 'admin' || user.role === 'dispatcher') ? (
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <button
+                                onClick={togglePause}
+                                style={{
+                                    background: isPaused ? 'rgba(40, 167, 69, 0.2)' : 'rgba(255, 193, 7, 0.2)',
+                                    border: `1px solid ${isPaused ? 'rgba(40, 167, 69, 0.5)' : 'rgba(255, 193, 7, 0.5)'}`,
+                                    color: isPaused ? '#28a745' : '#ffc107',
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '500',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                {isPaused ? '▶ Продолжить' : '⏸ Пауза'}
+                            </button>
+
+                            <div style={{
+                                fontSize: '0.85rem',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                fontStyle: 'italic'
+                            }}>
+                                {isPaused ? 'На паузе' : `Автосмена через ${AUTO_SWITCH_INTERVAL / 1000}с`}
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{
+                            fontSize: '0.85rem',
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            fontStyle: 'italic'
+                        }}>
+                            {isPaused ? 'На паузе' : `Автосмена через ${AUTO_SWITCH_INTERVAL / 1000}с`}
+                        </div>
+                    )}
+                </div>
+            )}
+
             <div style={{
                 position: 'fixed',
                 bottom: '20px',
@@ -770,7 +892,18 @@ const Dashboard = ({ onLoginClick }) => {
                 borderRadius: '16px'
             }}>
                 <div className="status-dot"></div>
-                <span>Показано: {filteredEquipment.length} из {equipment.length}</span>
+                <span>Показано: {currentEquipment.length} из {filteredEquipment.length}</span>
+                {totalPages > 1 && (
+                    <span style={{
+                        marginLeft: '5px',
+                        padding: '2px 6px',
+                        background: 'rgba(79, 172, 254, 0.2)',
+                        borderRadius: '4px',
+                        fontSize: '0.7rem'
+                    }}>
+                        Стр. {currentPage + 1}/{totalPages}
+                    </span>
+                )}
                 {selectedSection && (
                     <span style={{
                         marginLeft: '5px',
@@ -784,7 +917,19 @@ const Dashboard = ({ onLoginClick }) => {
                 )}
             </div>
 
-            {/* Модальные окна */}
+            <style jsx>{`
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `}</style>
+
             {showLaunchConfirm && (
                 <div className="modal-backdrop" onClick={() => setShowLaunchConfirm(null)}>
                     <div className="modal-content" style={{ maxWidth: '500px' }}>

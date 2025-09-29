@@ -1,7 +1,17 @@
-﻿* {
+﻿/* ========================================
+   БАЗОВЫЕ СТИЛИ (БЕЗ ОГРАНИЧЕНИЙ)
+   ======================================== */
+
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+/* НЕ блокируем масштабирование глобально */
+html {
+    width: 100%;
+    height: 100%;
 }
 
 body {
@@ -10,6 +20,8 @@ body {
     color: #ffffff;
     min-height: 100vh;
     overflow-x: hidden;
+    width: 100%;
+    height: 100%;
 }
 
 .App {
@@ -17,7 +29,41 @@ body {
     width: 100%;
 }
 
-/* Loading Screen */
+/* ========================================
+   ЗАЩИТА ОТ МАСШТАБИРОВАНИЯ - ТОЛЬКО ДЛЯ DASHBOARD
+   ======================================== */
+
+.dashboard-no-zoom {
+    zoom: 1 !important;
+    transform: scale(1) !important;
+    transform-origin: 0 0 !important;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+    .dashboard-no-zoom * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Разрешить выделение в input только для dashboard */
+    .dashboard-no-zoom input,
+    .dashboard-no-zoom textarea,
+    .dashboard-no-zoom [contenteditable] {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+    }
+
+/* ========================================
+   LOADING SCREEN
+   ======================================== */
+
 .loading-screen {
     display: flex;
     flex-direction: column;
@@ -47,7 +93,10 @@ body {
     }
 }
 
-/* Dashboard Styles */
+/* ========================================
+   DASHBOARD STYLES
+   ======================================== */
+
 .dashboard {
     padding: 20px;
     max-width: 1400px;
@@ -168,7 +217,10 @@ body {
         box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
     }
 
-/* Stats Cards - УМЕНЬШЕННЫЕ */
+/* ========================================
+   STATS CARDS
+   ======================================== */
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -216,6 +268,14 @@ body {
         --card-color: #dc3545;
     }
 
+    .stat-card.standby {
+        --card-color: #ffc107;
+    }
+
+    .stat-card.shiftchange {
+        --card-color: #17a2b8;
+    }
+
     .stat-card.total {
         --card-color: #6f42c1;
     }
@@ -240,7 +300,10 @@ body {
         color: rgba(255, 255, 255, 0.6);
     }
 
-/* Equipment Table */
+/* ========================================
+   EQUIPMENT TABLE
+   ======================================== */
+
 .equipment-section {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(10px);
@@ -334,7 +397,10 @@ body {
         background: linear-gradient(135deg, #28a745, #218838);
     }
 
-/* Status Badges */
+/* ========================================
+   STATUS BADGES
+   ======================================== */
+
 .status-badge {
     display: inline-block;
     padding: 6px 12px;
@@ -366,11 +432,14 @@ body {
     }
 
     .status-badge.Shiftchange {
-        background: linear-gradient(135deg, #17a2b8 , #fd7e14);
+        background: linear-gradient(135deg, #17a2b8, #fd7e14);
         color: #000;
     }
 
-/* Priority Badges */
+/* ========================================
+   PRIORITY BADGES
+   ======================================== */
+
 .priority-badge {
     display: inline-block;
     padding: 4px 8px;
@@ -416,7 +485,10 @@ body {
     }
 }
 
-/* Progress Bar */
+/* ========================================
+   PROGRESS BAR
+   ======================================== */
+
 .progress-container {
     width: 100px;
     position: relative;
@@ -446,7 +518,223 @@ body {
     font-weight: 600;
 }
 
-/* Responsive Design */
+/* ========================================
+   ФИЛЬТР УЧАСТКОВ - КАСТОМНЫЙ DROPDOWN
+   ======================================== */
+
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(26, 26, 46, 0.95);
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: fadeInFilter 0.3s ease-out;
+}
+
+.filter-label {
+    font-size: 0.95rem;
+    color: #ffffff;
+    font-weight: 600;
+    white-space: nowrap;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.5px;
+}
+
+/* Кастомный select wrapper */
+.custom-select-wrapper {
+    position: relative;
+    display: inline-block;
+    min-width: 220px;
+}
+
+    .custom-select-wrapper select {
+        display: none;
+    }
+
+/* Кастомный dropdown display */
+.custom-select-display {
+    padding: 10px 40px 10px 14px;
+    border-radius: 10px;
+    border: 2px solid rgba(79, 172, 254, 0.4);
+    background: rgba(30, 39, 46, 0.98);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    user-select: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234facfe' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 18px;
+}
+
+    .custom-select-display:hover {
+        background: rgba(40, 50, 60, 1);
+        border-color: rgba(79, 172, 254, 0.7);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 172, 254, 0.3);
+    }
+
+    .custom-select-display.open {
+        border-color: #4facfe;
+        background: rgba(45, 55, 70, 1);
+        box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.25);
+    }
+
+/* Выпадающий список */
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: rgba(20, 25, 35, 0.98);
+    border: 2px solid rgba(79, 172, 254, 0.6);
+    border-radius: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: dropdownSlide 0.2s ease-out;
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Элементы списка */
+.custom-select-option {
+    padding: 12px 16px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+    .custom-select-option:last-child {
+        border-bottom: none;
+    }
+
+    .custom-select-option:hover {
+        background: rgba(79, 172, 254, 0.2);
+        color: #4facfe;
+    }
+
+    .custom-select-option.selected {
+        background: rgba(79, 172, 254, 0.3);
+        color: #4facfe;
+        font-weight: 700;
+    }
+
+/* Scrollbar для dropdown */
+.custom-select-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(79, 172, 254, 0.5);
+    border-radius: 4px;
+}
+
+    .custom-select-dropdown::-webkit-scrollbar-thumb:hover {
+        background: rgba(79, 172, 254, 0.7);
+    }
+
+/* Кнопка очистки фильтра */
+.clear-filter-button {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(200, 35, 51, 0.9));
+    border: 1px solid rgba(220, 53, 69, 0.6);
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 42px;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+    .clear-filter-button:hover {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 1), rgba(200, 35, 51, 1));
+        border-color: rgba(220, 53, 69, 0.9);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
+    }
+
+    .clear-filter-button:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+/* Индикатор активного фильтра */
+.active-filter-badge {
+    background: rgba(79, 172, 254, 0.25);
+    color: #4facfe;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: 2px solid rgba(79, 172, 254, 0.5);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 0 15px rgba(79, 172, 254, 0.3);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(79, 172, 254, 0.3);
+        border-color: rgba(79, 172, 254, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(79, 172, 254, 0.6);
+        border-color: rgba(79, 172, 254, 0.8);
+    }
+}
+
+@keyframes fadeInFilter {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
 @media (max-width: 1200px) {
     .equipment-table {
         font-size: 0.9rem;
@@ -500,6 +788,33 @@ body {
 
     .equipment-table {
         min-width: 800px;
+    }
+
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .custom-select-wrapper {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .filter-label {
+        margin-right: 0;
+        margin-bottom: 4px;
+        text-align: left;
+    }
+
+    .clear-filter-button {
+        width: 100%;
+    }
+
+    .active-filter-badge {
+        width: 100%;
+        justify-content: center;
     }
 }
 

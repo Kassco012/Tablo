@@ -181,12 +181,6 @@ const AdminPanel = () => {
                     Статистика
                 </button>
                 <button
-                    className={`tab ${activeTab === 'archive' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('archive')}
-                >
-                    Архив
-                </button>
-                <button
                     className={`tab ${activeTab === 'settings' ? 'active' : ''}`}
                     onClick={() => setActiveTab('settings')}
                 >

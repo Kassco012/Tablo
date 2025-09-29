@@ -262,3 +262,182 @@ html {
 .equipment-fixed-height .status-badge.waiting {
     box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
 }
+
+/* Добавьте эти стили в frontend/src/App.css или frontend/src/components/Dashboard.css */
+
+/* Стили для select фильтра участков */
+.section-filter-select {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(30, 39, 46, 0.95); /* Темный фон вместо прозрачного */
+    color: #ffffff !important; /* Белый цвет текста */
+    font-size: 0.95rem;
+    font-weight: 500;
+    min-width: 200px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    /* Важно для видимости текста в option */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+    .section-filter-select:hover {
+        background: rgba(40, 50, 60, 0.98);
+        border-color: rgba(79, 172, 254, 0.5);
+        transform: translateY(-1px);
+    }
+
+    .section-filter-select:focus {
+        outline: none;
+        border-color: #4facfe;
+        background: rgba(40, 50, 60, 1);
+        box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+    }
+
+    /* Стили для option внутри select */
+    .section-filter-select option {
+        background: #1e272e; /* Темный фон для options */
+        color: #ffffff; /* Белый текст */
+        padding: 10px;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+        .section-filter-select option:hover {
+            background: rgba(79, 172, 254, 0.2);
+        }
+
+/* Стили для label фильтра */
+.filter-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    margin-right: 8px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Контейнер фильтра */
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Кнопка очистки фильтра */
+.clear-filter-button {
+    background: rgba(220, 53, 69, 0.8);
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 42px;
+}
+
+    .clear-filter-button:hover {
+        background: rgba(220, 53, 69, 1);
+        border-color: rgba(220, 53, 69, 0.8);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    }
+
+    .clear-filter-button:active {
+        transform: translateY(0);
+    }
+
+/* Индикатор активного фильтра */
+.active-filter-badge {
+    background: rgba(79, 172, 254, 0.2);
+    color: #4facfe;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid rgba(79, 172, 254, 0.4);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .section-filter-select {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .filter-label {
+        margin-right: 0;
+        margin-bottom: 4px;
+    }
+
+    .clear-filter-button {
+        width: 100%;
+    }
+}
+
+/* Анимация появления */
+@keyframes fadeInFilter {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-container {
+    animation: fadeInFilter 0.3s ease-out;
+}
+
+/* Дополнительные стили для улучшения видимости */
+.section-filter-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(50, 50, 50, 0.8);
+}
+
+/* Firefox специфичные стили */
+@-moz-document url-prefix() {
+    .section-filter-select {
+        padding-right: 30px;
+    }
+}
+
+/* Safari специфичные стили */
+@supports (-webkit-appearance: none) {
+    .section-filter-select {
+        -webkit-appearance: none;
+    }
+}
