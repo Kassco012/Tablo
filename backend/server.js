@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const equipmentRoutes = require('./routes/equipment');
 const archiveRoutes= require('./routes/archive');
 const { initializeDatabase } = require('./config/database');
+const { startSyncJob } = require('./jobs/mssqlSyncJob'); 
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -47,6 +48,27 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     optionsSuccessStatus: 200
 };
+
+
+
+async function startServer() {
+    try {
+        await initializeDatabase();
+        console.log('✅ База данных инициализирована');
+
+        // ДОБАВИТЬ ЭТИ СТРОКИ:
+        // Запуск фоновой синхронизации с MSSQL
+        console.log('🔄 Запуск синхронизации с MSSQL...');
+        startSyncJob();
+
+        app.listen(PORT, HOST, () => {
+            // ... существующий код вывода ...
+        });
+    } catch (error) {
+        console.error('❌ Ошибка запуска сервера:', error);
+        process.exit(1);
+    }
+}
 
 // Middleware
 app.use(helmet({

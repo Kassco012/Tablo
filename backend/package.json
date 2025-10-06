@@ -13,6 +13,7 @@
     "prod": "set NODE_ENV=production&& node server.js",
     "prod:network": "set HOST=0.0.0.0&& set PORT=5001&& set NODE_ENV=production&& node server.js",
     "init-db": "node scripts/initDatabase.js",
+    "migrate": "node migrations/001_create_equipment_master.js",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "echo \"No linting configured\" && exit 0"
   },
@@ -24,6 +25,7 @@
     "express-rate-limit": "^6.11.2",
     "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
+    "mssql": "^12.0.0",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
