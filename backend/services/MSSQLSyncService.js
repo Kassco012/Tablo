@@ -87,50 +87,50 @@ class MSSQLSyncService {
             const pool = await getPool();
 
             const query = `
-                SELECT 
-                    e.id as mssql_equipment_id,
-                    e.name as equipment_name,
-                    e.type as mssql_type,
-                    e.status_id,
-                    e.reason_id,
-                    e.updated_at,
-                    
-                    -- Статус
-                    status_enum.name as status_name,
-                    status_enum.symbol as status_symbol,
-                    
-                    -- Причина простоя
-                    reason_enum.name as reason_name,
-                    reason_enum.symbol as reason_symbol,
-                    
-                    -- Оператор (если есть)
-                    op.name as operator_name,
-                    
-                    -- Часы работы двигателя
-                    e.engine_hours
-                    
-                FROM dbo.equipment e
-                
-                -- Присоединяем статус
-                LEFT JOIN dbo.enum_tables status_enum 
-                    ON e.status_id = status_enum.id 
-                    AND status_enum.type = 'Status'
-                
-                -- Присоединяем причину
-                LEFT JOIN dbo.enum_tables reason_enum 
-                    ON e.reason_id = reason_enum.id
-                    AND reason_enum.type = 'Reason'
-                
-                -- Присоединяем оператора
-                LEFT JOIN dbo.operators op
-                    ON e.operator_id = op.id
-                
-                WHERE 
-                    e.deleted_at IS NULL
-                    AND e.type IN ('Shovel', 'Dozer', 'Drill', 'Truck', 'Grader', 'WaterTruck', 'AuxE')
-                
-                ORDER BY e.name;
-            `;
+    SELECT 
+        e.id as mssql_equipment_id,
+        e.name as equipment_name,
+        e.type as mssql_type,
+        e.status_id,
+        e.reason_id,
+        e.updated_at,
+        
+        -- Статус
+        status_enum.name as status_name,
+        status_enum.symbol as status_symbol,
+        
+        -- Причина простоя
+        reason_enum.name as reason_name,
+        reason_enum.symbol as reason_symbol,
+        
+        -- Оператор (если есть)
+        op.name as operator_name,
+        
+        -- Часы работы двигателя
+        e.engine_hours
+        
+    FROM dbo.equipment e
+    
+    -- Присоединяем статус
+    LEFT JOIN dbo.enum_tables status_enum 
+        ON e.status_id = status_enum.id 
+        AND status_enum.type = 'Status'
+    
+    -- Присоединяем причину
+    LEFT JOIN dbo.enum_tables reason_enum 
+        ON e.reason_id = reason_enum.id
+        AND reason_enum.type = 'Reason'
+    
+    -- Присоединяем оператора
+    LEFT JOIN dbo.operators op
+        ON e.operator_id = op.id
+    
+    WHERE 
+        e.deleted_at IS NULL
+        AND e.type IN ('Shovel', 'Dozer', 'Drill', 'Truck', 'Grader', 'WaterTruck', 'AuxE')
+    
+    ORDER BY e.name;
+`;
 
             const result = await pool.request().query(query);
             console.log(`📊 Получено ${result.recordset.length} записей из MSSQL`);
