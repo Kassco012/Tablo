@@ -255,9 +255,9 @@ const Dashboard = ({ onLoginClick }) => {
     const [launchingIds, setLaunchingIds] = useState(new Set());
     const [showLaunchConfirm, setShowLaunchConfirm] = useState(null);
 
-    // ПАГИНАЦИЯ
-    const ITEMS_PER_PAGE = 5;
-    const AUTO_SWITCH_INTERVAL = 10000;
+    // ПАГИНАЦИЯ - 10 записей на страницу
+    const ITEMS_PER_PAGE = 10;
+    const AUTO_SWITCH_INTERVAL = 15000; // 15 секунд
 
     const [currentPage, setCurrentPage] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
@@ -302,7 +302,7 @@ const Dashboard = ({ onLoginClick }) => {
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 1000); // Обновляем каждую секунду
+        }, 1000);
 
         return () => clearInterval(timer);
     }, []);
@@ -440,8 +440,17 @@ const Dashboard = ({ onLoginClick }) => {
 
     return (
         <div className="dashboard">
-            <div className="dashboard-header">
-                {/* ВРЕМЯ ОТДЕЛЬНО СЛЕВА */}
+            {/* НОВЫЙ ХЕДЕР: ВРЕМЯ + DOWN/READY + ФИЛЬТР/КНОПКИ */}
+            <div className="dashboard-header" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '30px',
+                flexWrap: 'wrap',
+                gap: '20px',
+                padding: '0 20px'
+            }}>
+                {/* ЛЕВАЯ ЧАСТЬ: ВРЕМЯ */}
                 <div className="header-left">
                     <div className="current-time">
                         <div className="date">
@@ -456,12 +465,40 @@ const Dashboard = ({ onLoginClick }) => {
                             {currentTime.toLocaleTimeString('ru-RU', {
                                 hour: '2-digit',
                                 minute: '2-digit',
-                                second: '2-digit' // ДОБАВИЛИ СЕКУНДЫ
+                                second: '2-digit'
                             })}
                         </div>
                     </div>
                 </div>
 
+                {/* ЦЕНТР: DOWN И READY */}
+                <div style={{
+                    display: 'flex',
+                    gap: '20px',
+                    alignItems: 'center'
+                }}>
+                    <div className="stat-card-inline down">
+                        <h3>DOWN</h3>
+                        <div className="number">
+                            {selectedSection
+                                ? filteredEquipment.filter(item => item.status === 'Down').length
+                                : stats.down || 0
+                            }
+                        </div>
+                    </div>
+
+                    <div className="stat-card-inline ready">
+                        <h3>READY</h3>
+                        <div className="number">
+                            {selectedSection
+                                ? filteredEquipment.filter(item => item.status === 'Ready').length
+                                : stats.ready || 0
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                {/* ПРАВАЯ ЧАСТЬ: ФИЛЬТР И КНОПКИ */}
                 <div className="header-right">
                     {/* ФИЛЬТР УЧАСТКОВ */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -591,64 +628,7 @@ const Dashboard = ({ onLoginClick }) => {
                 </div>
             </div>
 
-            {/* Остальной код остается без изменений */}
-            <div className="stats-grid">
-                <div className="stat-card repair">
-                    <h3>DOWN</h3>
-                    <div className="number">
-                        {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'Down').length
-                            : stats.down || 0
-                        }
-                    </div>
-                    <div className="label">единиц техники</div>
-                </div>
-
-                <div className="stat-card ready">
-                    <h3>READY</h3>
-                    <div className="number">
-                        {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'Ready').length
-                            : stats.ready || 0
-                        }
-                    </div>
-                    <div className="label">единиц техники</div>
-                </div>
-
-                <div className="stat-card waiting">
-                    <h3>DELAY</h3>
-                    <div className="number">
-                        {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'Delay').length
-                            : stats.delay || 0
-                        }
-                    </div>
-                    <div className="label">единиц техники</div>
-                </div>
-
-                <div className="stat-card standby">
-                    <h3>STANDBY</h3>
-                    <div className="number">
-                        {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'Standby').length
-                            : stats.standby || 0
-                        }
-                    </div>
-                    <div className="label">единиц техники</div>
-                </div>
-
-                <div className="stat-card shiftchange">
-                    <h3>SHIFTCHANGE</h3>
-                    <div className="number">
-                        {selectedSection
-                            ? filteredEquipment.filter(item => item.status === 'Shiftchange').length
-                            : stats.shiftchange || 0
-                        }
-                    </div>
-                    <div className="label">единиц техники</div>
-                </div>
-            </div>
-
+            {/* ТАБЛИЦА ОБОРУДОВАНИЯ */}
             <div className="equipment-section">
                 <table className="equipment-table">
                     <thead>
@@ -656,12 +636,12 @@ const Dashboard = ({ onLoginClick }) => {
                             <th>ID</th>
                             <th>Участок</th>
                             <th>Тип/Модель</th>
-                            <th>План/Факт</th>
-                            <th>Доп. время</th>
+                            <th>Факт</th>
+                            <th>План</th>
+                            <th>Задержка</th>
                             <th>Статус</th>
                             <th>Неисправность</th>
                             <th>Механик</th>
-                            <th>Действие</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -765,7 +745,7 @@ const Dashboard = ({ onLoginClick }) => {
                                                             Запуск...
                                                         </>
                                                     ) : (
-                                                        <>ЗАПУСК</>
+                                                        <>🚀 ЗАПУСК</>
                                                     )}
                                                 </button>
                                             ) : (
@@ -799,6 +779,7 @@ const Dashboard = ({ onLoginClick }) => {
                 </table>
             </div>
 
+            {/* ПАГИНАЦИЯ */}
             {totalPages > 1 && (
                 <div style={{
                     display: 'flex',
@@ -878,6 +859,7 @@ const Dashboard = ({ onLoginClick }) => {
                 </div>
             )}
 
+            {/* ИНДИКАТОР ВНИЗУ СПРАВА */}
             <div style={{
                 position: 'fixed',
                 bottom: '20px',
@@ -928,11 +910,17 @@ const Dashboard = ({ onLoginClick }) => {
                         transform: translateY(0);
                     }
                 }
+                
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
             `}</style>
 
+            {/* МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ЗАПУСКА */}
             {showLaunchConfirm && (
                 <div className="modal-backdrop" onClick={() => setShowLaunchConfirm(null)}>
-                    <div className="modal-content" style={{ maxWidth: '500px' }}>
+                    <div className="modal-content" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>🚀 Подтверждение запуска</h3>
                             <button
@@ -980,7 +968,9 @@ const Dashboard = ({ onLoginClick }) => {
                                         color: 'rgba(255, 255, 255, 0.8)',
                                         padding: '12px 24px',
                                         borderRadius: '8px',
-                                        cursor: 'pointer'
+                                        cursor: 'pointer',
+                                        fontSize: '0.95rem',
+                                        fontWeight: '500'
                                     }}
                                 >
                                     Отмена
@@ -998,10 +988,11 @@ const Dashboard = ({ onLoginClick }) => {
                                         fontWeight: '600',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px'
+                                        gap: '8px',
+                                        fontSize: '0.95rem'
                                     }}
                                 >
-                                    Запустить в работу
+                                    🚀 Запустить в работу
                                 </button>
                             </div>
                         </div>
@@ -1009,6 +1000,7 @@ const Dashboard = ({ onLoginClick }) => {
                 </div>
             )}
 
+            {/* МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ */}
             {selectedEquipment && (
                 <EquipmentTable
                     equipment={selectedEquipment}

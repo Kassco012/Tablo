@@ -1,0 +1,3178 @@
+{
+  "allTables": [
+    {
+      "table_name": "shift_road_times",
+      "schema_name": "dbo",
+      "row_count": "73496749"
+    },
+    {
+      "table_name": "shift_activities",
+      "schema_name": "dbo",
+      "row_count": "72187954"
+    },
+    {
+      "table_name": "event_logs_old_04Jun2019",
+      "schema_name": "dbo",
+      "row_count": "33155065"
+    },
+    {
+      "table_name": "current_trucks_at_shovel",
+      "schema_name": "dbo",
+      "row_count": "26537413"
+    },
+    {
+      "table_name": "shift_buckets",
+      "schema_name": "dbo",
+      "row_count": "22799555"
+    },
+    {
+      "table_name": "current_trucks_at_shovel_kal",
+      "schema_name": "dbo",
+      "row_count": "22392828"
+    },
+    {
+      "table_name": "shift_gps",
+      "schema_name": "dbo",
+      "row_count": "19414899"
+    },
+    {
+      "table_name": "shift_tkph",
+      "schema_name": "dbo",
+      "row_count": "15611474"
+    },
+    {
+      "table_name": "custom_fuel_usage_by_activity_12Dec",
+      "schema_name": "dbo",
+      "row_count": "14682915"
+    },
+    {
+      "table_name": "by_pattern_profiles",
+      "schema_name": "dbo",
+      "row_count": "10889580"
+    },
+    {
+      "table_name": "shift_work_zones",
+      "schema_name": "dbo",
+      "row_count": "10540184"
+    },
+    {
+      "table_name": "hour_equipment_reasons",
+      "schema_name": "dbo",
+      "row_count": "9838728"
+    },
+    {
+      "table_name": "shift_hauls",
+      "schema_name": "dbo",
+      "row_count": "9486958"
+    },
+    {
+      "table_name": "by_pattern_profiles_jcr",
+      "schema_name": "dbo",
+      "row_count": "8316678"
+    },
+    {
+      "table_name": "by_drill_time_events",
+      "schema_name": "dbo",
+      "row_count": "6985196"
+    },
+    {
+      "table_name": "by_drill_time_events_12Dec",
+      "schema_name": "dbo",
+      "row_count": "5849492"
+    },
+    {
+      "table_name": "shift_lp",
+      "schema_name": "dbo",
+      "row_count": "5228719"
+    },
+    {
+      "table_name": "hour_truck_hauls",
+      "schema_name": "dbo",
+      "row_count": "5202405"
+    },
+    {
+      "table_name": "shift_dumps",
+      "schema_name": "dbo",
+      "row_count": "4957018"
+    },
+    {
+      "table_name": "shift_loads",
+      "schema_name": "dbo",
+      "row_count": "4721507"
+    },
+    {
+      "table_name": "by_hauls_kal",
+      "schema_name": "dbo",
+      "row_count": "4672334"
+    },
+    {
+      "table_name": "by_operator_reasons",
+      "schema_name": "dbo",
+      "row_count": "4670035"
+    },
+    {
+      "table_name": "shift_states",
+      "schema_name": "dbo",
+      "row_count": "4663064"
+    },
+    {
+      "table_name": "by_pattern_profiles_kyar2",
+      "schema_name": "dbo",
+      "row_count": "4540065"
+    },
+    {
+      "table_name": "shift_services",
+      "schema_name": "dbo",
+      "row_count": "4515114"
+    },
+    {
+      "table_name": "by_operator_activities",
+      "schema_name": "dbo",
+      "row_count": "4513981"
+    },
+    {
+      "table_name": "hour_detail_buckets",
+      "schema_name": "dbo",
+      "row_count": "4460722"
+    },
+    {
+      "table_name": "by_detail_buckets",
+      "schema_name": "dbo",
+      "row_count": "4451865"
+    },
+    {
+      "table_name": "hour_truck_hauls_12Dec",
+      "schema_name": "dbo",
+      "row_count": "4431495"
+    },
+    {
+      "table_name": "by_operator_states",
+      "schema_name": "dbo",
+      "row_count": "4038494"
+    },
+    {
+      "table_name": "by_operator_reasons_12Dec",
+      "schema_name": "dbo",
+      "row_count": "4018989"
+    },
+    {
+      "table_name": "hour_detail_buckets_12Dec",
+      "schema_name": "dbo",
+      "row_count": "3919126"
+    },
+    {
+      "table_name": "by_detail_buckets_12Dec",
+      "schema_name": "dbo",
+      "row_count": "3911571"
+    },
+    {
+      "table_name": "by_operator_activities_12Dec",
+      "schema_name": "dbo",
+      "row_count": "3846357"
+    },
+    {
+      "table_name": "current_trucks_at_crusher_kal",
+      "schema_name": "dbo",
+      "row_count": "3494704"
+    },
+    {
+      "table_name": "by_operator_states_12Dec",
+      "schema_name": "dbo",
+      "row_count": "3487043"
+    },
+    {
+      "table_name": "by_hauls_kal_12Dec",
+      "schema_name": "dbo",
+      "row_count": "3478225"
+    },
+    {
+      "table_name": "drill_hole_segments",
+      "schema_name": "dbo",
+      "row_count": "3324248"
+    },
+    {
+      "table_name": "by_equipment_reasons",
+      "schema_name": "dbo",
+      "row_count": "3318315"
+    },
+    {
+      "table_name": "hour_detail_loads",
+      "schema_name": "dbo",
+      "row_count": "2994122"
+    },
+    {
+      "table_name": "month_detail_buckets",
+      "schema_name": "dbo",
+      "row_count": "2926811"
+    },
+    {
+      "table_name": "by_equipment_reasons_old",
+      "schema_name": "dbo",
+      "row_count": "2892916"
+    },
+    {
+      "table_name": "by_pattern_profiles_kyar",
+      "schema_name": "dbo",
+      "row_count": "2875253"
+    },
+    {
+      "table_name": "hour_detail_loads_back",
+      "schema_name": "dbo",
+      "row_count": "2872668"
+    },
+    {
+      "table_name": "hour_detail_dumps",
+      "schema_name": "dbo",
+      "row_count": "2752953"
+    },
+    {
+      "table_name": "by_equipment_states",
+      "schema_name": "dbo",
+      "row_count": "2711340"
+    },
+    {
+      "table_name": "hour_equipment_times",
+      "schema_name": "dbo",
+      "row_count": "2671849"
+    },
+    {
+      "table_name": "hour_detail_dumps_back",
+      "schema_name": "dbo",
+      "row_count": "2641705"
+    },
+    {
+      "table_name": "summary_times",
+      "schema_name": "dbo",
+      "row_count": "2445354"
+    },
+    {
+      "table_name": "by_equipment_states_12Dec",
+      "schema_name": "dbo",
+      "row_count": "2370673"
+    },
+    {
+      "table_name": "by_equipment_states_old",
+      "schema_name": "dbo",
+      "row_count": "2370646"
+    },
+    {
+      "table_name": "hour_equipment_services",
+      "schema_name": "dbo",
+      "row_count": "2201812"
+    },
+    {
+      "table_name": "dashboard_reasons",
+      "schema_name": "dbo",
+      "row_count": "2026197"
+    },
+    {
+      "table_name": "by_truck_hauls",
+      "schema_name": "dbo",
+      "row_count": "1924856"
+    },
+    {
+      "table_name": "hour_truck_dumps",
+      "schema_name": "dbo",
+      "row_count": "1814400"
+    },
+    {
+      "table_name": "hour_truck_loads",
+      "schema_name": "dbo",
+      "row_count": "1812599"
+    },
+    {
+      "table_name": "shift_dozing",
+      "schema_name": "dbo",
+      "row_count": "1739989"
+    },
+    {
+      "table_name": "dashboard_states",
+      "schema_name": "dbo",
+      "row_count": "1677815"
+    },
+    {
+      "table_name": "by_truck_hauls_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1599611"
+    },
+    {
+      "table_name": "hour_truck_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1569199"
+    },
+    {
+      "table_name": "shift_logins",
+      "schema_name": "dbo",
+      "row_count": "1544926"
+    },
+    {
+      "table_name": "dashboard_activity",
+      "schema_name": "dbo",
+      "row_count": "1542327"
+    },
+    {
+      "table_name": "change_logs",
+      "schema_name": "dbo",
+      "row_count": "1491194"
+    },
+    {
+      "table_name": "by_detail_dumps",
+      "schema_name": "dbo",
+      "row_count": "1465372"
+    },
+    {
+      "table_name": "shift_boundaries",
+      "schema_name": "dbo",
+      "row_count": "1452534"
+    },
+    {
+      "table_name": "by_detail_loads",
+      "schema_name": "dbo",
+      "row_count": "1452092"
+    },
+    {
+      "table_name": "by_equipment_times",
+      "schema_name": "dbo",
+      "row_count": "1448307"
+    },
+    {
+      "table_name": "by_pattern_profiles_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1422321"
+    },
+    {
+      "table_name": "by_operator_times",
+      "schema_name": "dbo",
+      "row_count": "1363396"
+    },
+    {
+      "table_name": "current_shift_detail_loads",
+      "schema_name": "dbo",
+      "row_count": "1339483"
+    },
+    {
+      "table_name": "by_cycle_time",
+      "schema_name": "dbo",
+      "row_count": "1240469"
+    },
+    {
+      "table_name": "by_detail_loads_old",
+      "schema_name": "dbo",
+      "row_count": "1194855"
+    },
+    {
+      "table_name": "hour_equipment_states",
+      "schema_name": "dbo",
+      "row_count": "1183132"
+    },
+    {
+      "table_name": "by_detail_dumps_old",
+      "schema_name": "dbo",
+      "row_count": "1155682"
+    },
+    {
+      "table_name": "month_detail_dumps",
+      "schema_name": "dbo",
+      "row_count": "1098068"
+    },
+    {
+      "table_name": "dashboard_truck_cycle",
+      "schema_name": "dbo",
+      "row_count": "1086923"
+    },
+    {
+      "table_name": "by_operator_times_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1022592"
+    },
+    {
+      "table_name": "by_cycle_time_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1020205"
+    },
+    {
+      "table_name": "shift_restarts",
+      "schema_name": "dbo",
+      "row_count": "1001832"
+    },
+    {
+      "table_name": "month_detail_loads",
+      "schema_name": "dbo",
+      "row_count": "853026"
+    },
+    {
+      "table_name": "drill_points",
+      "schema_name": "dbo",
+      "row_count": "832773"
+    },
+    {
+      "table_name": "drill_holes",
+      "schema_name": "dbo",
+      "row_count": "731779"
+    },
+    {
+      "table_name": "shift_prestarts",
+      "schema_name": "dbo",
+      "row_count": "716237"
+    },
+    {
+      "table_name": "hour_truck_hauls_old_24sep",
+      "schema_name": "dbo",
+      "row_count": "634278"
+    },
+    {
+      "table_name": "dashboard_load",
+      "schema_name": "dbo",
+      "row_count": "579901"
+    },
+    {
+      "table_name": "month_cycle_time",
+      "schema_name": "dbo",
+      "row_count": "529558"
+    },
+    {
+      "table_name": "by_equipment_availability",
+      "schema_name": "dbo",
+      "row_count": "518296"
+    },
+    {
+      "table_name": "hour_shovel_payload_dumps",
+      "schema_name": "dbo",
+      "row_count": "485830"
+    },
+    {
+      "table_name": "hour_shovel_loads",
+      "schema_name": "dbo",
+      "row_count": "482612"
+    },
+    {
+      "table_name": "current_detail_loads",
+      "schema_name": "dbo",
+      "row_count": "477054"
+    },
+    {
+      "table_name": "shift_messages",
+      "schema_name": "dbo",
+      "row_count": "453758"
+    },
+    {
+      "table_name": "temp_DrillPatternTargetVsActual",
+      "schema_name": "dbo",
+      "row_count": "442110"
+    },
+    {
+      "table_name": "hour_shovel_payload_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "424257"
+    },
+    {
+      "table_name": "hour_shovel_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "421312"
+    },
+    {
+      "table_name": "by_custom_detail_cycle_time",
+      "schema_name": "dbo",
+      "row_count": "410159"
+    },
+    {
+      "table_name": "by_equipment_times_12Dec",
+      "schema_name": "dbo",
+      "row_count": "400337"
+    },
+    {
+      "table_name": "hour_dump_dumps",
+      "schema_name": "dbo",
+      "row_count": "368588"
+    },
+    {
+      "table_name": "dashboard_times",
+      "schema_name": "dbo",
+      "row_count": "348286"
+    },
+    {
+      "table_name": "month_truck_hauls",
+      "schema_name": "dbo",
+      "row_count": "323360"
+    },
+    {
+      "table_name": "hour_dump_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "318780"
+    },
+    {
+      "table_name": "hour_equipment_services_old_24sep",
+      "schema_name": "dbo",
+      "row_count": "310964"
+    },
+    {
+      "table_name": "hour_truck_dumps_old_24sep",
+      "schema_name": "dbo",
+      "row_count": "256422"
+    },
+    {
+      "table_name": "hour_drillhole_kpis_op",
+      "schema_name": "dbo",
+      "row_count": "251853"
+    },
+    {
+      "table_name": "hour_detail_drillholes",
+      "schema_name": "dbo",
+      "row_count": "251711"
+    },
+    {
+      "table_name": "dashboard_drill_hole",
+      "schema_name": "dbo",
+      "row_count": "215054"
+    },
+    {
+      "table_name": "hour_grade_dumps",
+      "schema_name": "dbo",
+      "row_count": "205957"
+    },
+    {
+      "table_name": "shift_fuels",
+      "schema_name": "dbo",
+      "row_count": "200770"
+    },
+    {
+      "table_name": "drawing_elements",
+      "schema_name": "dbo",
+      "row_count": "199733"
+    },
+    {
+      "table_name": "hour_detail_drillholes_12Dec",
+      "schema_name": "dbo",
+      "row_count": "194476"
+    },
+    {
+      "table_name": "hour_drillhole_kpis_op_12Dec",
+      "schema_name": "dbo",
+      "row_count": "194445"
+    },
+    {
+      "table_name": "current_equipment_states",
+      "schema_name": "dbo",
+      "row_count": "176520"
+    },
+    {
+      "table_name": "by_truck_dumps",
+      "schema_name": "dbo",
+      "row_count": "172521"
+    },
+    {
+      "table_name": "by_truck_loads",
+      "schema_name": "dbo",
+      "row_count": "172315"
+    },
+    {
+      "table_name": "by_truck_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "150532"
+    },
+    {
+      "table_name": "by_truck_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "150314"
+    },
+    {
+      "table_name": "by_equipment_availability_12Dec",
+      "schema_name": "dbo",
+      "row_count": "136930"
+    },
+    {
+      "table_name": "shift_defects",
+      "schema_name": "dbo",
+      "row_count": "136169"
+    },
+    {
+      "table_name": "hour_grade_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "130110"
+    },
+    {
+      "table_name": "dashboard_availability",
+      "schema_name": "dbo",
+      "row_count": "125626"
+    },
+    {
+      "table_name": "by_grade_dumps",
+      "schema_name": "dbo",
+      "row_count": "111048"
+    },
+    {
+      "table_name": "by_grade_loads",
+      "schema_name": "dbo",
+      "row_count": "110320"
+    },
+    {
+      "table_name": "hour_detail_dozer",
+      "schema_name": "dbo",
+      "row_count": "109656"
+    },
+    {
+      "table_name": "by_pattern_profiles_test",
+      "schema_name": "dbo",
+      "row_count": "100001"
+    },
+    {
+      "table_name": "by_grade_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "94470"
+    },
+    {
+      "table_name": "by_grade_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "93840"
+    },
+    {
+      "table_name": "hour_detail_dozer_12Dec",
+      "schema_name": "dbo",
+      "row_count": "87799"
+    },
+    {
+      "table_name": "hour_detail_offsets",
+      "schema_name": "dbo",
+      "row_count": "85593"
+    },
+    {
+      "table_name": "shift_roads",
+      "schema_name": "dbo",
+      "row_count": "81657"
+    },
+    {
+      "table_name": "hour_shovel_loads_old_24sep",
+      "schema_name": "dbo",
+      "row_count": "71226"
+    },
+    {
+      "table_name": "by_blast_dumps",
+      "schema_name": "dbo",
+      "row_count": "57769"
+    },
+    {
+      "table_name": "by_blast_loads",
+      "schema_name": "dbo",
+      "row_count": "57548"
+    },
+    {
+      "table_name": "by_dump_dumps",
+      "schema_name": "dbo",
+      "row_count": "52729"
+    },
+    {
+      "table_name": "by_blast_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "50684"
+    },
+    {
+      "table_name": "dby_blast_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "50486"
+    },
+    {
+      "table_name": "by_blast_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "50486"
+    },
+    {
+      "table_name": "by_shovel_dumps",
+      "schema_name": "dbo",
+      "row_count": "49839"
+    },
+    {
+      "table_name": "by_shovel_loads",
+      "schema_name": "dbo",
+      "row_count": "49684"
+    },
+    {
+      "table_name": "by_shovel_ore_waste",
+      "schema_name": "dbo",
+      "row_count": "49684"
+    },
+    {
+      "table_name": "current_shovel_materials",
+      "schema_name": "dbo",
+      "row_count": "46782"
+    },
+    {
+      "table_name": "by_shovel_idle",
+      "schema_name": "dbo",
+      "row_count": "46483"
+    },
+    {
+      "table_name": "by_dump_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "45496"
+    },
+    {
+      "table_name": "by_shovel_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "43517"
+    },
+    {
+      "table_name": "by_shovel_ore_waste_12Dec",
+      "schema_name": "dbo",
+      "row_count": "43383"
+    },
+    {
+      "table_name": "by_shovel_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "43381"
+    },
+    {
+      "table_name": "current_shovel_ore_waste",
+      "schema_name": "dbo",
+      "row_count": "42136"
+    },
+    {
+      "table_name": "current_shift_shovel_idle",
+      "schema_name": "dbo",
+      "row_count": "42119"
+    },
+    {
+      "table_name": "by_shovel_idle_12Dec",
+      "schema_name": "dbo",
+      "row_count": "40182"
+    },
+    {
+      "table_name": "shift_sensors",
+      "schema_name": "dbo",
+      "row_count": "39257"
+    },
+    {
+      "table_name": "hour_drillhole_kpis_old",
+      "schema_name": "dbo",
+      "row_count": "35827"
+    },
+    {
+      "table_name": "by_material_dumps",
+      "schema_name": "dbo",
+      "row_count": "35196"
+    },
+    {
+      "table_name": "by_material_loads",
+      "schema_name": "dbo",
+      "row_count": "35166"
+    },
+    {
+      "table_name": "boundaries",
+      "schema_name": "dbo",
+      "row_count": "34233"
+    },
+    {
+      "table_name": "shift_drillhole_kpis_op",
+      "schema_name": "dbo",
+      "row_count": "31724"
+    },
+    {
+      "table_name": "by_material_dumps_12Dec",
+      "schema_name": "dbo",
+      "row_count": "30513"
+    },
+    {
+      "table_name": "by_material_loads_12Dec",
+      "schema_name": "dbo",
+      "row_count": "30488"
+    },
+    {
+      "table_name": "dashboard_shovel_cycle",
+      "schema_name": "dbo",
+      "row_count": "30154"
+    },
+    {
+      "table_name": "hour_detail_offsets_bak_12Dec",
+      "schema_name": "dbo",
+      "row_count": "27969"
+    },
+    {
+      "table_name": "hour_detail_offsets_bak",
+      "schema_name": "dbo",
+      "row_count": "27969"
+    },
+    {
+      "table_name": "shift_drillhole_kpis",
+      "schema_name": "dbo",
+      "row_count": "27337"
+    },
+    {
+      "table_name": "phrases",
+      "schema_name": "dbo",
+      "row_count": "19450"
+    },
+    {
+      "table_name": "drill_transactions",
+      "schema_name": "dbo",
+      "row_count": "17149"
+    },
+    {
+      "table_name": "locations",
+      "schema_name": "dbo",
+      "row_count": "15633"
+    },
+    {
+      "table_name": "month_grade_loads",
+      "schema_name": "dbo",
+      "row_count": "14768"
+    },
+    {
+      "table_name": "month_grade_dumps",
+      "schema_name": "dbo",
+      "row_count": "14612"
+    },
+    {
+      "table_name": "sensor_alarms",
+      "schema_name": "dbo",
+      "row_count": "13484"
+    },
+    {
+      "table_name": "month_operator_times",
+      "schema_name": "dbo",
+      "row_count": "12891"
+    },
+    {
+      "table_name": "grades",
+      "schema_name": "dbo",
+      "row_count": "12002"
+    },
+    {
+      "table_name": "gps_to_local_drill_points_table_unused",
+      "schema_name": "dbo",
+      "row_count": "9433"
+    },
+    {
+      "table_name": "drill_parts",
+      "schema_name": "dbo",
+      "row_count": "8085"
+    },
+    {
+      "table_name": "Time",
+      "schema_name": "BI",
+      "row_count": "8035"
+    },
+    {
+      "table_name": "dbo.old_hour_drillhole_kpis",
+      "schema_name": "dbo",
+      "row_count": "7195"
+    },
+    {
+      "table_name": "month_drillhole_kpis_op",
+      "schema_name": "dbo",
+      "row_count": "6602"
+    },
+    {
+      "table_name": "sensors",
+      "schema_name": "dbo",
+      "row_count": "5854"
+    },
+    {
+      "table_name": "dbo.hour_drillhole_kpis_24sep18",
+      "schema_name": "dbo",
+      "row_count": "5626"
+    },
+    {
+      "table_name": "hour_drillhole_kpis_old_24sep",
+      "schema_name": "dbo",
+      "row_count": "5626"
+    },
+    {
+      "table_name": "drill_patterns",
+      "schema_name": "dbo",
+      "row_count": "5500"
+    },
+    {
+      "table_name": "shift_alarm_annotation",
+      "schema_name": "dbo",
+      "row_count": "5437"
+    },
+    {
+      "table_name": "worker_qualifications",
+      "schema_name": "dbo",
+      "row_count": "5169"
+    },
+    {
+      "table_name": "hour_detail_alarms",
+      "schema_name": "dbo",
+      "row_count": "5151"
+    },
+    {
+      "table_name": "hour_detail_alarms_op_context",
+      "schema_name": "dbo",
+      "row_count": "4515"
+    },
+    {
+      "table_name": "gps_to_local_boundaries",
+      "schema_name": "dbo",
+      "row_count": "4352"
+    },
+    {
+      "table_name": "road_conditions",
+      "schema_name": "dbo",
+      "row_count": "3954"
+    },
+    {
+      "table_name": "drill_hole_tag_mappings",
+      "schema_name": "dbo",
+      "row_count": "3511"
+    },
+    {
+      "table_name": "month_equipment_availability",
+      "schema_name": "dbo",
+      "row_count": "3497"
+    },
+    {
+      "table_name": "month_equipment_times",
+      "schema_name": "dbo",
+      "row_count": "3497"
+    },
+    {
+      "table_name": "configurations",
+      "schema_name": "dbo",
+      "row_count": "2838"
+    },
+    {
+      "table_name": "operator_preferences",
+      "schema_name": "dbo",
+      "row_count": "2815"
+    },
+    {
+      "table_name": "month_blast_loads",
+      "schema_name": "dbo",
+      "row_count": "2725"
+    },
+    {
+      "table_name": "month_blast_dumps",
+      "schema_name": "dbo",
+      "row_count": "2698"
+    },
+    {
+      "table_name": "sensor_configs",
+      "schema_name": "dbo",
+      "row_count": "2414"
+    },
+    {
+      "table_name": "average_speeds",
+      "schema_name": "dbo",
+      "row_count": "2402"
+    },
+    {
+      "table_name": "gps_to_local_shift_roads",
+      "schema_name": "dbo",
+      "row_count": "2274"
+    },
+    {
+      "table_name": "month_truck_loads",
+      "schema_name": "dbo",
+      "row_count": "2129"
+    },
+    {
+      "table_name": "month_truck_dumps",
+      "schema_name": "dbo",
+      "row_count": "2123"
+    },
+    {
+      "table_name": "month_dump_dumps",
+      "schema_name": "dbo",
+      "row_count": "1836"
+    },
+    {
+      "table_name": "enum_tables",
+      "schema_name": "dbo",
+      "row_count": "1811"
+    },
+    {
+      "table_name": "hour_drillhole_kpis_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1487"
+    },
+    {
+      "table_name": "hour_drillhole_kpis_3_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1486"
+    },
+    {
+      "table_name": "hour_drillhole_kpis_old_24sep_2",
+      "schema_name": "dbo",
+      "row_count": "1486"
+    },
+    {
+      "table_name": "shift_waterings",
+      "schema_name": "dbo",
+      "row_count": "1031"
+    },
+    {
+      "table_name": "workers",
+      "schema_name": "dbo",
+      "row_count": "954"
+    },
+    {
+      "table_name": "month_shovel_loads",
+      "schema_name": "dbo",
+      "row_count": "772"
+    },
+    {
+      "table_name": "month_shovel_dumps",
+      "schema_name": "dbo",
+      "row_count": "768"
+    },
+    {
+      "table_name": "month_shovel_idle",
+      "schema_name": "dbo",
+      "row_count": "765"
+    },
+    {
+      "table_name": "dumping",
+      "schema_name": "dbo",
+      "row_count": "723"
+    },
+    {
+      "table_name": "month_material_dumps",
+      "schema_name": "dbo",
+      "row_count": "716"
+    },
+    {
+      "table_name": "month_material_loads",
+      "schema_name": "dbo",
+      "row_count": "716"
+    },
+    {
+      "table_name": "rpcs",
+      "schema_name": "dbo",
+      "row_count": "578"
+    },
+    {
+      "table_name": "month_drillhole_kpis",
+      "schema_name": "dbo",
+      "row_count": "504"
+    },
+    {
+      "table_name": "devices",
+      "schema_name": "dbo",
+      "row_count": "494"
+    },
+    {
+      "table_name": "reasons",
+      "schema_name": "dbo",
+      "row_count": "462"
+    },
+    {
+      "table_name": "enum_categories",
+      "schema_name": "dbo",
+      "row_count": "290"
+    },
+    {
+      "table_name": "by_pattern_profiles_test_3",
+      "schema_name": "dbo",
+      "row_count": "286"
+    },
+    {
+      "table_name": "shift_maintenance",
+      "schema_name": "dbo",
+      "row_count": "281"
+    },
+    {
+      "table_name": "roads",
+      "schema_name": "dbo",
+      "row_count": "269"
+    },
+    {
+      "table_name": "by_pattern_profiles_test_2",
+      "schema_name": "dbo",
+      "row_count": "255"
+    },
+    {
+      "table_name": "shift_road_conditions",
+      "schema_name": "dbo",
+      "row_count": "236"
+    },
+    {
+      "table_name": "blend_models",
+      "schema_name": "dbo",
+      "row_count": "209"
+    },
+    {
+      "table_name": "delay",
+      "schema_name": "dbo",
+      "row_count": "203"
+    },
+    {
+      "table_name": "sensor_units",
+      "schema_name": "dbo",
+      "row_count": "197"
+    },
+    {
+      "table_name": "temp_drill_holes",
+      "schema_name": "dbo",
+      "row_count": "196"
+    },
+    {
+      "table_name": "temp_drillholes",
+      "schema_name": "dbo",
+      "row_count": "196"
+    },
+    {
+      "table_name": "replicas",
+      "schema_name": "dbo",
+      "row_count": "188"
+    },
+    {
+      "table_name": "material_tonnages",
+      "schema_name": "dbo",
+      "row_count": "186"
+    },
+    {
+      "table_name": "replicas_oas",
+      "schema_name": "dbo",
+      "row_count": "186"
+    },
+    {
+      "table_name": "hour_drillhole_kpis",
+      "schema_name": "dbo",
+      "row_count": "184"
+    },
+    {
+      "table_name": "device_components",
+      "schema_name": "dbo",
+      "row_count": "180"
+    },
+    {
+      "table_name": "inbox",
+      "schema_name": "dbo",
+      "row_count": "168"
+    },
+    {
+      "table_name": "reasons_20211101",
+      "schema_name": "dbo",
+      "row_count": "166"
+    },
+    {
+      "table_name": "geometry_segments",
+      "schema_name": "dbo",
+      "row_count": "166"
+    },
+    {
+      "table_name": "reasons_11102021",
+      "schema_name": "dbo",
+      "row_count": "165"
+    },
+    {
+      "table_name": "equipment_lasts",
+      "schema_name": "dbo",
+      "row_count": "146"
+    },
+    {
+      "table_name": "beacons",
+      "schema_name": "dbo",
+      "row_count": "145"
+    },
+    {
+      "table_name": "erp_references",
+      "schema_name": "dbo",
+      "row_count": "140"
+    },
+    {
+      "table_name": "maintenance",
+      "schema_name": "dbo",
+      "row_count": "139"
+    },
+    {
+      "table_name": "equipment",
+      "schema_name": "dbo",
+      "row_count": "138"
+    },
+    {
+      "table_name": "traveling",
+      "schema_name": "dbo",
+      "row_count": "136"
+    },
+    {
+      "table_name": "plan_elements",
+      "schema_name": "dbo",
+      "row_count": "128"
+    },
+    {
+      "table_name": "display_styles",
+      "schema_name": "dbo",
+      "row_count": "94"
+    },
+    {
+      "table_name": "RoleReportAccess",
+      "schema_name": "BI",
+      "row_count": "93"
+    },
+    {
+      "table_name": "summaries",
+      "schema_name": "dbo",
+      "row_count": "93"
+    },
+    {
+      "table_name": "users",
+      "schema_name": "dbo",
+      "row_count": "74"
+    },
+    {
+      "table_name": "display_selectors",
+      "schema_name": "dbo",
+      "row_count": "73"
+    },
+    {
+      "table_name": "change_configurations",
+      "schema_name": "dbo",
+      "row_count": "72"
+    },
+    {
+      "table_name": "truck_kpis",
+      "schema_name": "dbo",
+      "row_count": "52"
+    },
+    {
+      "table_name": "hauling",
+      "schema_name": "dbo",
+      "row_count": "51"
+    },
+    {
+      "table_name": "lp_feed_rates",
+      "schema_name": "dbo",
+      "row_count": "50"
+    },
+    {
+      "table_name": "blending",
+      "schema_name": "dbo",
+      "row_count": "49"
+    },
+    {
+      "table_name": "shift_spillage",
+      "schema_name": "dbo",
+      "row_count": "48"
+    },
+    {
+      "table_name": "truck_restrictions",
+      "schema_name": "dbo",
+      "row_count": "47"
+    },
+    {
+      "table_name": "spillage",
+      "schema_name": "dbo",
+      "row_count": "44"
+    },
+    {
+      "table_name": "assignments",
+      "schema_name": "dbo",
+      "row_count": "44"
+    },
+    {
+      "table_name": "colors",
+      "schema_name": "dbo",
+      "row_count": "42"
+    },
+    {
+      "table_name": "dozer_kpis",
+      "schema_name": "dbo",
+      "row_count": "34"
+    },
+    {
+      "table_name": "geometry_points",
+      "schema_name": "dbo",
+      "row_count": "32"
+    },
+    {
+      "table_name": "grade_restrictions",
+      "schema_name": "dbo",
+      "row_count": "32"
+    },
+    {
+      "table_name": "aspnet_Users",
+      "schema_name": "BI",
+      "row_count": "32"
+    },
+    {
+      "table_name": "aspnet_Membership",
+      "schema_name": "BI",
+      "row_count": "32"
+    },
+    {
+      "table_name": "aspnet_UsersInRoles",
+      "schema_name": "BI",
+      "row_count": "32"
+    },
+    {
+      "table_name": "dozing",
+      "schema_name": "dbo",
+      "row_count": "30"
+    },
+    {
+      "table_name": "exception_routing",
+      "schema_name": "dbo",
+      "row_count": "29"
+    },
+    {
+      "table_name": "aspnet_Profile",
+      "schema_name": "BI",
+      "row_count": "26"
+    },
+    {
+      "table_name": "topography_quad_timestamps",
+      "schema_name": "dbo",
+      "row_count": "24"
+    },
+    {
+      "table_name": "enum_attributes",
+      "schema_name": "dbo",
+      "row_count": "22"
+    },
+    {
+      "table_name": "digging",
+      "schema_name": "dbo",
+      "row_count": "21"
+    },
+    {
+      "table_name": "shovel_kpis",
+      "schema_name": "dbo",
+      "row_count": "20"
+    },
+    {
+      "table_name": "shovel_restrictions",
+      "schema_name": "dbo",
+      "row_count": "20"
+    },
+    {
+      "table_name": "drill_kpis",
+      "schema_name": "dbo",
+      "row_count": "18"
+    },
+    {
+      "table_name": "drilling",
+      "schema_name": "dbo",
+      "row_count": "18"
+    },
+    {
+      "table_name": "equipment_components",
+      "schema_name": "dbo",
+      "row_count": "12"
+    },
+    {
+      "table_name": "prestart_checks",
+      "schema_name": "dbo",
+      "row_count": "10"
+    },
+    {
+      "table_name": "projects",
+      "schema_name": "dbo",
+      "row_count": "10"
+    },
+    {
+      "table_name": "locals",
+      "schema_name": "dbo",
+      "row_count": "10"
+    },
+    {
+      "table_name": "rotations",
+      "schema_name": "dbo",
+      "row_count": "8"
+    },
+    {
+      "table_name": "moving_averages",
+      "schema_name": "dbo",
+      "row_count": "8"
+    },
+    {
+      "table_name": "drawings",
+      "schema_name": "dbo",
+      "row_count": "8"
+    },
+    {
+      "table_name": "drill_current",
+      "schema_name": "dbo",
+      "row_count": "8"
+    },
+    {
+      "table_name": "shift_trams",
+      "schema_name": "dbo",
+      "row_count": "7"
+    },
+    {
+      "table_name": "plan_descriptors",
+      "schema_name": "dbo",
+      "row_count": "7"
+    },
+    {
+      "table_name": "tramming_schedules",
+      "schema_name": "dbo",
+      "row_count": "7"
+    },
+    {
+      "table_name": "tramming",
+      "schema_name": "dbo",
+      "row_count": "7"
+    },
+    {
+      "table_name": "features",
+      "schema_name": "dbo",
+      "row_count": "6"
+    },
+    {
+      "table_name": "sensor_sets",
+      "schema_name": "dbo",
+      "row_count": "6"
+    },
+    {
+      "table_name": "aspnet_SchemaVersions",
+      "schema_name": "BI",
+      "row_count": "6"
+    },
+    {
+      "table_name": "breaks",
+      "schema_name": "dbo",
+      "row_count": "6"
+    },
+    {
+      "table_name": "reportImages",
+      "schema_name": "BI",
+      "row_count": "5"
+    },
+    {
+      "table_name": "logoImage",
+      "schema_name": "BI",
+      "row_count": "4"
+    },
+    {
+      "table_name": "fuel_consumption",
+      "schema_name": "dbo",
+      "row_count": "4"
+    },
+    {
+      "table_name": "shift_comments",
+      "schema_name": "dbo",
+      "row_count": "4"
+    },
+    {
+      "table_name": "topography_quads",
+      "schema_name": "dbo",
+      "row_count": "4"
+    },
+    {
+      "table_name": "todos",
+      "schema_name": "dbo",
+      "row_count": "3"
+    },
+    {
+      "table_name": "equipment_geometries",
+      "schema_name": "dbo",
+      "row_count": "3"
+    },
+    {
+      "table_name": "aspnet_Roles",
+      "schema_name": "BI",
+      "row_count": "3"
+    },
+    {
+      "table_name": "topography",
+      "schema_name": "dbo",
+      "row_count": "3"
+    },
+    {
+      "table_name": "fueling",
+      "schema_name": "dbo",
+      "row_count": "2"
+    },
+    {
+      "table_name": "languages",
+      "schema_name": "dbo",
+      "row_count": "2"
+    },
+    {
+      "table_name": "bay_crushing",
+      "schema_name": "dbo",
+      "row_count": "2"
+    },
+    {
+      "table_name": "crushing",
+      "schema_name": "dbo",
+      "row_count": "1"
+    },
+    {
+      "table_name": "plans",
+      "schema_name": "dbo",
+      "row_count": "1"
+    },
+    {
+      "table_name": "projection_specs",
+      "schema_name": "dbo",
+      "row_count": "1"
+    },
+    {
+      "table_name": "schema_info",
+      "schema_name": "dbo",
+      "row_count": "1"
+    },
+    {
+      "table_name": "aspnet_Applications",
+      "schema_name": "BI",
+      "row_count": "1"
+    },
+    {
+      "table_name": "lp_mine",
+      "schema_name": "dbo",
+      "row_count": "1"
+    },
+    {
+      "table_name": "tire_models",
+      "schema_name": "dbo",
+      "row_count": "1"
+    },
+    {
+      "table_name": "tire_transaction_dismounts",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "tire_transactions",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "tires",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "usage_analytics",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hour_detail_trams_bak",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_safety_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "tire_axles",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "tire_dismount_details",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_material_quality",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_material_skips",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_offlines",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_consumables",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_heading_rounds",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "composite_materials",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_dump_extents",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_breaks",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_state_extents",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "custom_drill_hole_coordinates",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "gps_to_local_drill_holes_table_unused",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "manager_tests",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "map_configs",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "method_dict",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hp_calibrations",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hp_gps_positions",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "help",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "face_images",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "fatigue_calls",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "fatigue_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "fatigue_levels",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "fms_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "grade_qualities",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "emergency_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "dragline_operation",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "class_dict",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "crons",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "sysdiagrams",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_weights",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "sounds",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "speeding",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "notifications",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "oas_customers",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "oas_licenses",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "outbox",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "param_dict",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "path_simulations",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "worker_vacations",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "tracking_tags",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "views",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "vims_channels",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "vims_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "vims_readers",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "vims_units",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "weighing",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "aspnet_Paths",
+      "schema_name": "BI",
+      "row_count": "0"
+    },
+    {
+      "table_name": "aspnet_PersonalizationAllUsers",
+      "schema_name": "BI",
+      "row_count": "0"
+    },
+    {
+      "table_name": "aspnet_PersonalizationPerUser",
+      "schema_name": "BI",
+      "row_count": "0"
+    },
+    {
+      "table_name": "aspnet_WebEvent_Events",
+      "schema_name": "BI",
+      "row_count": "0"
+    },
+    {
+      "table_name": "sims_configs",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "snapshots",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_waters",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "table_stamps",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_vims",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_shovel_weights",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_sims_eocs",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_sensor_alarm_metadata",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_blasting",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_charge_codes",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_dragline_cycles",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_dragline_steps",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_drills",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_explosives",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_geology_passdown",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_grade_samples",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_hms",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_info",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_labours",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_locata",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_mems",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_names",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "sensor_groups",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "sensor_type_map",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "rules",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "plan_items",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "nicknames",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "novatel_auth_codes",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "mine_kpis",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "fuel_rates",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "lp_forecasts",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "lp_scenarios",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "manbus_assignments",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "heading_rounds",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hms_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hp_gps_trucks",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hpgps_positions",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "local_snapshots",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "locatas",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "lp_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "current_equipment_loads",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "default_time_cats",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "dig_rates",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "dragline_buckets",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "acknowledgments",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "active_lines",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "asset_tracking",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "buckets",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "charge_codes",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "charging",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "config_shifts",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "costs",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "geometry_node_sensors",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "geometry_node_sets",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "geometry_nodes",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "geometry_param_sets",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "geometry_params",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "explosive_truck_kpis",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "explosives",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "freewave_configurations",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "drill_blasts",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "drill_design_details",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "drill_parts_maintenances",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_snapshots",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "video_requests",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "videos",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hour_detail_trams_old",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "topography_quad_updates",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "user_configs",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "version_dict",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "view_elements",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_features",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "surface_projects",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "todo_requests",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_ripping",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "shift_topography_quads",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "event_logs",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "route_restrictions",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "safety_events",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "messages",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "images",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hour_detail_alarms_12Dec",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "by_equipment_sensors",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "by_equipment_sensors_12Dec",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hour_detail_trams_12Dec",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "hour_detail_trams",
+      "schema_name": "dbo",
+      "row_count": "0"
+    }
+  ],
+  "equipmentTables": [
+    {
+      "table_name": "hour_equipment_reasons",
+      "schema_name": "dbo",
+      "row_count": "9838728"
+    },
+    {
+      "table_name": "by_equipment_reasons",
+      "schema_name": "dbo",
+      "row_count": "3318315"
+    },
+    {
+      "table_name": "by_equipment_reasons_old",
+      "schema_name": "dbo",
+      "row_count": "2892916"
+    },
+    {
+      "table_name": "by_equipment_states",
+      "schema_name": "dbo",
+      "row_count": "2711340"
+    },
+    {
+      "table_name": "hour_equipment_times",
+      "schema_name": "dbo",
+      "row_count": "2671849"
+    },
+    {
+      "table_name": "by_equipment_states_12Dec",
+      "schema_name": "dbo",
+      "row_count": "2370673"
+    },
+    {
+      "table_name": "by_equipment_states_old",
+      "schema_name": "dbo",
+      "row_count": "2370646"
+    },
+    {
+      "table_name": "hour_equipment_services",
+      "schema_name": "dbo",
+      "row_count": "2201812"
+    },
+    {
+      "table_name": "by_equipment_times",
+      "schema_name": "dbo",
+      "row_count": "1448307"
+    },
+    {
+      "table_name": "hour_equipment_states",
+      "schema_name": "dbo",
+      "row_count": "1183132"
+    },
+    {
+      "table_name": "by_equipment_availability",
+      "schema_name": "dbo",
+      "row_count": "518296"
+    },
+    {
+      "table_name": "by_equipment_times_12Dec",
+      "schema_name": "dbo",
+      "row_count": "400337"
+    },
+    {
+      "table_name": "hour_equipment_services_old_24sep",
+      "schema_name": "dbo",
+      "row_count": "310964"
+    },
+    {
+      "table_name": "current_equipment_states",
+      "schema_name": "dbo",
+      "row_count": "176520"
+    },
+    {
+      "table_name": "by_equipment_availability_12Dec",
+      "schema_name": "dbo",
+      "row_count": "136930"
+    },
+    {
+      "table_name": "month_equipment_times",
+      "schema_name": "dbo",
+      "row_count": "3497"
+    },
+    {
+      "table_name": "month_equipment_availability",
+      "schema_name": "dbo",
+      "row_count": "3497"
+    },
+    {
+      "table_name": "sensor_units",
+      "schema_name": "dbo",
+      "row_count": "197"
+    },
+    {
+      "table_name": "equipment_lasts",
+      "schema_name": "dbo",
+      "row_count": "146"
+    },
+    {
+      "table_name": "equipment",
+      "schema_name": "dbo",
+      "row_count": "138"
+    },
+    {
+      "table_name": "equipment_components",
+      "schema_name": "dbo",
+      "row_count": "12"
+    },
+    {
+      "table_name": "equipment_geometries",
+      "schema_name": "dbo",
+      "row_count": "3"
+    },
+    {
+      "table_name": "by_equipment_sensors_12Dec",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "vims_units",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "asset_tracking",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "current_equipment_loads",
+      "schema_name": "dbo",
+      "row_count": "0"
+    },
+    {
+      "table_name": "by_equipment_sensors",
+      "schema_name": "dbo",
+      "row_count": "0"
+    }
+  ],
+  "equipmentStructure": {
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "type",
+        "data_type": "varchar",
+        "max_length": 40,
+        "is_nullable": true
+      },
+      {
+        "column_name": "name",
+        "data_type": "varchar",
+        "max_length": 40,
+        "is_nullable": true
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "deleted_at",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "revision",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "device_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "status_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "reason_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "lineup_status_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "lineup_reason_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "equipment_type_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "activity_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "activity_start",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "size",
+        "data_type": "real",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "tiedown_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "unit_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "length",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "height",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "project_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "time_late",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "prestart_check",
+        "data_type": "smallint",
+        "max_length": 2,
+        "is_nullable": true
+      },
+      {
+        "column_name": "warnings",
+        "data_type": "varchar",
+        "max_length": 263,
+        "is_nullable": true
+      },
+      {
+        "column_name": "hp_equipment_type_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "department_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "lineup_comment",
+        "data_type": "varchar",
+        "max_length": 2048,
+        "is_nullable": true
+      },
+      {
+        "column_name": "no_auto_accept",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "contractor_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "repair_status_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "weight",
+        "data_type": "real",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "lineup_priority_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "iconset_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "geometry_node_set_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "geometry_param_set_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "last_activity_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "last_heard",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "enabled",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "silent",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "material_type_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "operator_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "login_id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "reason_start",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      }
+    ],
+    "foreignKeys": []
+  },
+  "statuses": [],
+  "reasons": [],
+  "modelTables": [
+    {
+      "table_name": "blend_models",
+      "schema_name": "dbo",
+      "row_count": "209"
+    },
+    {
+      "table_name": "tire_models",
+      "schema_name": "dbo",
+      "row_count": "1"
+    },
+    {
+      "table_name": "sensor_type_map",
+      "schema_name": "dbo",
+      "row_count": "0"
+    }
+  ],
+  "operatorTables": [
+    {
+      "table_name": "by_operator_reasons",
+      "schema_name": "dbo",
+      "row_count": "4670035"
+    },
+    {
+      "table_name": "by_operator_activities",
+      "schema_name": "dbo",
+      "row_count": "4513981"
+    },
+    {
+      "table_name": "by_operator_states",
+      "schema_name": "dbo",
+      "row_count": "4038494"
+    },
+    {
+      "table_name": "by_operator_reasons_12Dec",
+      "schema_name": "dbo",
+      "row_count": "4018989"
+    },
+    {
+      "table_name": "by_operator_activities_12Dec",
+      "schema_name": "dbo",
+      "row_count": "3846357"
+    },
+    {
+      "table_name": "by_operator_states_12Dec",
+      "schema_name": "dbo",
+      "row_count": "3487043"
+    },
+    {
+      "table_name": "by_operator_times",
+      "schema_name": "dbo",
+      "row_count": "1363396"
+    },
+    {
+      "table_name": "by_operator_times_12Dec",
+      "schema_name": "dbo",
+      "row_count": "1022592"
+    },
+    {
+      "table_name": "month_operator_times",
+      "schema_name": "dbo",
+      "row_count": "12891"
+    },
+    {
+      "table_name": "worker_qualifications",
+      "schema_name": "dbo",
+      "row_count": "5169"
+    },
+    {
+      "table_name": "operator_preferences",
+      "schema_name": "dbo",
+      "row_count": "2815"
+    },
+    {
+      "table_name": "workers",
+      "schema_name": "dbo",
+      "row_count": "954"
+    },
+    {
+      "table_name": "worker_vacations",
+      "schema_name": "dbo",
+      "row_count": "0"
+    }
+  ],
+  "sampleData": [
+    {
+      "id": 272,
+      "type": "Truck",
+      "name": "HT126",
+      "created_at": "2015-04-19T05:48:29.000Z",
+      "updated_at": "2025-10-06T09:41:29.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 588,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 334,
+      "lineup_reason_id": null,
+      "equipment_type_id": 603,
+      "activity_id": 131,
+      "activity_start": "2025-10-06T09:40:36.000Z",
+      "size": 128,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:49:47.000Z",
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:29.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-05T23:15:14.000Z"
+    },
+    {
+      "id": 401,
+      "type": "Truck",
+      "name": "HT155",
+      "created_at": "2023-08-22T04:36:18.000Z",
+      "updated_at": "2025-10-06T09:41:25.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 833,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 333,
+      "lineup_reason_id": null,
+      "equipment_type_id": 1358,
+      "activity_id": 134,
+      "activity_start": "2025-10-06T09:41:24.000Z",
+      "size": 233,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:44:42.000Z",
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:28.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-06T09:36:28.000Z"
+    },
+    {
+      "id": 396,
+      "type": "Dozer",
+      "name": "DZ625",
+      "created_at": "2023-05-23T04:10:19.000Z",
+      "updated_at": "2025-10-06T09:41:25.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 824,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 333,
+      "lineup_reason_id": null,
+      "equipment_type_id": 607,
+      "activity_id": 592,
+      "activity_start": "2025-10-06T09:41:25.000Z",
+      "size": null,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": null,
+      "height": null,
+      "project_id": 5,
+      "time_late": null,
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": 268,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:26.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-06T07:48:47.000Z"
+    },
+    {
+      "id": 315,
+      "type": "Shovel",
+      "name": "EX204",
+      "created_at": "2017-07-24T02:30:35.000Z",
+      "updated_at": "2025-10-06T09:41:25.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 657,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 332,
+      "lineup_reason_id": null,
+      "equipment_type_id": 599,
+      "activity_id": 134,
+      "activity_start": "2025-10-06T09:41:24.000Z",
+      "size": null,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 18,
+      "height": null,
+      "project_id": 3,
+      "time_late": "2025-10-06T09:44:42.000Z",
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": 264,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:28.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-06T04:33:55.000Z"
+    },
+    {
+      "id": 357,
+      "type": "Truck",
+      "name": "HT143",
+      "created_at": "2019-04-11T02:49:03.000Z",
+      "updated_at": "2025-10-06T09:41:24.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 727,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 332,
+      "lineup_reason_id": null,
+      "equipment_type_id": 1358,
+      "activity_id": 145,
+      "activity_start": "2025-10-06T09:38:24.000Z",
+      "size": 233,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:44:54.000Z",
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:28.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-06T08:37:27.000Z"
+    },
+    {
+      "id": 325,
+      "type": "Truck",
+      "name": "HT137",
+      "created_at": "2017-10-24T05:00:10.000Z",
+      "updated_at": "2025-10-06T09:41:24.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 667,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 332,
+      "lineup_reason_id": null,
+      "equipment_type_id": 603,
+      "activity_id": 134,
+      "activity_start": "2025-10-06T09:41:19.000Z",
+      "size": 128,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:43:05.000Z",
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:28.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-05T14:18:38.000Z"
+    },
+    {
+      "id": 273,
+      "type": "Truck",
+      "name": "HT127",
+      "created_at": "2015-04-19T05:48:51.000Z",
+      "updated_at": "2025-10-06T09:41:24.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 589,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 331,
+      "lineup_reason_id": null,
+      "equipment_type_id": 603,
+      "activity_id": 145,
+      "activity_start": "2025-10-06T09:39:57.000Z",
+      "size": 128,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:45:29.000Z",
+      "prestart_check": 1,
+      "warnings": "337",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:29.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-05T23:14:53.000Z"
+    },
+    {
+      "id": 277,
+      "type": "Truck",
+      "name": "HT131",
+      "created_at": "2015-04-19T05:50:19.000Z",
+      "updated_at": "2025-10-06T09:41:23.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 593,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 332,
+      "lineup_reason_id": null,
+      "equipment_type_id": 603,
+      "activity_id": 131,
+      "activity_start": "2025-10-06T09:34:34.000Z",
+      "size": 128,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:45:48.000Z",
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:25.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-06T07:12:31.000Z"
+    },
+    {
+      "id": 310,
+      "type": "Truck",
+      "name": "HT132",
+      "created_at": "2016-09-13T07:45:05.000Z",
+      "updated_at": "2025-10-06T09:41:22.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 649,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 332,
+      "lineup_reason_id": null,
+      "equipment_type_id": 603,
+      "activity_id": 131,
+      "activity_start": "2025-10-06T09:40:30.000Z",
+      "size": 128,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:49:25.000Z",
+      "prestart_check": null,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:27.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-05T23:15:10.000Z"
+    },
+    {
+      "id": 313,
+      "type": "Truck",
+      "name": "HT135",
+      "created_at": "2016-09-13T07:47:51.000Z",
+      "updated_at": "2025-10-06T09:41:21.000Z",
+      "deleted_at": null,
+      "revision": null,
+      "device_id": 652,
+      "status_id": 332,
+      "reason_id": 529,
+      "lineup_status_id": 331,
+      "lineup_reason_id": null,
+      "equipment_type_id": 603,
+      "activity_id": 136,
+      "activity_start": "2025-10-06T09:37:42.000Z",
+      "size": 128,
+      "tiedown_id": null,
+      "unit_id": null,
+      "length": 11,
+      "height": 6,
+      "project_id": 2,
+      "time_late": "2025-10-06T09:47:31.000Z",
+      "prestart_check": 1,
+      "warnings": "\"\"",
+      "hp_equipment_type_id": null,
+      "department_id": null,
+      "lineup_comment": null,
+      "no_auto_accept": null,
+      "contractor_id": null,
+      "repair_status_id": null,
+      "weight": null,
+      "lineup_priority_id": null,
+      "iconset_id": null,
+      "geometry_node_set_id": null,
+      "geometry_param_set_id": null,
+      "last_activity_id": null,
+      "last_heard": "2025-10-06T09:41:25.000Z",
+      "enabled": null,
+      "silent": null,
+      "material_type_id": null,
+      "operator_id": null,
+      "login_id": null,
+      "reason_start": "2025-10-06T07:12:40.000Z"
+    }
+  ],
+  "relationships": []
+}

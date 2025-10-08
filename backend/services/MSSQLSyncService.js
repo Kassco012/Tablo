@@ -1,9 +1,9 @@
-﻿// backend/services/MSSQLSyncService.js
+﻿// backend/services/MSSQLSyncService.js - ОБНОВЛЕННАЯ ВЕРСИЯ
 
 const { getPool } = require('../config/mssqlDatabase');
 const { getDatabase } = require('../config/database');
 
-// Маппинг типов техники из MSSQL в ваш формат
+// Маппинг типов техники из MSSQL
 const TYPE_MAPPING = {
     'Shovel': {
         equipment_type: 'Экскаватор',
@@ -25,19 +25,51 @@ const TYPE_MAPPING = {
         equipment_type: 'Грейдер',
         section: 'колесные техники'
     },
+    'WaterTruck': {
+        equipment_type: 'Поливочная машина',
+        section: 'колесные техники'
+    },
     'AuxE': {
         equipment_type: 'Вспомогательное оборудование',
         section: 'легкотоннажные техники'
     }
 };
 
-// Маппинг статусов (ID → Название)
+// РАСШИРЕННЫЙ маппинг статусов - все статусы простоя
 const STATUS_MAPPING = {
-    331: 'Down',
-    332: 'Ready',
-    333: 'Standby',
-    334: 'Delay',
-    335: 'Shiftchange'
+    // Основные статусы
+    331: 'Down',           // Простой (общий)
+    332: 'Ready',          // Готова к работе
+    333: 'Standby',        // Ожидание
+    334: 'Delay',          // Задержка
+    335: 'Shiftchange',    // Смена
+
+    // Дополнительные статусы простоя из вашей системы
+    336: 'Down',           // PM SERVICE (Плановое ТО)
+    337: 'Down',           // WAIT PARTS (Ожидание запчастей)
+    338: 'Down',           // ENGINE (Ремонт двигателя)
+    339: 'Down',           // HYDRAULIC (Гидравлика)
+    340: 'Down',           // ELECTRICAL (Электрика)
+    341: 'Down',           // TRANSMISSION (Трансмиссия)
+    342: 'Down',           // AIR CONDITIONING (Кондиционер)
+    343: 'Down',           // GEAR BOX (Коробка передач)
+    344: 'Down',           // GET/BUCKET/BLADE (Ковш/Отвал)
+    345: 'Down',           // TIRES (Шины)
+    346: 'Down',           // UNDERCARRIAGE (Ходовая часть)
+    347: 'Down'            // OTHER (Другое)
+};
+
+// Маппинг причин простоя на участки (для более точной категоризации)
+const REASON_TO_SECTION = {
+    'PM SERVICE': 'капитальный ремонт',
+    'WAIT PARTS': 'колесные техники',
+    'ENGINE': 'капитальный ремонт',
+    'HYDRAULIC': 'гусеничные техники',
+    'ELECTRICAL': 'энергоучасток',
+    'TRANSMISSION': 'капитальный ремонт',
+    'GEAR BOX': 'капитальный ремонт',
+    'TIRES': 'шиномонтажные работы',
+    'UNDERCARRIAGE': 'гусеничные техники'
 };
 
 class MSSQLSyncService {
@@ -48,7 +80,7 @@ class MSSQLSyncService {
     }
 
     /**
-     * Получить данные оборудования из MSSQL
+     * Получить данные оборудования из MSSQL с расширенной информацией
      */
     async fetchEquipmentFromMSSQL() {
         try {
@@ -60,14 +92,22 @@ class MSSQLSyncService {
                     e.name as equipment_name,
                     e.type as mssql_type,
                     e.status_id,
+                    e.reason_id,
                     e.updated_at,
                     
                     -- Статус
                     status_enum.name as status_name,
                     status_enum.symbol as status_symbol,
                     
-                    -- Причина (если есть)
-                    reason_enum.name as reason_name
+                    -- Причина простоя
+                    reason_enum.name as reason_name,
+                    reason_enum.symbol as reason_symbol,
+                    
+                    -- Оператор (если есть)
+                    op.name as operator_name,
+                    
+                    -- Часы работы двигателя
+                    e.engine_hours
                     
                 FROM dbo.equipment e
                 
@@ -79,10 +119,15 @@ class MSSQLSyncService {
                 -- Присоединяем причину
                 LEFT JOIN dbo.enum_tables reason_enum 
                     ON e.reason_id = reason_enum.id
+                    AND reason_enum.type = 'Reason'
+                
+                -- Присоединяем оператора
+                LEFT JOIN dbo.operators op
+                    ON e.operator_id = op.id
                 
                 WHERE 
                     e.deleted_at IS NULL
-                    AND e.type IN ('Shovel', 'Dozer', 'Drill', 'Truck', 'Grader', 'AuxE')
+                    AND e.type IN ('Shovel', 'Dozer', 'Drill', 'Truck', 'Grader', 'WaterTruck', 'AuxE')
                 
                 ORDER BY e.name;
             `;
@@ -102,6 +147,20 @@ class MSSQLSyncService {
     }
 
     /**
+     * Определить участок на основе типа и причины
+     */
+    determineSection(mssqlType, reasonName) {
+        // Если есть специфическая причина - используем её
+        if (reasonName && REASON_TO_SECTION[reasonName]) {
+            return REASON_TO_SECTION[reasonName];
+        }
+
+        // Иначе используем базовый маппинг по типу
+        const typeInfo = TYPE_MAPPING[mssqlType];
+        return typeInfo ? typeInfo.section : 'колесные техники';
+    }
+
+    /**
      * Синхронизировать данные из MSSQL в SQLite
      */
     async syncEquipment() {
@@ -116,7 +175,6 @@ class MSSQLSyncService {
         try {
             console.log('\n🔄 Начало синхронизации с MSSQL...');
 
-            // Получаем данные из MSSQL
             const mssqlEquipment = await this.fetchEquipmentFromMSSQL();
 
             if (!mssqlEquipment || mssqlEquipment.length === 0) {
@@ -129,12 +187,12 @@ class MSSQLSyncService {
             let createdCount = 0;
             let errorCount = 0;
 
-            // Обрабатываем каждую единицу оборудования
             for (const equipment of mssqlEquipment) {
                 try {
-                    const equipmentId = equipment.equipment_name; // EX207, DZ673
-                    const mssqlType = equipment.mssql_type; // Shovel, Dozer
-                    const statusId = equipment.status_id; // 331, 332, 333
+                    const equipmentId = equipment.equipment_name;
+                    const mssqlType = equipment.mssql_type;
+                    const statusId = equipment.status_id;
+                    const reasonName = equipment.reason_name;
 
                     // Маппинг типа
                     const typeInfo = TYPE_MAPPING[mssqlType] || {
@@ -145,44 +203,54 @@ class MSSQLSyncService {
                     // Маппинг статуса
                     const status = STATUS_MAPPING[statusId] || 'Ready';
 
-                    // Проверяем существует ли запись
+                    // Определяем участок с учетом причины простоя
+                    const section = this.determineSection(mssqlType, reasonName);
+
+                    // Формируем описание неисправности
+                    let malfunction = '';
+                    if (status === 'Down' && reasonName) {
+                        malfunction = this.formatReason(reasonName);
+                    }
+
                     const existingRecord = await this.checkEquipmentExists(db, equipmentId);
 
                     if (existingRecord) {
-                        // ОБНОВЛЯЕМ только статус и тип (НЕ трогаем модель, механика и т.д.)
+                        // ОБНОВЛЯЕМ
                         await this.updateEquipment(db, {
                             id: equipmentId,
                             mssql_equipment_id: equipment.mssql_equipment_id,
                             mssql_type: mssqlType,
                             mssql_status_id: statusId,
                             equipment_type: typeInfo.equipment_type,
-                            section: typeInfo.section,
+                            section: section,
                             status: status,
-                            mssql_reason: equipment.reason_name,
+                            malfunction: malfunction,
+                            mechanic_name: equipment.operator_name || '',
+                            mssql_reason: reasonName,
                             last_sync_time: new Date().toISOString()
                         });
                         updatedCount++;
                     } else {
-                        // СОЗДАЕМ новую запись
+                        // СОЗДАЕМ
                         await this.createEquipment(db, {
                             id: equipmentId,
                             mssql_equipment_id: equipment.mssql_equipment_id,
                             mssql_type: mssqlType,
                             mssql_status_id: statusId,
                             equipment_type: typeInfo.equipment_type,
-                            model: '', // Пустое - заполнить вручную
-                            section: typeInfo.section,
+                            model: '', // Заполнить вручную или из другой таблицы
+                            section: section,
                             status: status,
-                            priority: 'normal',
+                            priority: status === 'Down' ? 'high' : 'normal',
                             planned_start: '',
                             planned_end: '',
                             actual_start: '',
                             actual_end: '',
                             delay_hours: 0,
-                            malfunction: equipment.reason_name || '',
-                            mechanic_name: '',
-                            progress: 0,
-                            mssql_reason: equipment.reason_name,
+                            malfunction: malfunction,
+                            mechanic_name: equipment.operator_name || '',
+                            progress: status === 'Ready' ? 100 : 0,
+                            mssql_reason: reasonName,
                             last_sync_time: new Date().toISOString(),
                             is_active: 1,
                             manually_edited: 0
@@ -216,8 +284,25 @@ class MSSQLSyncService {
     }
 
     /**
-     * Проверить существует ли оборудование в SQLite
+     * Форматировать причину простоя для отображения
      */
+    formatReason(reason) {
+        const reasonMap = {
+            'PM SERVICE': 'Плановое техническое обслуживание',
+            'WAIT PARTS': 'Ожидание запасных частей',
+            'ENGINE': 'Ремонт двигателя',
+            'HYDRAULIC': 'Ремонт гидравлической системы',
+            'ELECTRICAL': 'Ремонт электрооборудования',
+            'TRANSMISSION': 'Ремонт трансмиссии',
+            'AIR CONDITIONING': 'Ремонт кондиционера',
+            'GEAR BOX': 'Ремонт коробки передач',
+            'GET/BUCKET/BLADE': 'Ремонт рабочего оборудования (ковш/отвал)',
+            'TIRES': 'Замена/ремонт шин',
+            'UNDERCARRIAGE': 'Ремонт ходовой части'
+        };
+        return reasonMap[reason] || reason;
+    }
+
     async checkEquipmentExists(db, equipmentId) {
         return new Promise((resolve, reject) => {
             db.get(
@@ -231,9 +316,6 @@ class MSSQLSyncService {
         });
     }
 
-    /**
-     * Обновить существующее оборудование (ТОЛЬКО статус и тип)
-     */
     async updateEquipment(db, data) {
         return new Promise((resolve, reject) => {
             const query = `
@@ -245,6 +327,8 @@ class MSSQLSyncService {
                     equipment_type = ?,
                     section = ?,
                     status = ?,
+                    malfunction = ?,
+                    mechanic_name = ?,
                     mssql_reason = ?,
                     last_sync_time = ?,
                     updated_at = CURRENT_TIMESTAMP
@@ -261,6 +345,8 @@ class MSSQLSyncService {
                     data.equipment_type,
                     data.section,
                     data.status,
+                    data.malfunction,
+                    data.mechanic_name,
                     data.mssql_reason,
                     data.last_sync_time,
                     data.id
@@ -277,9 +363,6 @@ class MSSQLSyncService {
         });
     }
 
-    /**
-     * Создать новое оборудование
-     */
     async createEquipment(db, data) {
         return new Promise((resolve, reject) => {
             const query = `
@@ -330,14 +413,11 @@ class MSSQLSyncService {
         });
     }
 
-    /**
-     * Получить статус синхронизации
-     */
     getStatus() {
         return {
             isRunning: this.isRunning,
             lastSyncTime: this.lastSyncTime,
-            recentErrors: this.syncErrors.slice(-5) // Последние 5 ошибок
+            recentErrors: this.syncErrors.slice(-5)
         };
     }
 }
