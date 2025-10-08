@@ -56,13 +56,27 @@ async function startServer() {
         await initializeDatabase();
         console.log('✅ База данных инициализирована');
 
-        // ДОБАВИТЬ ЭТИ СТРОКИ:
-        // Запуск фоновой синхронизации с MSSQL
-        console.log('🔄 Запуск синхронизации с MSSQL...');
+        // ДОБАВИТЬ ЭТИ 3 СТРОКИ:
+        console.log('🔄 Запуск синхронизации с JMineOps...');
+        const { startSyncJob } = require('./jobs/mssqlSyncJob');
         startSyncJob();
 
         app.listen(PORT, HOST, () => {
-            // ... существующий код вывода ...
+            console.log('='.repeat(70));
+            console.log(`🚀 Сервер MMA АКТОГАЙ запущен`);
+            console.log(`🌐 Хост: ${HOST}`);
+            console.log(`🔌 Порт: ${PORT}`);
+            console.log(`🔗 Локальный доступ: http://localhost:${PORT}`);
+            if (HOST !== 'localhost' && HOST !== '127.0.0.1') {
+                console.log(`🔗 Сетевой доступ: http://${HOST}:${PORT}`);
+            }
+            console.log(`🏥 Health check: http://${HOST}:${PORT}/api/health`);
+            console.log(`📚 API docs: http://${HOST}:${PORT}/api/docs`);
+            console.log(`⚙️ Режим: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`🌍 CORS Origins: ${process.env.CORS_ORIGINS || 'default'}`);
+            console.log(`🗂️ Архивная система: включена`);
+            console.log(`📊 База данных: SQLite`);
+            console.log('='.repeat(70));
         });
     } catch (error) {
         console.error('❌ Ошибка запуска сервера:', error);

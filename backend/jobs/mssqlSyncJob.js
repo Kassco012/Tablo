@@ -1,6 +1,6 @@
-﻿// backend/jobs/mssqlSyncJob.js
+﻿// backend/jobs/mssqlSyncJob.js - ОБНОВЛЕННАЯ ВЕРСИЯ
 
-const MSSQLSyncService = require('../services/MSSQLSyncService');
+const JMineOpsDataService = require('../services/JMineOpsDataService');
 
 const SYNC_INTERVAL = 30000; // 30 секунд
 
@@ -15,11 +15,11 @@ function startSyncJob() {
         return;
     }
 
-    console.log('🚀 Запуск фоновой синхронизации с MSSQL');
+    console.log('🚀 Запуск фоновой синхронизации с JMineOps');
     console.log(`⏱️ Интервал: ${SYNC_INTERVAL / 1000} секунд`);
 
     // Первая синхронизация сразу
-    MSSQLSyncService.syncEquipment()
+    JMineOpsDataService.syncEquipment()
         .then(() => {
             console.log('✅ Первая синхронизация завершена');
         })
@@ -30,7 +30,7 @@ function startSyncJob() {
     // Повторяющаяся синхронизация каждые 30 секунд
     syncInterval = setInterval(async () => {
         try {
-            await MSSQLSyncService.syncEquipment();
+            await JMineOpsDataService.syncEquipment();
         } catch (err) {
             console.error('❌ Ошибка синхронизации:', err);
         }

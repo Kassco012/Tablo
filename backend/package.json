@@ -14,6 +14,9 @@
     "prod:network": "set HOST=0.0.0.0&& set PORT=5001&& set NODE_ENV=production&& node server.js",
     "init-db": "node scripts/initDatabase.js",
     "migrate": "node migrations/001_create_equipment_master.js",
+    "test:connection": "node scripts/testJMineOpsConnection.js",
+    "test:query": "node scripts/testSQLQuery.js",
+    "test:all": "npm run test:connection && npm run test:query",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "echo \"No linting configured\" && exit 0"
   },
@@ -36,7 +39,8 @@
     "monitoring",
     "dashboard",
     "mma",
-    "aktogay"
+    "aktogay",
+    "shift-states"
   ],
   "author": "MMA Aktogay",
   "license": "MIT",
