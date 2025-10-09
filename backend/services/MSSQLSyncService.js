@@ -79,61 +79,79 @@ class MSSQLSyncService {
         this.syncErrors = [];
     }
 
-    /**
-     * Получить данные оборудования из MSSQL с расширенной информацией
-     */
+
     async fetchEquipmentFromMSSQL() {
         try {
             const pool = await getPool();
 
             const query = `
-    SELECT 
-        e.id as mssql_equipment_id,
-        e.name as equipment_name,
-        e.type as mssql_type,
-        e.status_id,
-        e.reason_id,
-        e.updated_at,
-        
-        -- Статус
-        status_enum.name as status_name,
-        status_enum.symbol as status_symbol,
-        
-        -- Причина простоя
-        reason_enum.name as reason_name,
-        reason_enum.symbol as reason_symbol,
-        
-        -- Оператор (если есть)
-        op.name as operator_name,
-        
-        -- Часы работы двигателя
-        e.engine_hours
-        
-    FROM dbo.equipment e
-    
-    -- Присоединяем статус
-    LEFT JOIN dbo.enum_tables status_enum 
-        ON e.status_id = status_enum.id 
-        AND status_enum.type = 'Status'
-    
-    -- Присоединяем причину
-    LEFT JOIN dbo.enum_tables reason_enum 
-        ON e.reason_id = reason_enum.id
-        AND reason_enum.type = 'Reason'
-    
-    -- Присоединяем оператора
-    LEFT JOIN dbo.operators op
-        ON e.operator_id = op.id
-    
-    WHERE 
-        e.deleted_at IS NULL
-        AND e.type IN ('Shovel', 'Dozer', 'Drill', 'Truck', 'Grader', 'WaterTruck', 'AuxE')
-    
-    ORDER BY e.name;
-`;
+            -- Получаем ПОСЛЕДНИЙ простой для каждой техники за СЕГОДНЯ
+            WITH LastDowntime AS (
+                SELECT 
+                    ss.equipment_id,
+                    ss.status_id,
+                    ss.reason_id,
+                    ss.time as down_start_time,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY ss.equipment_id 
+                        ORDER BY ss.time DESC
+                    ) as rn
+                FROM dbo.shift_states ss
+                WHERE 
+                    ss.status_id = 331  -- Down
+                    AND ss.time >= CAST(GETDATE() AS DATE)  -- с 00:00 сегодня
+                    AND ss.time < DATEADD(day, 1, CAST(GETDATE() AS DATE))  -- до 23:59 сегодня
+            )
+            SELECT 
+                e.id as mssql_equipment_id,
+                e.name as equipment_name,
+                e.type as mssql_type,
+                
+                -- Модель из equipment_type
+                ISNULL(et.name, '') as equipment_model,
+                
+                ld.status_id,
+                
+                -- Статус
+                status_enum.name as status_name,
+                status_enum.symbol as status_symbol,
+                
+                -- ВАЖНО: Причина из таблицы reasons (НЕ enum_tables!)
+                r.descrip as reason_name,
+                
+                -- Точное время простоя из shift_states
+                ld.down_start_time
+
+            FROM LastDowntime ld
+
+            -- Связываем с equipment
+            INNER JOIN dbo.equipment e 
+                ON ld.equipment_id = e.id
+
+            -- Получаем название статуса
+            LEFT JOIN dbo.enum_tables status_enum 
+                ON ld.status_id = status_enum.id 
+                AND status_enum.type = 'Status'
+
+            -- ВАЖНО: Причина из dbo.reasons (а не enum_tables!)
+            LEFT JOIN dbo.reasons r 
+                ON ld.reason_id = r.id
+
+            -- Тип оборудования (для модели)
+            LEFT JOIN dbo.enum_tables et
+                ON e.equipment_type_id = et.id
+
+            WHERE 
+                ld.rn = 1  -- Только последняя запись для каждой техники
+                AND e.deleted_at IS NULL
+                AND e.enabled = 1
+                AND e.type IN ('Shovel', 'Dozer', 'Drill', 'Truck', 'Grader', 'AuxE')
+                
+            ORDER BY ld.down_start_time DESC;
+        `;
 
             const result = await pool.request().query(query);
-            console.log(`📊 Получено ${result.recordset.length} записей из MSSQL`);
+            console.log(`📊 Получено ${result.recordset.length} записей из MSSQL (простои за сегодня)`);
 
             return result.recordset;
         } catch (error) {
@@ -146,9 +164,8 @@ class MSSQLSyncService {
         }
     }
 
-    /**
-     * Определить участок на основе типа и причины
-     */
+
+
     determineSection(mssqlType, reasonName) {
         // Если есть специфическая причина - используем её
         if (reasonName && REASON_TO_SECTION[reasonName]) {
@@ -160,9 +177,7 @@ class MSSQLSyncService {
         return typeInfo ? typeInfo.section : 'колесные техники';
     }
 
-    /**
-     * Синхронизировать данные из MSSQL в SQLite
-     */
+
     async syncEquipment() {
         if (this.isRunning) {
             console.log('⚠️ Синхронизация уже выполняется, пропуск...');
@@ -173,12 +188,12 @@ class MSSQLSyncService {
         const startTime = Date.now();
 
         try {
-            console.log('\n🔄 Начало синхронизации с MSSQL...');
+            console.log('\n🔄 Начало синхронизации с MSSQL (shift_states за сегодня)...');
 
             const mssqlEquipment = await this.fetchEquipmentFromMSSQL();
 
             if (!mssqlEquipment || mssqlEquipment.length === 0) {
-                console.log('⚠️ Нет данных из MSSQL для синхронизации');
+                console.log('⚠️ Нет данных из MSSQL для синхронизации (возможно сегодня нет простоев)');
                 return;
             }
 
@@ -201,10 +216,7 @@ class MSSQLSyncService {
                     };
 
                     // Маппинг статуса
-                    const status = STATUS_MAPPING[statusId] || 'Ready';
-
-                    // Определяем участок с учетом причины простоя
-                    const section = this.determineSection(mssqlType, reasonName);
+                    const status = STATUS_MAPPING[statusId] || 'Down';
 
                     // Формируем описание неисправности
                     let malfunction = '';
@@ -212,20 +224,30 @@ class MSSQLSyncService {
                         malfunction = this.formatReason(reasonName);
                     }
 
+                    // Время начала простоя из shift_states
+                    const actual_start = equipment.down_start_time
+                        ? new Date(equipment.down_start_time).toISOString().substring(11, 16)
+                        : '';
+
                     const existingRecord = await this.checkEquipmentExists(db, equipmentId);
 
                     if (existingRecord) {
-                        // ОБНОВЛЯЕМ
+                        // ОБНОВЛЯЕМ (сохраняем ручные поля)
                         await this.updateEquipment(db, {
                             id: equipmentId,
                             mssql_equipment_id: equipment.mssql_equipment_id,
                             mssql_type: mssqlType,
                             mssql_status_id: statusId,
                             equipment_type: typeInfo.equipment_type,
-                            section: section,
+                            model: equipment.equipment_model || '',
+                            section: existingRecord.section || '', // Сохраняем участок
                             status: status,
                             malfunction: malfunction,
-                            mechanic_name: equipment.operator_name || '',
+                            actual_start: actual_start,
+                            mechanic_name: existingRecord.mechanic_name || '', // Сохраняем механика
+                            planned_start: existingRecord.planned_start || '', // Сохраняем план
+                            planned_end: existingRecord.planned_end || '',
+                            delay_hours: existingRecord.delay_hours || 0, // Сохраняем задержку
                             mssql_reason: reasonName,
                             last_sync_time: new Date().toISOString()
                         });
@@ -238,18 +260,18 @@ class MSSQLSyncService {
                             mssql_type: mssqlType,
                             mssql_status_id: statusId,
                             equipment_type: typeInfo.equipment_type,
-                            model: '', // Заполнить вручную или из другой таблицы
-                            section: section,
+                            model: equipment.equipment_model || '',
+                            section: '', // Диспетчер заполнит
                             status: status,
                             priority: status === 'Down' ? 'high' : 'normal',
-                            planned_start: '',
-                            planned_end: '',
-                            actual_start: '',
+                            planned_start: '', // Ручной
+                            planned_end: '', // Ручной
+                            actual_start: actual_start,
                             actual_end: '',
-                            delay_hours: 0,
+                            delay_hours: 0, // Ручной
                             malfunction: malfunction,
-                            mechanic_name: equipment.operator_name || '',
-                            progress: status === 'Ready' ? 100 : 0,
+                            mechanic_name: '', // Ручной
+                            progress: 0,
                             mssql_reason: reasonName,
                             last_sync_time: new Date().toISOString(),
                             is_active: 1,
@@ -283,9 +305,7 @@ class MSSQLSyncService {
         }
     }
 
-    /**
-     * Форматировать причину простоя для отображения
-     */
+
     formatReason(reason) {
         const reasonMap = {
             'PM SERVICE': 'Плановое техническое обслуживание',
@@ -319,22 +339,27 @@ class MSSQLSyncService {
     async updateEquipment(db, data) {
         return new Promise((resolve, reject) => {
             const query = `
-                UPDATE equipment_master 
-                SET 
-                    mssql_equipment_id = ?,
-                    mssql_type = ?,
-                    mssql_status_id = ?,
-                    equipment_type = ?,
-                    section = ?,
-                    status = ?,
-                    malfunction = ?,
-                    mechanic_name = ?,
-                    mssql_reason = ?,
-                    last_sync_time = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-                AND manually_edited = 0
-            `;
+            UPDATE equipment_master 
+            SET 
+                mssql_equipment_id = ?,
+                mssql_type = ?,
+                mssql_status_id = ?,
+                equipment_type = ?,
+                model = ?,
+                section = ?,
+                status = ?,
+                malfunction = ?,
+                actual_start = ?,
+                mechanic_name = ?,
+                planned_start = ?,
+                planned_end = ?,
+                delay_hours = ?,
+                mssql_reason = ?,
+                last_sync_time = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            AND manually_edited = 0
+        `;
 
             db.run(
                 query,
@@ -343,10 +368,15 @@ class MSSQLSyncService {
                     data.mssql_type,
                     data.mssql_status_id,
                     data.equipment_type,
+                    data.model,
                     data.section,
                     data.status,
                     data.malfunction,
+                    data.actual_start,
                     data.mechanic_name,
+                    data.planned_start,
+                    data.planned_end,
+                    data.delay_hours,
                     data.mssql_reason,
                     data.last_sync_time,
                     data.id
