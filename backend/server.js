@@ -28,7 +28,7 @@ const corsOptions = {
                 'http://127.0.0.1:3000',
                 'http://10.35.3.117:3001',
                 'http://10.35.3.117:3000',
-                'http://10.35.3.117:5001'
+                
             ];
 
         if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {

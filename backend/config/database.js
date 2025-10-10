@@ -141,9 +141,33 @@ async function createDefaultUsers(database) {
             {
                 username: 'kassymzhan.nuraliyev@kazminerals.com',
                 password: bcrypt.hashSync('Kazmin2025', 10),
-                role: 'dispatcher',
+                role: 'admin',
                 full_name: 'Касымжан Нуралиев'
-            }
+            },
+            {
+                username: 'yelnur.Zhumagaliyev@Kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Елнур Жумагалиев'
+            },
+            {
+                username: 'iliyas.sagyndyk@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Ильяс Сагындык'
+            },
+            {
+                username: 'anna.demakova@kazminerals.com ',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Анна Демакова'
+            },
+            {
+                username: 'ualikhan.belgibay@kazminerals.com ',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Уалихан Белгибай'
+            },
         ];
 
         let completed = 0;

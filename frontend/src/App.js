@@ -1,101 +1,98 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿// frontend/src/App.js
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { AuthProvider } from './contexts/AuthContext';
+
+// Импортируем существующие компоненты с правильными именами файлов
+import Dashboard from './components/Dashboard'; // Dashboard.js существует
+import Archive from './components/archive';     // archive.js (с маленькой буквы!)
+import Login from './components/LoginModal';    // LoginModal.js (не Login!)
+
+// Компоненты для обработки ошибок - нужно создать или использовать существующие
+// import ErrorNotification from './components/ErrorNotification'; // ErrorNotification.css существует
+import StatusCards from './components/StatusCards'; // StatusCards.js существует (можно использовать вместо ConnectionStatus)
+
+// Если ProtectedRoute не существует, создадим простую версию ниже
 import './App.css';
-import Archive from './components/archive';
-import Dashboard from './components/Dashboard';
-import LoginModal from './components/LoginModal';
-import AdminPanel from './components/AdminPanel';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { EquipmentProvider } from './contexts/EquipmentContext';
 
-function AppContent() {
-    const { user, loading } = useAuth();
-    const [showLogin, setShowLogin] = useState(false);
+// Простой компонент ProtectedRoute (создайте файл components/ProtectedRoute.js)
+const ProtectedRoute = ({ children, requiredRoles }) => {
+    // Временная заглушка - замените на полную версию с проверкой авторизации
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    useEffect(() => {
-        // Автоматически показываем логин если пользователь не авторизован
-        if (!loading && !user) {
-            setShowLogin(true);
-        }
-    }, [user, loading]);
+    if (!user || !user.token) {
+        return <Navigate to="/login" replace />;
+    }
 
-    if (loading) {
+    if (requiredRoles && !requiredRoles.includes(user.role)) {
         return (
-            <div className="loading-screen">
-                <div className="loading-spinner"></div>
-                <p>Загрузка системы...</p>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '100vh'
+            }}>
+                <h2>Доступ запрещен</h2>
+                <p>У вас недостаточно прав для просмотра этой страницы</p>
+                <button onClick={() => window.history.back()}>Назад</button>
             </div>
         );
     }
 
-    return (
-        <div className="App">
-            <Routes>
-                <Route
-                    path="/"
-                    element={
-                        <Dashboard onLoginClick={() => setShowLogin(true)} />
-                    }
-                />
-                <Route
-                    path="/admin"
-                    element={
-                        user && (user.role === 'admin' || user.role === 'dispatcher')
-                            ? <AdminPanel />
-                            : <Navigate to="/" replace />
-                    }
-                />
-                <Route
-                    path="/archive"
-                    element={
-                        user && (user.role === 'admin' || user.role === 'dispatcher')
-                            ? <Archive/>
-                            : <Navigate to="/" replace />
-                    }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+    return children;
+};
 
-            {showLogin && (
-                <LoginModal
-                    isOpen={showLogin}
-                    onClose={() => setShowLogin(false)}
-                    onSuccess={() => setShowLogin(false)}
-                />
-            )}
+// Временный компонент ErrorNotification (если ErrorNotification.js не существует)
+const ErrorNotificationComponent = () => {
+    // Используем существующие стили из ErrorNotification.css
+    return null; // Временно пустой
+};
 
-            <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="dark"
-                toastStyle={{
-                    background: 'linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff'
-                }}
-            />
-        </div>
-    );
-}
+// Временный компонент ConnectionStatus на основе StatusCards
+const ConnectionStatus = () => {
+    return null; // Или можно использовать <StatusCards />
+};
 
 function App() {
     return (
         <AuthProvider>
-            <EquipmentProvider>
-                <Router>
-                    <AppContent />
-                </Router>
-            </EquipmentProvider>
+            <Router>
+                <div className="App">
+                    {/* Глобальные компоненты */}
+                    <ErrorNotificationComponent />
+                    <ConnectionStatus />
+
+                    <Routes>
+                        {/* Страница входа - используем LoginModal */}
+                        <Route path="/login" element={<Login />} />
+
+                        {/* Dashboard - только для admin и dispatcher */}
+                        <Route path="/dashboard" element={
+                            <ProtectedRoute requiredRoles={['admin', 'dispatcher']}>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* Archive - для admin, dispatcher и viewer */}
+                        <Route path="/archive" element={
+                            <ProtectedRoute requiredRoles={['admin', 'dispatcher', 'viewer']}>
+                                <Archive />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* Главная страница - редирект на dashboard */}
+                        <Route path="/" element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* Обработка несуществующих роутов */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </div>
+            </Router>
         </AuthProvider>
     );
 }

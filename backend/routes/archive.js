@@ -55,7 +55,6 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                 equipment.section,
                 equipment.equipment_type,
                 equipment.model,
-                equipment.priority || 'normal',
                 equipment.planned_start,
                 equipment.planned_end,
                 equipment.actual_start,

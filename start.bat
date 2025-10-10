@@ -117,7 +117,7 @@ timeout /t 2 /nobreak >nul
 :: Запуск Backend
 echo 🖥️ Запуск Backend сервера...
 cd /d "%CURRENT_DIR%\backend"
-start "MMA Backend Server" cmd /k "echo MMA АКТОГАЙ - Backend Server && echo Порт: 5001 && echo IP: 10.35.3.117 && echo Локально: http://localhost:5001 && echo Сеть: http://10.35.3.117:5001 && echo. && node server.js"
+start "MMA Backend Server" cmd /k "echo MMA АКТОГАЙ - Backend Server && echo Порт: 5001 && echo IP: 10.35.3.117 && echo Локально: http://localhost:5002 && echo Сеть: http://10.35.3.117:5002 && echo. && node server.js"
 
 :: Ждем запуска backend
 echo ⏳ Ожидание запуска Backend...
@@ -155,11 +155,7 @@ echo.
 echo 📱 Доступ с других устройств в сети:
 echo    http://10.35.3.117:3001
 echo.
-echo 👥 Тестовые учетные данные:
-echo    Администратор: admin / admin123
-echo    Диспетчер: dispatcher / user123
-echo ========================================
-echo.
+
 
 :: Настройка Windows Firewall
 echo 🛡️ Настройка Windows Firewall...

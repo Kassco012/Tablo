@@ -376,6 +376,21 @@ const Dashboard = ({ onLoginClick }) => {
 
     const formatTime = (timeString) => {
         if (!timeString) return '-';
+
+        // Если это полная дата-время ISO
+        if (timeString.includes('T') || timeString.includes('Z')) {
+            const date = new Date(timeString);
+            return date.toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Если это уже время HH:MM
+        if (timeString.match(/^\d{2}:\d{2}/)) {
+            return timeString.substring(0, 5);
+        }
+
         return timeString;
     };
 
@@ -399,7 +414,8 @@ const Dashboard = ({ onLoginClick }) => {
     };
 
     const canLaunch = (equipmentItem) => {
-        return equipmentItem.status === 'Ready' || equipmentItem.status === 'Standby';
+        const status = equipmentItem.status?.toLowerCase();
+        return status === 'ready' || status === 'standby';
     };
 
     const clearFilter = () => {
@@ -414,6 +430,19 @@ const Dashboard = ({ onLoginClick }) => {
         setCurrentPage(page);
         setIsPaused(true);
     };
+
+
+    useEffect(() => {
+        if (equipment && equipment.length > 0) {
+            console.log('📊 ДАННЫЕ НА ФРОНТЕ:', {
+                total: equipment.length,
+                sample: equipment[0], // Первая запись
+                statuses: [...new Set(equipment.map(e => e.status))] // Уникальные статусы
+            });
+        } else {
+            console.warn('⚠️ НЕТ ДАННЫХ equipment:', equipment);
+        }
+    }, [equipment]);
 
     if (loading) {
         return (
@@ -681,11 +710,15 @@ const Dashboard = ({ onLoginClick }) => {
                                 </td>
                                 <td>
                                     <div className="time-info">
-                                        <div className="planned">
-                                            План: {formatTime(item.planned_start)} - {formatTime(item.planned_end)}
+                                        <div>
+                                            {formatTime(item.planned_start) || '-'} - {formatTime(item.planned_end) || '-'}
                                         </div>
-                                        <div className="actual">
-                                            Факт: {formatTime(item.actual_start)} - {formatTime(item.actual_end)}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div className="time-info">
+                                        <div>
+                                            {formatTime(item.actual_start) || '-'} - {formatTime(item.actual_end) || '-'}
                                         </div>
                                     </div>
                                 </td>
@@ -1014,3 +1047,5 @@ const Dashboard = ({ onLoginClick }) => {
 };
 
 export default Dashboard;
+
+

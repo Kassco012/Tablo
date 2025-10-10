@@ -1,0 +1,258 @@
+/* ============================================
+   ERROR NOTIFICATION STYLES
+   frontend/src/components/ErrorNotification.css
+   ============================================ */
+
+.error-notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.error-notification {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+    border-left: 4px solid;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.error-notification--critical {
+    border-left-color: #dc2626;
+    background-color: #fef2f2;
+}
+
+.error-notification--error {
+    border-left-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.error-notification--warning {
+    border-left-color: #f59e0b;
+    background-color: #fffbeb;
+}
+
+.error-notification--info {
+    border-left-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+.error-notification__content {
+    display: flex;
+    align-items: start;
+    gap: 12px;
+}
+
+.error-notification__icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.error-notification__text {
+    flex: 1;
+}
+
+.error-notification__message {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.error-notification__code {
+    font-size: 12px;
+    color: #6b7280;
+    font-family: monospace;
+}
+
+.error-notification__action {
+    margin-top: 8px;
+    padding: 4px 12px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .error-notification__action:hover {
+        background: #2563eb;
+    }
+
+.error-notification__close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+    .error-notification__close:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+/* ============================================
+   CONNECTION STATUS STYLES
+   frontend/src/components/ConnectionStatus.css
+   ============================================ */
+
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.connection-status--online {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.connection-status--offline {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.connection-status--checking {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.connection-status__icon {
+    font-size: 10px;
+}
+
+.connection-status__text {
+    font-weight: 500;
+}
+
+.connection-status__retry {
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: white;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .connection-status__retry:hover {
+        background: currentColor;
+        color: white;
+    }
+
+/* ============================================
+   ACCESS DENIED STYLES
+   ============================================ */
+
+.access-denied {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    text-align: center;
+}
+
+    .access-denied h2 {
+        color: #dc2626;
+        margin-bottom: 16px;
+        font-size: 32px;
+    }
+
+    .access-denied p {
+        color: #4b5563;
+        margin-bottom: 8px;
+    }
+
+    .access-denied strong {
+        color: #111827;
+    }
+
+    .access-denied button {
+        margin-top: 24px;
+        padding: 12px 24px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        .access-denied button:hover {
+            background: #2563eb;
+        }
+
+/* ============================================
+   LOADING CONTAINER STYLES
+   ============================================ */
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-container p {
+    margin-top: 16px;
+    color: #6b7280;
+    font-size: 14px;
+}

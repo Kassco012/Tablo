@@ -28,27 +28,26 @@ async function runMigration() {
               equipment_type TEXT NOT NULL,
               model TEXT,
               
-              -- 4. План/Факт
-              planned_start TEXT,
-              planned_end TEXT,
+              -- 4. Факт
               actual_start TEXT,
               actual_end TEXT,
+
+              -- 5 План
+              planned_start TEXT,
+              planned_end TEXT,
               
-              -- 5. Доп. время (задержка)
+              -- 6. Задержка
               delay_hours INTEGER DEFAULT 0,
               
-              -- 6. Статус
+              -- 7. Статус
               status TEXT NOT NULL DEFAULT 'Ready',
               priority TEXT DEFAULT 'normal',
               
-              -- 7. Неисправность
+              -- 8. Неисправность
               malfunction TEXT,
               
-              -- 8. Механик
+              -- 9. Механик
               mechanic_name TEXT,
-              
-              -- 9. Действие (прогресс работ)
-              progress INTEGER DEFAULT 0,
               
               -- Связь с MSSQL (для синхронизации)
               mssql_equipment_id INTEGER UNIQUE,
