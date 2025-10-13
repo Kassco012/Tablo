@@ -73,9 +73,7 @@ const testConnection = async () => {
     }
 };
 
-/**
- * Закрыть все подключения
- */
+
 const closePool = async () => {
     try {
         if (poolPromise) {

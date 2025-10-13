@@ -14,6 +14,23 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const HOST = process.env.HOST || '0.0.0.0';
 
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+
+// ↓↓↓ ЭТО ДОЛЖНО БЫТЬ САМЫМ ПЕРВЫМ! ↓↓↓
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Только после cors идут остальные middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // CORS настройка
 const corsOptions = {
     origin: function (origin, callback) {

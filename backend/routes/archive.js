@@ -4,10 +4,6 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-/**
- * Запуск техники в работу (архивирование)
- * POST /api/archive/launch/:id
- */
 router.post('/launch/:id', authenticateToken, (req, res) => {
     const db = getDatabase();
     const { id } = req.params;
@@ -121,10 +117,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
     });
 });
 
-/**
- * Получение архивных записей с фильтрацией и пагинацией
- * GET /api/archive
- */
+
 router.get('/', authenticateToken, (req, res) => {
     // Проверяем права доступа
     if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {
@@ -223,10 +216,6 @@ router.get('/', authenticateToken, (req, res) => {
     });
 });
 
-/**
- * Статистика архива
- * GET /api/archive/stats
- */
 router.get('/stats', authenticateToken, (req, res) => {
     // Проверяем права доступа
     if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {

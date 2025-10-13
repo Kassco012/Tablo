@@ -44,6 +44,13 @@ const StatusCards = ({ stats, loading }) => {
             icon: ''
         },
         {
+            key: 'shiftchange',
+            title: 'SHIFTCHANGE',
+            value: stats.shiftchange || 0,
+            className: 'shiftchange',
+            icon: ''
+        },
+        {
             key: 'total',
             title: 'ВСЕГО',
             value: stats.total || 0,

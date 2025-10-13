@@ -4,7 +4,9 @@ import axios from 'axios';
 // Получаем URL из переменной окружения или используем дефолтный
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
-console.log('API URL configured:', API_URL);
+console.log('%c🌐 API Configuration', 'color: #4CAF50; font-size: 14px; font-weight: bold;');
+console.log('API URL:', API_URL);
+console.log('Environment:', process.env.NODE_ENV);
 
 // Создаем экземпляр axios
 const api = axios.create({
@@ -18,23 +20,24 @@ const api = axios.create({
 // Интерцептор для добавления токена к запросам
 api.interceptors.request.use(
     (config) => {
-        // Получаем токен из localStorage
         const token = localStorage.getItem('token');
 
-        // Логирование для отладки
-        console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+        console.log('%c📤 API REQUEST', 'color: #2196F3; font-weight: bold;');
+        console.log('Method:', config.method?.toUpperCase());
+        console.log('URL:', `${config.baseURL}${config.url}`);
+        console.log('Data:', config.data);
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            console.log('Token added to request');
+            console.log('✅ Token added');
         } else {
-            console.log('No token available');
+            console.log('ℹ️ No token available');
         }
 
         return config;
     },
     (error) => {
-        console.error('Request error:', error);
+        console.error('%c❌ REQUEST ERROR', 'color: #f44336; font-weight: bold;', error);
         return Promise.reject(error);
     }
 );
@@ -42,61 +45,57 @@ api.interceptors.request.use(
 // Интерцептор для обработки ответов
 api.interceptors.response.use(
     (response) => {
-        console.log(`API Response: ${response.status} ${response.config.url}`, response.data);
+        console.log('%c📥 API RESPONSE', 'color: #4CAF50; font-weight: bold;');
+        console.log('Status:', response.status);
+        console.log('Data:', response.data);
         return response;
     },
     (error) => {
-        console.error('Response error:', error);
+        console.log('%c❌ API ERROR', 'color: #f44336; font-weight: bold;');
 
         if (error.response) {
             const { status, data } = error.response;
+            console.log('Status Code:', status);
+            console.log('Error Data:', data);
 
-            console.log(`Error ${status}:`, data);
-
-            // Обработка различных статусов ошибок
             switch (status) {
+                case 400:
+                    console.log('❌ Bad Request');
+                    break;
                 case 401:
-                    console.log('Unauthorized - clearing token');
+                    console.log('❌ Unauthorized');
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
-
-                    // Редирект на login только если мы не на странице логина
                     if (!window.location.pathname.includes('/login')) {
                         window.location.href = '/login';
                     }
                     break;
-
                 case 403:
-                    console.log('Forbidden - insufficient permissions');
+                    console.log('❌ Forbidden');
                     break;
-
                 case 404:
-                    console.log('Not found');
+                    console.log('❌ Not Found');
                     break;
-
                 case 500:
-                    console.log('Server error');
+                    console.log('❌ Server Error');
                     break;
-
                 default:
-                    console.log('Unknown error');
+                    console.log('❌ Unknown error');
             }
         } else if (error.request) {
-            console.error('No response from server:', error.request);
+            console.log('❌ No response from server');
+            console.log('Possible reasons: Backend not running, CORS issue, Network error');
         } else {
-            console.error('Error setting up request:', error.message);
+            console.log('❌ Error setting up request:', error.message);
         }
 
         return Promise.reject(error);
     }
 );
 
-// Публичные endpoints (не требуют авторизации)
-const publicEndpoints = ['/health', '/auth/login', '/auth/register'];
-
 // API методы
 const apiService = {
-    // Health check - не требует авторизации
+    // Health check
     checkHealth: async () => {
         try {
             const response = await api.get('/health');
@@ -109,29 +108,71 @@ const apiService = {
     // Авторизация
     login: async (email, password) => {
         try {
-            console.log('Attempting login for:', email);
-            const response = await api.post('/auth/login', { email, password });
+            console.log('%c🔑 LOGIN ATTEMPT', 'color: #9C27B0; font-weight: bold;');
+            console.log('Email:', email);
+            console.log('Password length:', password?.length || 0);
+
+            const response = await api.post('/auth/login', {
+                username: email,  // Backend ожидает 'username', а не 'email'
+                password
+            });
+
+            console.log('%c✅ LOGIN SUCCESS', 'color: #4CAF50; font-weight: bold;');
+            console.log('Response:', response.data);
 
             // Сохраняем токен и данные пользователя
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
-                console.log('Login successful, token saved');
+
+                console.log('✅ Token saved');
+                console.log('✅ User saved');
+
+                // Проверка сохранения
+                const savedToken = localStorage.getItem('token');
+                const savedUser = localStorage.getItem('user');
+                console.log('🔍 Verification:', {
+                    tokenExists: !!savedToken,
+                    userExists: !!savedUser
+                });
+            } else {
+                console.warn('⚠️ No token in response!');
             }
 
             return { success: true, data: response.data };
         } catch (error) {
-            console.error('Login failed:', error);
+            console.log('%c❌ LOGIN FAILED', 'color: #f44336; font-weight: bold;');
+            console.error('Error:', error);
+
+            let errorMessage = 'Ошибка авторизации';
+
+            if (error.response) {
+                // Сервер ответил с ошибкой
+                errorMessage = error.response.data?.message ||
+                    error.response.data?.error ||
+                    `Ошибка ${error.response.status}`;
+                console.log('Server error:', errorMessage);
+            } else if (error.request) {
+                // Запрос отправлен, но нет ответа
+                errorMessage = 'Сервер недоступен';
+                console.log('No response from backend');
+            } else {
+                // Ошибка при создании запроса
+                errorMessage = error.message;
+                console.log('Request setup error:', errorMessage);
+            }
+
+            // КРИТИЧНО: ВСЕГДА возвращаем объект с success: false
             return {
                 success: false,
-                error: error.response?.data?.message || 'Ошибка авторизации'
+                error: errorMessage
             };
         }
     },
 
     // Выход
     logout: () => {
-        console.log('Logging out...');
+        console.log('%c👋 LOGOUT', 'color: #FF9800; font-weight: bold;');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -163,7 +204,7 @@ const apiService = {
         }
     },
 
-    // Универсальный метод для GET запросов
+    // Универсальные методы
     get: async (url, params = {}) => {
         try {
             const response = await api.get(url, { params });
@@ -173,7 +214,6 @@ const apiService = {
         }
     },
 
-    // Универсальный метод для POST запросов
     post: async (url, data = {}) => {
         try {
             const response = await api.post(url, data);
@@ -183,7 +223,6 @@ const apiService = {
         }
     },
 
-    // Универсальный метод для PUT запросов
     put: async (url, data = {}) => {
         try {
             const response = await api.put(url, data);
@@ -193,7 +232,6 @@ const apiService = {
         }
     },
 
-    // Универсальный метод для DELETE запросов
     delete: async (url) => {
         try {
             const response = await api.delete(url);
@@ -204,6 +242,5 @@ const apiService = {
     }
 };
 
-// Экспортируем и api instance и сервис
 export { api };
 export default apiService;

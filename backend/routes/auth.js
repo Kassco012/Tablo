@@ -6,25 +6,25 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Секретный ключ для JWT (в продакшене должен быть в .env)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-// Логин
+
+// ✅ ИСПРАВЛЕНИЕ:
 router.post('/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;  // Теперь email везде!
 
-        if (!username || !password) {
+        if (!email || !password) {
             return res.status(400).json({
-                message: 'Имя пользователя и пароль обязательны'
+                message: 'Email и пароль обязательны'
             });
         }
 
         const db = getDatabase();
 
         db.get(
-            'SELECT * FROM users WHERE username = ?',
-            [username],
+            'SELECT * FROM users WHERE username = ?',  // В БД поле называется username
+            [email],  // Но передаем email
             async (err, user) => {
                 if (err) {
                     console.error('Database error:', err);
@@ -35,19 +35,16 @@ router.post('/login', async (req, res) => {
                     return res.status(401).json({ message: 'Неверные учетные данные' });
                 }
 
-                // Проверяем пароль
                 const validPassword = await bcrypt.compare(password, user.password);
                 if (!validPassword) {
                     return res.status(401).json({ message: 'Неверные учетные данные' });
                 }
 
-                // Обновляем время последнего входа
                 db.run(
                     'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
                     [user.id]
                 );
 
-                // Создаем JWT токен
                 const token = jwt.sign(
                     {
                         userId: user.id,
@@ -63,6 +60,7 @@ router.post('/login', async (req, res) => {
                     token,
                     user: {
                         id: user.id,
+                        email: user.username,  // Возвращаем как email
                         username: user.username,
                         role: user.role,
                         fullName: user.full_name
@@ -76,7 +74,6 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Регистрация (только для админов)
 router.post('/register', authenticateToken, async (req, res) => {
     try {
         const { username, password, role, fullName } = req.body;
@@ -141,7 +138,11 @@ router.post('/register', authenticateToken, async (req, res) => {
 router.get('/verify', authenticateToken, (req, res) => {
     res.json({
         message: 'Токен действителен',
-        user: req.user
+        user: {
+            id: req.user.userId,
+            username: req.user.username,
+            role: req.user.role
+        }
     });
 });
 

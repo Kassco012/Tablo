@@ -1,6 +1,8 @@
-﻿import React, { useState } from 'react';
+﻿// frontend/src/components/LoginModal.js
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom'; // ← ДОБАВИТЬ
 import './LoginModal.css';
 
 const LoginModal = ({ isOpen, onClose, onSuccess }) => {
@@ -10,17 +12,41 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
     });
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
+    const navigate = useNavigate(); // ← ДОБАВИТЬ
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            await login(formData.username, formData.password);
-            toast.success('Вход выполнен успешно!');
-            onSuccess();
-            setFormData({ username: '', password: '' });
+            console.log('🔑 Attempting login with:', formData.username);
+
+            const result = await login(formData.username, formData.password);
+
+            console.log('📊 Login result:', result);
+
+            if (result.success) {
+                console.log('✅ Login successful!');
+                toast.success('Вход выполнен успешно!');
+
+                // Закрываем модалку
+                if (onSuccess) {
+                    onSuccess();
+                }
+
+                // Даём время на сохранение в localStorage
+                setTimeout(() => {
+                    // Редирект на dashboard
+                    navigate('/dashboard');
+                    // Или можно использовать:
+                    // window.location.href = '/dashboard';
+                }, 100);
+            } else {
+                console.error('❌ Login failed:', result.error);
+                toast.error(result.error || 'Ошибка входа');
+            }
         } catch (error) {
+            console.error('❌ Login exception:', error);
             toast.error(error.message || 'Ошибка входа');
         } finally {
             setLoading(false);
@@ -127,9 +153,18 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
                             className="account-info"
                             onClick={() => handleAccountClick('kassymzhan.nuraliyev@kazminerals.com')}
                         >
-                            <strong>Диспетчер</strong>
+                            <strong>Администратор</strong>
                             <div className="login-label">Email:</div>
                             <div className="login-value">kassymzhan.nuraliyev@kazminerals.com</div>
+                            <div className="password-hint">Нажмите для автозаполнения логина</div>
+                        </div>
+                        <div
+                            className="account-info"
+                            onClick={() => handleAccountClick('ualikhan.belgibay@kazminerals.com')}
+                        >
+                            <strong>Диспетчер</strong>
+                            <div className="login-label">Email:</div>
+                            <div className="login-value">ualikhan.belgibay@kazminerals.com</div>
                             <div className="password-hint">Нажмите для автозаполнения логина</div>
                         </div>
                     </div>

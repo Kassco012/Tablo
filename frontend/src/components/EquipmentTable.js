@@ -298,13 +298,13 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                 </div>
 
                                 <div className="info-item">
-                                    <label>Плановое время:</label>
-                                    <span>{equipment.planned_start} - {equipment.planned_end}</span>
+                                    <label>Фактическое время:</label>
+                                    <span>{equipment.actual_start || '-'} - {equipment.actual_end || '-'}</span>
                                 </div>
 
                                 <div className="info-item">
-                                    <label>Фактическое время:</label>
-                                    <span>{equipment.actual_start || '-'} - {equipment.actual_end || '-'}</span>
+                                    <label>Плановое время:</label>
+                                    <span>{equipment.planned_start} - {equipment.planned_end}</span>
                                 </div>
 
                                 <div className="info-item">
@@ -312,18 +312,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     <span>{equipment.delay_hours > 0 ? `+${equipment.delay_hours}ч` : 'Нет'}</span>
                                 </div>
 
-                                <div className="info-item">
-                                    <label>Прогресс:</label>
-                                    <div className="progress-container">
-                                        <div className="progress-bar">
-                                            <div
-                                                className="progress-fill"
-                                                style={{ width: `${equipment.progress}%` }}
-                                            />
-                                        </div>
-                                        <span className="progress-text">{equipment.progress}%</span>
-                                    </div>
-                                </div>
 
                                 <div className="info-item full-width">
                                     <label>Неисправность:</label>
@@ -405,6 +393,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     >
                                         <option value="excavator">Экскаватор</option>
                                         <option value="loader">Погрузчик</option>
+                                      
                                     </select>
                                 </div>
 
@@ -428,11 +417,11 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         onChange={handleChange}
                                         disabled={loading}
                                     >
-                                        <option value="Ready">Готово</option>
-                                        <option value="Down">Не работает</option>
-                                        <option value="Standby">Ожидание</option>
-                                        <option value="Delay">Задержка</option>
-                                        <option value="Shiftchange">Смена</option>
+                                        <option value="Ready">Ready</option>
+                                        <option value="Down">Down</option>
+                                        <option value="Standby">Standby</option>
+                                        <option value="Delay">Delay</option>
+                                        <option value="Shiftchange">Shiftchange</option>
                                     </select>
                                 </div>
 
@@ -504,19 +493,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         value={formData.delay_hours}
                                         onChange={handleChange}
                                         min="0"
-                                        disabled={loading}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Прогресс (%)</label>
-                                    <input
-                                        type="number"
-                                        name="progress"
-                                        value={formData.progress}
-                                        onChange={handleChange}
-                                        min="0"
-                                        max="100"
                                         disabled={loading}
                                     />
                                 </div>

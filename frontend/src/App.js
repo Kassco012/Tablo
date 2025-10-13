@@ -1,26 +1,27 @@
-﻿// frontend/src/App.js
-import React from 'react';
+﻿import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Contexts
 import { AuthProvider } from './contexts/AuthContext';
+import { EquipmentProvider } from './contexts/EquipmentContext';
 
-// Импортируем существующие компоненты с правильными именами файлов
-import Dashboard from './components/Dashboard'; // Dashboard.js существует
-import Archive from './components/archive';     // archive.js (с маленькой буквы!)
-import Login from './components/LoginModal';    // LoginModal.js (не Login!)
+// Components
+import Dashboard from './components/Dashboard';
+import Archive from './components/archive';
+import LoginModal from './components/LoginModal';
+import AdminPanel from './components/AdminPanel';
 
-// Компоненты для обработки ошибок - нужно создать или использовать существующие
-// import ErrorNotification from './components/ErrorNotification'; // ErrorNotification.css существует
-import StatusCards from './components/StatusCards'; // StatusCards.js существует (можно использовать вместо ConnectionStatus)
-
-// Если ProtectedRoute не существует, создадим простую версию ниже
+// Styles
 import './App.css';
 
-// Простой компонент ProtectedRoute (создайте файл components/ProtectedRoute.js)
+// ProtectedRoute компонент
 const ProtectedRoute = ({ children, requiredRoles }) => {
-    // Временная заглушка - замените на полную версию с проверкой авторизации
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
 
-    if (!user || !user.token) {
+    if (!user || !user.role) {
         return <Navigate to="/login" replace />;
     }
 
@@ -31,11 +32,25 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minHeight: '100vh'
+                minHeight: '100vh',
+                color: 'white'
             }}>
                 <h2>Доступ запрещен</h2>
                 <p>У вас недостаточно прав для просмотра этой страницы</p>
-                <button onClick={() => window.history.back()}>Назад</button>
+                <button
+                    onClick={() => window.history.back()}
+                    style={{
+                        marginTop: '20px',
+                        padding: '10px 20px',
+                        background: '#4facfe',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: 'white',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Назад
+                </button>
             </div>
         );
     }
@@ -43,56 +58,87 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
     return children;
 };
 
-// Временный компонент ErrorNotification (если ErrorNotification.js не существует)
-const ErrorNotificationComponent = () => {
-    // Используем существующие стили из ErrorNotification.css
-    return null; // Временно пустой
-};
-
-// Временный компонент ConnectionStatus на основе StatusCards
-const ConnectionStatus = () => {
-    return null; // Или можно использовать <StatusCards />
-};
-
 function App() {
+    const [showLogin, setShowLogin] = useState(false);
+
     return (
         <AuthProvider>
-            <Router>
-                <div className="App">
-                    {/* Глобальные компоненты */}
-                    <ErrorNotificationComponent />
-                    <ConnectionStatus />
+            <EquipmentProvider>  {/* ✅ ОБЕРНУЛИ ВСЁ ПРИЛОЖЕНИЕ */}
+                <Router>
+                    <div className="App">
+                        <Routes>
+                            {/* Главная страница */}
+                            <Route
+                                path="/"
+                                element={
+                                    <Dashboard onLoginClick={() => setShowLogin(true)} />
+                                }
+                            />
 
-                    <Routes>
-                        {/* Страница входа - используем LoginModal */}
-                        <Route path="/login" element={<Login />} />
+                            {/* Страница входа */}
+                            <Route
+                                path="/login"
+                                element={
+                                    <LoginModal
+                                        isOpen={true}
+                                        onClose={() => window.history.back()}
+                                        onSuccess={() => window.location.href = '/'}
+                                    />
+                                }
+                            />
 
-                        {/* Dashboard - только для admin и dispatcher */}
-                        <Route path="/dashboard" element={
-                            <ProtectedRoute requiredRoles={['admin', 'dispatcher']}>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        } />
+                            {/* Админ-панель */}
+                            <Route
+                                path="/admin"
+                                element={
+                                    <ProtectedRoute requiredRoles={['admin', 'dispatcher']}>
+                                        <AdminPanel />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        {/* Archive - для admin, dispatcher и viewer */}
-                        <Route path="/archive" element={
-                            <ProtectedRoute requiredRoles={['admin', 'dispatcher', 'viewer']}>
-                                <Archive />
-                            </ProtectedRoute>
-                        } />
+                            {/* Архив */}
+                            <Route
+                                path="/archive"
+                                element={
+                                    <ProtectedRoute requiredRoles={['admin', 'dispatcher']}>
+                                        <Archive />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        {/* Главная страница - редирект на dashboard */}
-                        <Route path="/" element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        } />
+                            {/* Несуществующие маршруты */}
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
 
-                        {/* Обработка несуществующих роутов */}
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                </div>
-            </Router>
+                        {/* Toast уведомления */}
+                        <ToastContainer
+                            position="top-right"
+                            autoClose={3000}
+                            hideProgressBar={false}
+                            newestOnTop
+                            closeOnClick
+                            rtl={false}
+                            pauseOnFocusLoss
+                            draggable
+                            pauseOnHover
+                            theme="dark"
+                        />
+
+                        {/* Модальное окно входа */}
+                        {showLogin && (
+                            <LoginModal
+                                isOpen={showLogin}
+                                onClose={() => setShowLogin(false)}
+                                onSuccess={() => {
+                                    setShowLogin(false);
+                                    window.location.reload();
+                                }}
+                            />
+                        )}
+                    </div>
+                </Router>
+            </EquipmentProvider>  {/* ✅ ЗАКРЫЛИ ПРОВАЙДЕР */}
         </AuthProvider>
     );
 }

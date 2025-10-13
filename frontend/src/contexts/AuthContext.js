@@ -1,6 +1,6 @@
 ﻿// frontend/src/contexts/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import apiService from '../services/api';
+import apiService, { api } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -17,12 +17,9 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Проверка сохраненной авторизации при загрузке
     useEffect(() => {
         checkAuth();
     }, []);
-
-    // frontend/src/contexts/AuthContext.js
 
     const checkAuth = async () => {
         console.log('🔐 Checking authentication...');
@@ -31,66 +28,46 @@ export const AuthProvider = ({ children }) => {
             const token = localStorage.getItem('token');
             const savedUser = localStorage.getItem('user');
 
-            console.log('📦 Saved data:', {
-                hasToken: !!token,
-                hasUser: !!savedUser,
-                token: token ? `${token.substring(0, 20)}...` : 'none'
-            });
-
             if (token && savedUser) {
-                console.log('✅ Found saved token and user');
-
-                // Проверяем валидность токена через /api/auth/verify
-                try {
-                    const response = await api.get('/auth/verify');
-
-                    if (response.status === 200) {
-                        const userData = JSON.parse(savedUser);
-                        setUser(userData);
-                        console.log('✅ User restored:', userData);
-                    } else {
-                        throw new Error('Token validation failed');
-                    }
-                } catch (verifyError) {
-                    console.log('❌ Token invalid, clearing...', verifyError.message);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    setUser(null);
-                }
+                const userData = JSON.parse(savedUser);
+                setUser(userData);
+                console.log('✅ User restored:', userData);
             } else {
-                console.log('ℹ️ No saved authentication found');
+                console.log('ℹ️ No saved authentication');
                 setUser(null);
             }
         } catch (err) {
             console.error('❌ Auth check error:', err);
-            setError('Ошибка проверки авторизации');
             setUser(null);
         } finally {
             setLoading(false);
         }
     };
 
-    const login = async (email, password) => {
-        console.log('Login attempt for:', email);
+    const login = async (username, password) => {  // Изменил email -> username
+        console.log('Login attempt for:', username);
         setLoading(true);
         setError(null);
 
         try {
-            const result = await apiService.login(email, password);
+            const response = await api.post('/auth/login', { username, password });
 
-            if (result.success) {
-                console.log('Login successful:', result.data);
-                setUser(result.data.user);
+            console.log('✅ Login response:', response.data);
+
+            // Сохраняем токен и пользователя
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                setUser(response.data.user);
                 setError(null);
+                console.log('✅ Token saved:', response.data.token.substring(0, 20) + '...');
                 return { success: true };
             } else {
-                console.log('Login failed:', result.error);
-                setError(result.error || 'Ошибка входа');
-                return { success: false, error: result.error };
+                throw new Error('Токен не получен от сервера');
             }
         } catch (err) {
-            console.error('Login error:', err);
-            const errorMessage = err.response?.data?.message || 'Ошибка соединения с сервером';
+            console.error('❌ Login error:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Ошибка входа';
             setError(errorMessage);
             return { success: false, error: errorMessage };
         } finally {
@@ -99,12 +76,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        console.log('Logging out...');
+        console.log('👋 Logout');
         setUser(null);
         setError(null);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Не делаем редирект здесь, пусть компонент сам решает
     };
 
     const hasRole = (requiredRoles) => {
