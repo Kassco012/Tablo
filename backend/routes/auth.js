@@ -1,177 +1,162 @@
 ﻿const express = require('express');
+const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getDatabase } = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
+const db = require('../config/database');
 
-const router = express.Router();
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-
-// ✅ ИСПРАВЛЕНИЕ:
+// ============================================
+// LOGIN ROUTE - ТОЛЬКО USERNAME
+// ============================================
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;  // Теперь email везде!
+        console.log('='.repeat(60));
+        console.log('🔑 LOGIN REQUEST RECEIVED');
+        console.log('='.repeat(60));
+        console.log('Body:', req.body);
 
-        if (!email || !password) {
-            return res.status(400).json({
-                message: 'Email и пароль обязательны'
-            });
-        }
+        const { username, password } = req.body;
 
-        const db = getDatabase();
+        console.log('Extracted username:', username);
+        console.log('Extracted password:', password ? '***' : 'EMPTY');
 
-        db.get(
-            'SELECT * FROM users WHERE username = ?',  // В БД поле называется username
-            [email],  // Но передаем email
-            async (err, user) => {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ message: 'Ошибка сервера' });
-                }
-
-                if (!user) {
-                    return res.status(401).json({ message: 'Неверные учетные данные' });
-                }
-
-                const validPassword = await bcrypt.compare(password, user.password);
-                if (!validPassword) {
-                    return res.status(401).json({ message: 'Неверные учетные данные' });
-                }
-
-                db.run(
-                    'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-                    [user.id]
-                );
-
-                const token = jwt.sign(
-                    {
-                        userId: user.id,
-                        username: user.username,
-                        role: user.role
-                    },
-                    JWT_SECRET,
-                    { expiresIn: '24h' }
-                );
-
-                res.json({
-                    message: 'Вход выполнен успешно',
-                    token,
-                    user: {
-                        id: user.id,
-                        email: user.username,  // Возвращаем как email
-                        username: user.username,
-                        role: user.role,
-                        fullName: user.full_name
-                    }
-                });
-            }
-        );
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Ошибка сервера' });
-    }
-});
-
-router.post('/register', authenticateToken, async (req, res) => {
-    try {
-        const { username, password, role, fullName } = req.body;
-
-        // Проверяем права доступа
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({
-                message: 'Недостаточно прав доступа'
-            });
-        }
-
+        // Валидация
         if (!username || !password) {
+            console.log('❌ VALIDATION FAILED: Missing credentials');
             return res.status(400).json({
-                message: 'Имя пользователя и пароль обязательны'
+                success: false,
+                message: 'Username и пароль обязательны'
             });
         }
 
-        const db = getDatabase();
+        // ✅ ПОИСК ТОЛЬКО ПО USERNAME
+        console.log('🔍 Searching for user:', username);
 
-        // Проверяем, не существует ли уже пользователь
-        db.get(
-            'SELECT id FROM users WHERE username = ?',
-            [username],
-            async (err, existingUser) => {
-                if (err) {
-                    return res.status(500).json({ message: 'Ошибка сервера' });
-                }
-
-                if (existingUser) {
-                    return res.status(409).json({
-                        message: 'Пользователь с таким именем уже существует'
-                    });
-                }
-
-                // Хешируем пароль
-                const hashedPassword = await bcrypt.hash(password, 10);
-
-                // Создаем пользователя
-                db.run(
-                    'INSERT INTO users (username, password, role, full_name) VALUES (?, ?, ?, ?)',
-                    [username, hashedPassword, role || 'user', fullName || ''],
-                    function (err) {
-                        if (err) {
-                            return res.status(500).json({ message: 'Ошибка создания пользователя' });
-                        }
-
-                        res.status(201).json({
-                            message: 'Пользователь создан успешно',
-                            userId: this.lastID
-                        });
-                    }
-                );
-            }
+        const user = await db.get(
+            'SELECT * FROM users WHERE username = ?',
+            [username]
         );
-    } catch (error) {
-        console.error('Register error:', error);
-        res.status(500).json({ message: 'Ошибка сервера' });
-    }
-});
 
-// Проверка токена
-router.get('/verify', authenticateToken, (req, res) => {
-    res.json({
-        message: 'Токен действителен',
-        user: {
-            id: req.user.userId,
-            username: req.user.username,
-            role: req.user.role
+        console.log('🔍 User found:', user ? 'YES' : 'NO');
+
+        if (!user) {
+            console.log('❌ USER NOT FOUND:', username);
+            return res.status(401).json({
+                success: false,
+                message: 'Неверный username или пароль'
+            });
         }
-    });
-});
 
-// Выход
-router.post('/logout', (req, res) => {
-    // В простой реализации с JWT просто отвечаем успехом
-    // В продакшене можно добавить черный список токенов
-    res.json({ message: 'Выход выполнен успешно' });
-});
+        console.log('✅ User found:', user.username);
+        console.log('👤 User role:', user.role);
 
-// Получение списка пользователей (только для админов)
-router.get('/users', authenticateToken, (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Недостаточно прав доступа' });
-    }
+        // Проверка пароля
+        const isValidPassword = await bcrypt.compare(password, user.password);
 
-    const db = getDatabase();
+        console.log('🔐 Password check:', isValidPassword ? 'VALID' : 'INVALID');
 
-    db.all(
-        'SELECT id, username, role, full_name, created_at, last_login FROM users ORDER BY created_at DESC',
-        [],
-        (err, users) => {
-            if (err) {
-                return res.status(500).json({ message: 'Ошибка получения пользователей' });
+        if (!isValidPassword) {
+            console.log('❌ INVALID PASSWORD for:', username);
+            return res.status(401).json({
+                success: false,
+                message: 'Неверный username или пароль'
+            });
+        }
+
+        console.log('✅ Password valid');
+
+        // Генерация токена
+        const token = jwt.sign(
+            {
+                id: user.id,
+                username: user.username,
+                role: user.role
+            },
+            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            { expiresIn: '24h' }
+        );
+
+        console.log('✅ Token generated');
+
+        // Обновляем last_login
+        await db.run(
+            'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+            [user.id]
+        );
+
+        console.log('✅ LOGIN SUCCESSFUL for:', username);
+        console.log('='.repeat(60));
+
+        // Успешный ответ БЕЗ email
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                fullName: user.full_name,
+                role: user.role
             }
+        });
 
-            res.json(users);
+    } catch (error) {
+        console.error('='.repeat(60));
+        console.error('💥 LOGIN ERROR:', error);
+        console.error('Error stack:', error.stack);
+        console.error('='.repeat(60));
+
+        res.status(500).json({
+            success: false,
+            message: 'Ошибка сервера при входе',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// ============================================
+// VERIFY TOKEN
+// ============================================
+router.get('/verify', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Токен не предоставлен'
+            });
         }
-    );
+
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+        );
+
+        const user = await db.get('SELECT * FROM users WHERE id = ?', [decoded.id]);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Пользователь не найден'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                fullName: user.full_name,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Token verification error:', error);
+        res.status(401).json({
+            success: false,
+            message: 'Недействительный токен'
+        });
+    }
 });
 
 module.exports = router;

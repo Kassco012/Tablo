@@ -244,10 +244,9 @@ const Archive = () => {
                 <div>
                     <h2 style={{
                         fontSize: '1.8rem',
-                        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
+                        color: '#4facfe',  // ← Обычный цвет вместо градиента
+                        fontWeight: 700,
+                        textShadow: '0 2px 8px rgba(79, 172, 254, 0.3)',
                         marginBottom: '10px'
                     }}>
                         Архив Техники

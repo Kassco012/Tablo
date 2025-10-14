@@ -23,7 +23,7 @@ async function initializeDatabase() {
         const database = getDatabase();
 
         const createTables = `
-            -- Таблица пользователей
+            -- Таблица пользователей (БЕЗ email)
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
@@ -157,13 +157,13 @@ async function createDefaultUsers(database) {
                 full_name: 'Ильяс Сагындык'
             },
             {
-                username: 'anna.demakova@kazminerals.com ',
+                username: 'anna.demakova@kazminerals.com',
                 password: bcrypt.hashSync('KAL2025', 10),
                 role: 'dispatcher',
                 full_name: 'Анна Демакова'
             },
             {
-                username: 'ualikhan.belgibay@kazminerals.com ',
+                username: 'ualikhan.belgibay@kazminerals.com',
                 password: bcrypt.hashSync('KAL2025', 10),
                 role: 'dispatcher',
                 full_name: 'Уалихан Белгибай'
@@ -173,7 +173,8 @@ async function createDefaultUsers(database) {
         let completed = 0;
         users.forEach(user => {
             database.run(
-                `INSERT OR IGNORE INTO users (username, password, role, full_name) VALUES (?, ?, ?, ?)`,
+                `INSERT OR IGNORE INTO users (username, password, role, full_name) 
+                 VALUES (?, ?, ?, ?)`,
                 [user.username, user.password, user.role, user.full_name],
                 function (err) {
                     if (err) {
@@ -204,6 +205,55 @@ function closeDatabase() {
     }
 }
 
+// ============================================
+// ПРОМИСИФИЦИРОВАННЫЕ МЕТОДЫ
+// ============================================
+
+function get(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        const database = getDatabase();
+        database.get(sql, params, (err, row) => {
+            if (err) {
+                console.error('❌ DB GET Error:', err);
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+}
+
+function all(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        const database = getDatabase();
+        database.all(sql, params, (err, rows) => {
+            if (err) {
+                console.error('❌ DB ALL Error:', err);
+                reject(err);
+            } else {
+                resolve(rows || []);
+            }
+        });
+    });
+}
+
+function run(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        const database = getDatabase();
+        database.run(sql, params, function(err) {
+            if (err) {
+                console.error('❌ DB RUN Error:', err);
+                reject(err);
+            } else {
+                resolve({
+                    lastID: this.lastID,
+                    changes: this.changes
+                });
+            }
+        });
+    });
+}
+
 // Graceful shutdown
 process.on('SIGINT', () => {
     closeDatabase();
@@ -213,5 +263,8 @@ process.on('SIGINT', () => {
 module.exports = {
     getDatabase,
     initializeDatabase,
-    closeDatabase
+    closeDatabase,
+    get,
+    all,
+    run
 };

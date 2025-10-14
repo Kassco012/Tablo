@@ -4,6 +4,7 @@ const express = require('express');
 const { getDatabase } = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
 const MSSQLSyncService = require('../services/MSSQLSyncService');
+const db = require('../config/database');
 
 const router = express.Router();
 
@@ -71,6 +72,31 @@ router.get('/sections', (req, res) => {
         }
         res.json(sections);
     });
+});
+
+
+router.get('/sections', async (req, res) => {
+    try {
+        const sections = await db.query(`
+            SELECT 
+                section,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'Down' THEN 1 ELSE 0 END) as down_count,
+                SUM(CASE WHEN status = 'Ready' THEN 1 ELSE 0 END) as ready_count
+            FROM equipment
+            WHERE section IS NOT NULL
+            GROUP BY section
+            ORDER BY section
+        `);
+
+        res.json(sections);
+    } catch (error) {
+        console.error('❌ Error getting sections:', error);
+        res.status(500).json({
+            error: 'Ошибка получения участков',
+            message: error.message
+        });
+    }
 });
 
 // Получение статистики
