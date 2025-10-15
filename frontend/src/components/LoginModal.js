@@ -138,6 +138,8 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
                             <strong>Разработчик</strong>
                             <div className="login-label">Username:</div>
                             <div className="login-value">kassymzhan.nuraliyev@kazminerals.com</div>
+                            <div className="login-label">Password:</div>
+                            <div className="login-value">Kazmin2025</div>
                             <div className="password-hint">Нажмите для автозаполнения username</div>
                         </div>
                         <div
@@ -147,6 +149,15 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
                             <strong>Администратор</strong>
                             <div className="login-label">Username:</div>
                             <div className="login-value">timur.abitov@kazminerals.com</div>
+                            <div className="password-hint">Нажмите для автозаполнения username</div>
+                        </div>
+                        <div
+                            className="account-info"
+                            onClick={() => handleAccountClick('ualikhan.belgibay@kazminerals.com')}
+                        >
+                            <strong>Диспетчер</strong>
+                            <div className="login-label">Username:</div>
+                            <div className="login-value">ualikhan.belgibay@kazminerals.com</div>
                             <div className="password-hint">Нажмите для автозаполнения username</div>
                         </div>
                     </div>
