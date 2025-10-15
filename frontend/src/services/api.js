@@ -1,14 +1,11 @@
-﻿// frontend/src/services/api.js
-import axios from 'axios';
+﻿import axios from 'axios';
 
-// Получаем URL из переменной окружения или используем дефолтный
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 console.log('%c🌐 API Configuration', 'color: #4CAF50; font-size: 14px; font-weight: bold;');
 console.log('API URL:', API_URL);
 console.log('Environment:', process.env.NODE_ENV);
 
-// Создаем экземпляр axios
 const api = axios.create({
     baseURL: API_URL,
     timeout: 15000,
@@ -102,71 +99,6 @@ const apiService = {
             return { success: true, data: response.data };
         } catch (error) {
             return { success: false, error: error.message };
-        }
-    },
-
-    // Авторизация
-    login: async (email, password) => {
-        try {
-            console.log('%c🔑 LOGIN ATTEMPT', 'color: #9C27B0; font-weight: bold;');
-            console.log('Email:', email);
-            console.log('Password length:', password?.length || 0);
-
-            const response = await api.post('/auth/login', {
-                username: email,  // Backend ожидает 'username', а не 'email'
-                password
-            });
-
-            console.log('%c✅ LOGIN SUCCESS', 'color: #4CAF50; font-weight: bold;');
-            console.log('Response:', response.data);
-
-            // Сохраняем токен и данные пользователя
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-
-                console.log('✅ Token saved');
-                console.log('✅ User saved');
-
-                // Проверка сохранения
-                const savedToken = localStorage.getItem('token');
-                const savedUser = localStorage.getItem('user');
-                console.log('🔍 Verification:', {
-                    tokenExists: !!savedToken,
-                    userExists: !!savedUser
-                });
-            } else {
-                console.warn('⚠️ No token in response!');
-            }
-
-            return { success: true, data: response.data };
-        } catch (error) {
-            console.log('%c❌ LOGIN FAILED', 'color: #f44336; font-weight: bold;');
-            console.error('Error:', error);
-
-            let errorMessage = 'Ошибка авторизации';
-
-            if (error.response) {
-                // Сервер ответил с ошибкой
-                errorMessage = error.response.data?.message ||
-                    error.response.data?.error ||
-                    `Ошибка ${error.response.status}`;
-                console.log('Server error:', errorMessage);
-            } else if (error.request) {
-                // Запрос отправлен, но нет ответа
-                errorMessage = 'Сервер недоступен';
-                console.log('No response from backend');
-            } else {
-                // Ошибка при создании запроса
-                errorMessage = error.message;
-                console.log('Request setup error:', errorMessage);
-            }
-
-            // КРИТИЧНО: ВСЕГДА возвращаем объект с success: false
-            return {
-                success: false,
-                error: errorMessage
-            };
         }
     },
 

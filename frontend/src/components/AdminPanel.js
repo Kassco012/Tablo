@@ -647,17 +647,6 @@ const AdminPanel = () => {
                                     />
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Прогресс (%)</label>
-                                    <input
-                                        type="number"
-                                        value={newEquipment.progress}
-                                        onChange={(e) => setNewEquipment({ ...newEquipment, progress: parseInt(e.target.value) || 0 })}
-                                        min="0"
-                                        max="100"
-                                    />
-                                </div>
-
                                 <div className="form-group full-width">
                                     <label>Неисправность</label>
                                     <textarea

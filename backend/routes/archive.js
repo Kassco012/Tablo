@@ -10,7 +10,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
     const { completion_reason = 'launched' } = req.body;
 
     // Проверяем права доступа
-    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {
+    if (req.user.role !== 'programmer' && req.user.role !== 'dispatcher' && req.user.role !== 'admin'  ) {
         return res.status(403).json({ message: 'Недостаточно прав доступа' });
     }
 
@@ -120,7 +120,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
 
 router.get('/', authenticateToken, (req, res) => {
     // Проверяем права доступа
-    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {
+    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher' && req.user.role !== 'programmer' ) {
         return res.status(403).json({ message: 'Недостаточно прав доступа' });
     }
 
@@ -218,7 +218,7 @@ router.get('/', authenticateToken, (req, res) => {
 
 router.get('/stats', authenticateToken, (req, res) => {
     // Проверяем права доступа
-    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher') {
+    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher' && req.user.role !== 'programmer' ) {
         return res.status(403).json({ message: 'Недостаточно прав доступа' });
     }
 

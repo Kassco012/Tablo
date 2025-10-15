@@ -25,7 +25,7 @@ const Archive = () => {
     });
 
     useEffect(() => {
-        if (user && (user.role === 'admin' || user.role === 'dispatcher')) {
+        if (user && (user.role === 'admin' || user.role === 'dispatcher' || user.role === 'programmer' )) {
             fetchArchives();
             fetchStats();
         }
@@ -217,7 +217,7 @@ const Archive = () => {
     };
 
     // Проверка прав доступа
-    if (!user || (user.role !== 'admin' && user.role !== 'dispatcher')) {
+    if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'programmer' )) {
         return (
             <div style={{
                 textAlign: 'center',
@@ -244,10 +244,9 @@ const Archive = () => {
                 <div>
                     <h2 style={{
                         fontSize: '1.8rem',
-                        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
+                        color: '#4facfe',  // ← Обычный цвет вместо градиента
+                        fontWeight: 700,
+                        textShadow: '0 2px 8px rgba(79, 172, 254, 0.3)',
                         marginBottom: '10px'
                     }}>
                         Архив Техники
@@ -294,7 +293,7 @@ const Archive = () => {
                         borderRadius: '8px',
                         border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>
-                        {user?.fullName || user?.username} ({user?.role === 'admin' ? 'Администратор' : 'Диспетчер'})
+                        {user?.fullName || user?.username} ({user?.role === 'admin' ? 'Администратор' : 'Диспетчер' })
                     </div>
                 </div>
             </div>

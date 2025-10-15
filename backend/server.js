@@ -14,24 +14,9 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const HOST = process.env.HOST || '0.0.0.0';
 
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-
-// ↓↓↓ ЭТО ДОЛЖНО БЫТЬ САМЫМ ПЕРВЫМ! ↓↓↓
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Только после cors идут остальные middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// CORS настройка
+// ============================================
+// CORS НАСТРОЙКА (ОПРЕДЕЛЯЕМ ПЕРЕД ИСПОЛЬЗОВАНИЕМ!)
+// ============================================
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
@@ -45,7 +30,8 @@ const corsOptions = {
                 'http://127.0.0.1:3000',
                 'http://10.35.3.117:3001',
                 'http://10.35.3.117:3000',
-                
+                'http://10.2.12.177:3001',
+                'http://10.2.12.177:3000'
             ];
 
         if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
@@ -56,12 +42,41 @@ const corsOptions = {
         }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Length', 'X-JSON'],
+    maxAge: 86400,
     optionsSuccessStatus: 200
 };
 
-// Middleware
+// ============================================
+// MIDDLEWARE (СТРОГО В ЭТОМ ПОРЯДКЕ!)
+// ============================================
+
+// 1. CORS - САМЫЙ ПЕРВЫЙ!
+app.use(cors(corsOptions));
+
+// 2. Preflight запросы
+app.options('*', cors(corsOptions));
+
+// 3. Body parsers - СРАЗУ ПОСЛЕ CORS
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 4. Логирование запросов (только в development)
+if (process.env.NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.url}`);
+        console.log(`   Origin: ${req.headers.origin || 'No origin'}`);
+        console.log(`   Content-Type: ${req.headers['content-type'] || 'No content-type'}`);
+        if (req.body && Object.keys(req.body).length > 0) {
+            console.log(`   Body:`, req.body);
+        }
+        next();
+    });
+}
+
+// 5. Helmet для безопасности
 app.use(helmet({
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
@@ -73,6 +88,7 @@ app.use(helmet({
             connectSrc: [
                 "'self'",
                 "http://10.35.3.117:5001",
+                "http://10.2.12.177:5001",
                 "http://localhost:5001",
                 "http://127.0.0.1:5001"
             ]
@@ -80,9 +96,7 @@ app.use(helmet({
     }
 }));
 
-app.use(cors(corsOptions));
-
-// Rate limiting
+// 6. Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: process.env.NODE_ENV === 'development' ? 1000 : 100,
@@ -92,21 +106,16 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Логирование в dev режиме
-if (process.env.NODE_ENV === 'development') {
-    app.use((req, res, next) => {
-        console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.url}`);
-        next();
-    });
-}
-
-// Routes
+// ============================================
+// ROUTES (ПОСЛЕ ВСЕХ MIDDLEWARE!)
+// ============================================
 app.use('/api/auth', authRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/archive', archiveRoutes);
+
+// ============================================
+// СЛУЖЕБНЫЕ ЭНДПОИНТЫ
+// ============================================
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -128,9 +137,12 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Простая проверка
+// Ping
 app.get('/ping', (req, res) => {
-    res.json({ message: 'pong', timestamp: new Date().toISOString() });
+    res.json({
+        message: 'pong',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // API документация
@@ -167,17 +179,11 @@ app.get('/api/docs', (req, res) => {
     });
 });
 
-// Error handling
-app.use((err, req, res, next) => {
-    console.error('💥 Ошибка сервера:', err.stack);
-    res.status(500).json({
-        message: 'Внутренняя ошибка сервера',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined,
-        timestamp: new Date().toISOString()
-    });
-});
+// ============================================
+// ERROR HANDLERS (В САМОМ КОНЦЕ!)
+// ============================================
 
-// 404 handler
+// 404 для API маршрутов
 app.use('/api/*', (req, res) => {
     res.status(404).json({
         message: 'API маршрут не найден',
@@ -187,20 +193,29 @@ app.use('/api/*', (req, res) => {
     });
 });
 
-// Запуск сервера
+// Общий обработчик ошибок
+app.use((err, req, res, next) => {
+    console.error('💥 Ошибка сервера:', err.stack);
+    res.status(500).json({
+        message: 'Внутренняя ошибка сервера',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ============================================
+// ЗАПУСК СЕРВЕРА
+// ============================================
 async function startServer() {
     try {
-        // 1. Инициализация базы данных
         console.log('🔄 Инициализация базы данных...');
         await initializeDatabase();
         console.log('✅ База данных инициализирована');
 
-        // 2. Запуск синхронизации с MSSQL
         console.log('🔄 Запуск синхронизации с JMineOps...');
         startSyncJob();
         console.log('✅ Синхронизация запущена');
 
-        // 3. Запуск HTTP сервера
         app.listen(PORT, HOST, () => {
             console.log('='.repeat(70));
             console.log(`🚀 Сервер MMA АКТОГАЙ запущен`);
@@ -222,7 +237,9 @@ async function startServer() {
     }
 }
 
-// Graceful shutdown
+// ============================================
+// GRACEFUL SHUTDOWN
+// ============================================
 process.on('SIGTERM', () => {
     console.log('🛑 Получен сигнал SIGTERM, завершение работы...');
     process.exit(0);
@@ -233,7 +250,6 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-// Запуск
 startServer();
 
 module.exports = app;

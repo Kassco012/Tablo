@@ -331,7 +331,7 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 // Получение данных дашборда
 router.get('/',
     authenticate,
-    authorize('admin', 'dispatcher'),
+    authorize('programmer', 'admin' , 'dispatcher'),
     asyncHandler(async (req, res) => {
         try {
             // Имитация загрузки данных

@@ -28,7 +28,8 @@ const UserProfileDropdown = ({ user }) => {
             'admin': 'Администратор',
             'dispatcher': 'Диспетчер',
             'mechanic': 'Механик',
-            'viewer': 'Наблюдатель'
+            'viewer': 'Наблюдатель', 
+            'programmer' : 'Программист'
         };
         return roleMap[role] || role;
     };
@@ -38,7 +39,8 @@ const UserProfileDropdown = ({ user }) => {
             'admin': '#dc3545',
             'dispatcher': '#ffc107',
             'mechanic': '#28a745',
-            'viewer': '#6c757d'
+            'viewer': '#6c757d', 
+            'programmer': '#dc3545'
         };
         return colorMap[role] || '#6c757d';
     };
@@ -256,7 +258,7 @@ const Dashboard = ({ onLoginClick }) => {
     const [showLaunchConfirm, setShowLaunchConfirm] = useState(null);
 
     // ПАГИНАЦИЯ - 10 записей на страницу
-    const ITEMS_PER_PAGE = 10;
+    const ITEMS_PER_PAGE = 9;
     const AUTO_SWITCH_INTERVAL = 15000; // 15 секунд
 
     const [currentPage, setCurrentPage] = useState(0);
@@ -324,17 +326,34 @@ const Dashboard = ({ onLoginClick }) => {
         }
     }, [equipment, selectedSection]);
 
+    // Замените функцию loadSections на эту:
     const loadSections = async () => {
         try {
             const response = await api.get('/equipment/sections');
-            setSections(response.data);
+
+            // ✅ Проверяем, что данные - это массив
+            if (response.data && Array.isArray(response.data)) {
+                setSections(response.data);
+            } else {
+                console.warn('⚠️ Sections API вернул не массив:', response.data);
+                setSections([]); // Устанавливаем пустой массив
+            }
         } catch (error) {
-            console.error('Error loading sections:', error);
+            console.error('❌ Error loading sections:', error);
+
+            // Устанавливаем пустой массив при ошибке
+            setSections([]);
+
+            // Если 404 - значит эндпоинт не существует
+            if (error.response?.status === 404) {
+                console.warn('⚠️ API /equipment/sections не найден');
+                toast.warning('Фильтр по участкам недоступен');
+            }
         }
     };
 
     const handleLaunchEquipment = async (equipmentItem) => {
-        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher')) {
+        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'programmer' )) {
             toast.error('Недостаточно прав для запуска техники');
             return;
         }
@@ -778,7 +797,7 @@ const Dashboard = ({ onLoginClick }) => {
                                                             Запуск...
                                                         </>
                                                     ) : (
-                                                        <>🚀 ЗАПУСК</>
+                                                        <> ЗАПУСК</>
                                                     )}
                                                 </button>
                                             ) : (
@@ -955,7 +974,7 @@ const Dashboard = ({ onLoginClick }) => {
                 <div className="modal-backdrop" onClick={() => setShowLaunchConfirm(null)}>
                     <div className="modal-content" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>🚀 Подтверждение запуска</h3>
+                            <h3> Подтверждение запуска</h3>
                             <button
                                 className="close-button"
                                 onClick={() => setShowLaunchConfirm(null)}
@@ -1025,7 +1044,7 @@ const Dashboard = ({ onLoginClick }) => {
                                         fontSize: '0.95rem'
                                     }}
                                 >
-                                    🚀 Запустить в работу
+                                     Запустить в работу
                                 </button>
                             </div>
                         </div>
