@@ -163,7 +163,6 @@ app.get('/api/docs', (req, res) => {
             },
             equipment: {
                 'GET /api/equipment': 'Список оборудования',
-                'GET /api/equipment/sections': 'Список участков',
                 'GET /api/equipment/stats': 'Статистика',
                 'GET /api/equipment/:id': 'Информация об оборудовании',
                 'PUT /api/equipment/:id': 'Обновление (auth)',

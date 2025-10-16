@@ -21,9 +21,6 @@ async function runMigration() {
               -- 1. ID
               id TEXT PRIMARY KEY,
               
-              -- 2. Участок
-              section TEXT NOT NULL DEFAULT 'колесные техники',
-              
               -- 3. Тип/Модель
               equipment_type TEXT NOT NULL,
               model TEXT,
@@ -66,7 +63,6 @@ async function runMigration() {
 
         const createIndexesSQL = `
             CREATE INDEX IF NOT EXISTS idx_equipment_status ON equipment_master(status);
-            CREATE INDEX IF NOT EXISTS idx_equipment_section ON equipment_master(section);
             CREATE INDEX IF NOT EXISTS idx_equipment_active ON equipment_master(is_active);
             CREATE INDEX IF NOT EXISTS idx_equipment_mssql_id ON equipment_master(mssql_equipment_id);
         `;

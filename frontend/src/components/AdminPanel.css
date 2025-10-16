@@ -388,15 +388,15 @@
         border-color: var(--card-color);
     }
 
-    .stat-card-admin.repair {
-        --card-color: #4facfe;
+    .stat-card-admin.down {
+        --card-color: #dc3545;
     }
 
     .stat-card-admin.ready {
         --card-color: #28a745;
     }
 
-    .stat-card-admin.waiting {
+    .stat-card-admin.delay {
         --card-color: #dc3545;
     }
 

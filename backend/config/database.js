@@ -37,19 +37,14 @@ async function initializeDatabase() {
             -- Основная таблица оборудования
             CREATE TABLE IF NOT EXISTS equipment_master (
                 id TEXT PRIMARY KEY,
-                section TEXT NOT NULL DEFAULT 'колесные техники',
                 equipment_type TEXT NOT NULL,
                 model TEXT,
-                planned_start TEXT,
-                planned_end TEXT,
                 actual_start TEXT,
                 actual_end TEXT,
-                delay_hours INTEGER DEFAULT 0,
+                planned_hours REAL DEFAULT 0,
                 status TEXT NOT NULL DEFAULT 'Ready',
-                priority TEXT DEFAULT 'normal',
                 malfunction TEXT,
                 mechanic_name TEXT,
-                progress INTEGER DEFAULT 0,
                 mssql_equipment_id INTEGER,
                 mssql_type TEXT,
                 mssql_status_id INTEGER,
@@ -65,19 +60,14 @@ async function initializeDatabase() {
             CREATE TABLE IF NOT EXISTS equipment_archive (
                 archive_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 id TEXT NOT NULL,
-                section TEXT NOT NULL,
                 equipment_type TEXT NOT NULL,
                 model TEXT,
                 status TEXT NOT NULL,
-                priority TEXT NOT NULL DEFAULT 'normal',
-                planned_start TEXT,
-                planned_end TEXT,
                 actual_start TEXT,
                 actual_end TEXT,
-                delay_hours INTEGER DEFAULT 0,
+                planned_hours REAL DEFAULT 0,
                 malfunction TEXT,
                 mechanic_name TEXT,
-                progress INTEGER DEFAULT 0,
                 created_at DATETIME,
                 updated_at DATETIME,
                 completed_date DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -100,7 +90,6 @@ async function initializeDatabase() {
 
             -- Индексы для equipment_master
             CREATE INDEX IF NOT EXISTS idx_master_status ON equipment_master(status);
-            CREATE INDEX IF NOT EXISTS idx_master_section ON equipment_master(section);
             CREATE INDEX IF NOT EXISTS idx_master_active ON equipment_master(is_active);
             CREATE INDEX IF NOT EXISTS idx_master_mssql_id ON equipment_master(mssql_equipment_id);
             
@@ -121,8 +110,104 @@ async function initializeDatabase() {
             }
 
             console.log('✅ Таблицы созданы успешно');
+
+            // ✅ МИГРАЦИЯ: Добавляем колонку planned_hours если её нет
+            await migrateDatabase(database);
+
             await createDefaultUsers(database);
             resolve();
+        });
+    });
+}
+
+// ✅ НОВАЯ ФУНКЦИЯ: Миграция БД для добавления planned_hours
+async function migrateDatabase(database) {
+    return new Promise((resolve) => {
+        console.log('🔄 Проверка миграций...');
+
+        // Проверяем, есть ли колонка planned_hours в equipment_master
+        database.all("PRAGMA table_info(equipment_master)", [], (err, columns) => {
+            if (err) {
+                console.error('❌ Ошибка проверки структуры таблицы:', err);
+                resolve();
+                return;
+            }
+
+            const hasPlannedHours = columns.some(col => col.name === 'planned_hours');
+
+            if (!hasPlannedHours) {
+                console.log('🔄 Добавление колонки planned_hours в equipment_master...');
+                database.run(
+                    'ALTER TABLE equipment_master ADD COLUMN planned_hours REAL DEFAULT 0',
+                    (err) => {
+                        if (err) {
+                            console.error('❌ Ошибка добавления planned_hours в equipment_master:', err);
+                        } else {
+                            console.log('✅ Колонка planned_hours добавлена в equipment_master');
+                        }
+
+                        // Добавляем в таблицу архива
+                        database.all("PRAGMA table_info(equipment_archive)", [], (err, archiveColumns) => {
+                            if (err) {
+                                console.error('❌ Ошибка проверки структуры таблицы архива:', err);
+                                resolve();
+                                return;
+                            }
+
+                            const archiveHasPlannedHours = archiveColumns.some(col => col.name === 'planned_hours');
+
+                            if (!archiveHasPlannedHours) {
+                                console.log('🔄 Добавление колонки planned_hours в equipment_archive...');
+                                database.run(
+                                    'ALTER TABLE equipment_archive ADD COLUMN planned_hours REAL DEFAULT 0',
+                                    (err) => {
+                                        if (err) {
+                                            console.error('❌ Ошибка добавления planned_hours в equipment_archive:', err);
+                                        } else {
+                                            console.log('✅ Колонка planned_hours добавлена в equipment_archive');
+                                        }
+                                        resolve();
+                                    }
+                                );
+                            } else {
+                                console.log('✅ Колонка planned_hours уже существует в equipment_archive');
+                                resolve();
+                            }
+                        });
+                    }
+                );
+            } else {
+                console.log('✅ Колонка planned_hours уже существует в equipment_master');
+
+                // Проверяем архив
+                database.all("PRAGMA table_info(equipment_archive)", [], (err, archiveColumns) => {
+                    if (err) {
+                        console.error('❌ Ошибка проверки структуры таблицы архива:', err);
+                        resolve();
+                        return;
+                    }
+
+                    const archiveHasPlannedHours = archiveColumns.some(col => col.name === 'planned_hours');
+
+                    if (!archiveHasPlannedHours) {
+                        console.log('🔄 Добавление колонки planned_hours в equipment_archive...');
+                        database.run(
+                            'ALTER TABLE equipment_archive ADD COLUMN planned_hours REAL DEFAULT 0',
+                            (err) => {
+                                if (err) {
+                                    console.error('❌ Ошибка добавления planned_hours в equipment_archive:', err);
+                                } else {
+                                    console.log('✅ Колонка planned_hours добавлена в equipment_archive');
+                                }
+                                resolve();
+                            }
+                        );
+                    } else {
+                        console.log('✅ Колонка planned_hours уже существует в equipment_archive');
+                        resolve();
+                    }
+                });
+            }
         });
     });
 }
@@ -167,6 +252,84 @@ async function createDefaultUsers(database) {
                 password: bcrypt.hashSync('KAL2025', 10),
                 role: 'dispatcher',
                 full_name: 'Уалихан Белгибай'
+            },
+            {
+                username: 'assel.zhumadilova@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Асель Жумадилова'
+            },
+            {
+                username: 'dias.mukhamedbekov@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Диас Мухамедбеков'
+            },
+            {
+                username: 'nurtay.oraltayev@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Нұртай Оралтаев'
+            },
+            {
+                username: 'tamara.borisenko@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Тамара Борисенко'
+            },
+            {
+                username: 'aidyn.sarsembinov@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Айдын Сәрсембинов'
+            },
+            {
+                username: 'anuar.alibay@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Әнуар Әлібай'
+            },
+            {
+                username: 'aizada.kabidenova@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Айзада Кабиденова'
+            },
+            {
+                username: 'adilet.oskenbayev@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Адилет Оскинбаев'
+            },
+            {
+                username: 'temirlan.kaidar@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Кайдар Темирлан'
+            },
+            {
+                username: 'nikita.zabarin@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Никита Забарин'
+            },
+            {
+                username: 'akmaral.bakchakova@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Акмарал Бакчакова'
+            },
+            {
+                username: 'alimzhan.nurtazin@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Алимжан Нуртазин'
+            },
+            {
+                username: 'ansar.rysbayev@kazminerals.com',
+                password: bcrypt.hashSync('KAL2025', 10),
+                role: 'dispatcher',
+                full_name: 'Ансар Рысбаев'
             },
         ];
 
@@ -240,7 +403,7 @@ function all(sql, params = []) {
 function run(sql, params = []) {
     return new Promise((resolve, reject) => {
         const database = getDatabase();
-        database.run(sql, params, function(err) {
+        database.run(sql, params, function (err) {
             if (err) {
                 console.error('❌ DB RUN Error:', err);
                 reject(err);

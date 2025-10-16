@@ -1,10 +1,14 @@
-﻿// frontend/src/components/EquipmentTable.js - обновленная версия с участками
+﻿// frontend/src/components/EquipmentTable.js - с улучшенным вводом планового времени
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import './EquipmentTable.css';
+import {
+    getEquipmentTypeText,
+    getEquipmentTypeOptions
+} from '../components/EquipmentTypes';
 
 const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const { user } = useAuth();
@@ -12,33 +16,17 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         id: '',
         type: '',
         model: '',
-        section: '',
         status: '',
-        priority: '',
-        planned_start: '',
-        planned_end: '',
-        actual_start: '',
-        actual_end: '',
-        delay_hours: 0,
+        planned_hours: 0,
         malfunction: '',
-        mechanic_name: '',
-        progress: 0
+        mechanic_name: ''
     });
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('edit');
     const [showIdChangeConfirm, setShowIdChangeConfirm] = useState(false);
     const [originalId, setOriginalId] = useState('');
-
-    // Список участков
-    const SECTIONS = [
-        'колесные техники',
-        'гусеничные техники',
-        'шиномонтажные работы',
-        'капитальный ремонт',
-        'энергоучасток',
-        'легкотоннажные техники'
-    ];
 
     useEffect(() => {
         if (equipment) {
@@ -46,34 +34,46 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                 id: equipment.id || '',
                 type: equipment.type || '',
                 model: equipment.model || '',
-                section: equipment.section || 'колесные техники',
                 status: equipment.status || '',
-                priority: equipment.priority || '',
-                planned_start: equipment.planned_start || '',
-                planned_end: equipment.planned_end || '',
-                actual_start: equipment.actual_start || '',
-                actual_end: equipment.actual_end || '',
-                delay_hours: equipment.delay_hours || 0,
+                planned_hours: equipment.planned_hours || 0,
                 malfunction: equipment.malfunction || '',
-                mechanic_name: equipment.mechanic_name || '',
-                progress: equipment.progress || 0
+                mechanic_name: equipment.mechanic_name || ''
             };
 
             setFormData(equipmentData);
             setOriginalId(equipment.id);
 
-            if (user && (user.role === 'admin' || user.role === 'dispatcher')) {
+            if (user && (user.role === 'admin' || user.role === 'dispatcher' || user.role === 'programmer')) {
                 loadHistory();
             }
         }
     }, [equipment, user]);
 
     const loadHistory = async () => {
+        setHistoryLoading(true);
+
         try {
             const response = await api.get(`/equipment/${equipment.id}/history`);
-            setHistory(response.data);
+
+            if (response.data && Array.isArray(response.data)) {
+                setHistory(response.data);
+            } else {
+                console.warn('⚠️ История пришла не в виде массива:', response.data);
+                setHistory([]);
+            }
         } catch (error) {
-            console.error('Error loading history:', error);
+            console.error('❌ Error loading history:', error);
+            setHistory([]);
+
+            if (error.response?.status === 404) {
+                toast.info('История для этого оборудования пока не создана');
+            } else if (error.response?.status === 500) {
+                toast.error('Ошибка сервера при загрузке истории');
+            } else {
+                toast.error('Не удалось загрузить историю изменений');
+            }
+        } finally {
+            setHistoryLoading(false);
         }
     };
 
@@ -90,7 +90,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
 
         try {
             setLoading(true);
-            const response = await api.put(`/equipment/${originalId}/change-id`, {
+            await api.put(`/equipment/${originalId}/change-id`, {
                 newId: formData.id.trim()
             });
 
@@ -107,11 +107,52 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         }
     };
 
+    // ✅ Обработчик изменения планового времени
+    const handlePlannedHoursChange = (e) => {
+        const value = e.target.value.trim();
+
+        // Разрешаем пустое поле, цифры, точку и запятую
+        if (value === '' || /^[\d.,]+$/.test(value)) {
+            // Заменяем запятую на точку для корректной работы
+            const normalizedValue = value.replace(',', '.');
+
+            // Парсим значение
+            const numValue = parseFloat(normalizedValue);
+
+            // Если значение корректное число
+            if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+                setFormData(prev => ({
+                    ...prev,
+                    planned_hours: numValue
+                }));
+            } else if (value === '') {
+                // Если поле пустое, устанавливаем 0
+                setFormData(prev => ({
+                    ...prev,
+                    planned_hours: 0
+                }));
+            } else {
+                // Показываем предупреждение только если число вне диапазона
+                if (!isNaN(numValue)) {
+                    toast.warning('Плановое время должно быть от 0 до 100 часов');
+                }
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!user || (user.role !== 'admin' && user.role !== 'dispatcher')) {
             toast.error('Недостаточно прав для редактирования');
+            return;
+        }
+
+        // ✅ Валидация планового времени
+        const plannedHours = parseFloat(formData.planned_hours);
+
+        if (isNaN(plannedHours) || plannedHours < 0 || plannedHours > 100) {
+            toast.error('Плановое время должно быть числом от 0 до 100 часов');
             return;
         }
 
@@ -132,17 +173,10 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             const updateData = {
                 type: formData.type,
                 model: formData.model,
-                section: formData.section,
                 status: formData.status,
-                priority: formData.priority,
-                planned_start: formData.planned_start,
-                planned_end: formData.planned_end,
-                actual_start: formData.actual_start,
-                actual_end: formData.actual_end,
-                delay_hours: formData.delay_hours,
+                planned_hours: formData.planned_hours,
                 malfunction: formData.malfunction,
-                mechanic_name: formData.mechanic_name,
-                progress: formData.progress
+                mechanic_name: formData.mechanic_name
             };
 
             await api.put(`/equipment/${currentId}`, updateData);
@@ -161,7 +195,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         const { name, value, type } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'number' ? parseInt(value) || 0 : value
+            [name]: type === 'number' ? parseFloat(value) || 0 : value
         }));
     };
 
@@ -182,17 +216,14 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         return statusMap[status] || status;
     };
 
-    const getEquipmentTypeText = (type) => {
-        return type === 'excavator' ? 'Экскаватор' : 'Погрузчик';
-    };
-
-    const getSectionText = (section) => {
-        return section || 'Не указан';
-    };
-
     const formatDateTime = (dateString) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleString('ru-RU');
+        try {
+            return new Date(dateString).toLocaleString('ru-RU');
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return dateString;
+        }
     };
 
     const getActionText = (action) => {
@@ -203,11 +234,18 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             'update_mechanic_name': 'Назначение механика',
             'update_type': 'Изменение типа',
             'update_model': 'Изменение модели',
-            'update_section': 'Изменение участка',
+            'update_planned_hours': 'Изменение планового времени',
             'change_id': 'Изменение ID',
             'delete': 'Удаление'
         };
         return actionMap[action] || action;
+    };
+
+    // ✅ Функция для правильного склонения слова "час"
+    const getHoursText = (hours) => {
+        if (hours === 1) return 'час';
+        if (hours >= 2 && hours <= 4) return 'часа';
+        return 'часов';
     };
 
     if (!isOpen || !equipment) return null;
@@ -222,9 +260,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                         <h2>Оборудование {originalId}</h2>
                         <p className="equipment-subtitle">
                             {getEquipmentTypeText(equipment.type)} {equipment.model}
-                        </p>
-                        <p className="equipment-subtitle" style={{ color: '#4facfe' }}>
-                            Участок: {getSectionText(equipment.section)}
                         </p>
                     </div>
                     <button className="close-button" onClick={onClose}>
@@ -267,22 +302,9 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                 </div>
 
                                 <div className="info-item">
-                                    <label>Участок:</label>
-                                    <span style={{
-                                        background: 'rgba(79, 172, 254, 0.1)',
-                                        color: '#4facfe',
-                                        padding: '4px 8px',
-                                        borderRadius: '6px',
-                                        fontSize: '0.9rem',
-                                        fontWeight: '500'
-                                    }}>
-                                        {getSectionText(equipment.section)}
-                                    </span>
-                                </div>
-
-                                <div className="info-item">
                                     <label>Тип:</label>
                                     <span>{getEquipmentTypeText(equipment.type)}</span>
+                                    <span>{getEquipmentTypeOptions(equipment.type)}</span>
                                 </div>
 
                                 <div className="info-item">
@@ -297,21 +319,19 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     </span>
                                 </div>
 
-                                <div className="info-item">
-                                    <label>Фактическое время:</label>
-                                    <span>{equipment.actual_start || '-'} - {equipment.actual_end || '-'}</span>
-                                </div>
-
+                                {/* ✅ Показываем плановое время с правильным склонением */}
                                 <div className="info-item">
                                     <label>Плановое время:</label>
-                                    <span>{equipment.planned_start} - {equipment.planned_end}</span>
+                                    <span style={{
+                                        color: equipment.planned_hours > 0 ? '#ffffff' : 'rgba(255, 255, 255, 0.4)',
+                                        fontStyle: equipment.planned_hours > 0 ? 'normal' : 'italic'
+                                    }}>
+                                        {equipment.planned_hours > 0
+                                            ? `${equipment.planned_hours} ${getHoursText(equipment.planned_hours)}`
+                                            : 'Не указано'
+                                        }
+                                    </span>
                                 </div>
-
-                                <div className="info-item">
-                                    <label>Задержка:</label>
-                                    <span>{equipment.delay_hours > 0 ? `+${equipment.delay_hours}ч` : 'Нет'}</span>
-                                </div>
-
 
                                 <div className="info-item full-width">
                                     <label>Неисправность:</label>
@@ -368,22 +388,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Участок</label>
-                                    <select
-                                        name="section"
-                                        value={formData.section}
-                                        onChange={handleChange}
-                                        disabled={loading}
-                                    >
-                                        {SECTIONS.map(section => (
-                                            <option key={section} value={section}>
-                                                {getSectionText(section)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
                                     <label>Тип</label>
                                     <select
                                         name="type"
@@ -393,7 +397,11 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     >
                                         <option value="excavator">Экскаватор</option>
                                         <option value="loader">Погрузчик</option>
-                                      
+                                        <option value="watertruck">Водовоз</option>
+                                        <option value="dozer">Бульдозер</option>
+                                        <option value="drill">Буровой станок</option>
+                                        <option value="grader">Автогрейдер</option>
+                                        <option value="truck">Самосвал</option>
                                     </select>
                                 </div>
 
@@ -425,76 +433,68 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     </select>
                                 </div>
 
+                                {/* ✅ УЛУЧШЕННОЕ ПОЛЕ: Плановое время с текстовым вводом */}
                                 <div className="form-group">
-                                    <label>Приоритет</label>
-                                    <select
-                                        name="priority"
-                                        value={formData.priority}
-                                        onChange={handleChange}
-                                        disabled={loading}
-                                    >
-                                        <option value="low">Низкий</option>
-                                        <option value="normal">Обычный</option>
-                                        <option value="medium">Средний</option>
-                                        <option value="high">Высокий</option>
-                                        <option value="critical">Критический</option>
-                                    </select>
-                                </div>
+                                    <label>Плановое время (часы)</label>
 
-                                <div className="form-group">
-                                    <label>Плановое начало</label>
-                                    <input
-                                        type="time"
-                                        name="planned_start"
-                                        value={formData.planned_start}
-                                        onChange={handleChange}
-                                        disabled={loading}
-                                    />
-                                </div>
+                                    {/* Быстрый выбор часто используемых значений */}
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '8px',
+                                        marginBottom: '10px',
+                                        flexWrap: 'wrap'
+                                    }}>
+                                        {[1, 2, 4, 6, 8, 12, 24].map(hours => (
+                                            <button
+                                                key={hours}
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({
+                                                    ...prev,
+                                                    planned_hours: hours
+                                                }))}
+                                                disabled={loading}
+                                                style={{
+                                                    background: formData.planned_hours === hours
+                                                        ? 'rgba(79, 172, 254, 0.3)'
+                                                        : 'rgba(255, 255, 255, 0.1)',
+                                                    border: `1px solid ${formData.planned_hours === hours
+                                                        ? '#4facfe'
+                                                        : 'rgba(255, 255, 255, 0.2)'}`,
+                                                    color: '#ffffff',
+                                                    padding: '6px 12px',
+                                                    borderRadius: '6px',
+                                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                                    fontSize: '0.85rem',
+                                                    transition: 'all 0.2s ease',
+                                                    fontWeight: formData.planned_hours === hours ? '600' : '400'
+                                                }}
+                                            >
+                                                {hours}ч
+                                            </button>
+                                        ))}
+                                    </div>
 
-                                <div className="form-group">
-                                    <label>Плановое окончание</label>
+                                    {/* Ручной ввод */}
                                     <input
-                                        type="time"
-                                        name="planned_end"
-                                        value={formData.planned_end}
-                                        onChange={handleChange}
+                                        type="text"
+                                        name="planned_hours"
+                                        value={formData.planned_hours || ''}
+                                        onChange={handlePlannedHoursChange}
                                         disabled={loading}
+                                        placeholder="Или введите вручную: 1.5, 6.5, 8..."
+                                        style={{
+                                            fontFamily: 'monospace',
+                                            fontSize: '1rem'
+                                        }}
                                     />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Фактическое начало</label>
-                                    <input
-                                        type="time"
-                                        name="actual_start"
-                                        value={formData.actual_start}
-                                        onChange={handleChange}
-                                        disabled={loading}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Фактическое окончание</label>
-                                    <input
-                                        type="time"
-                                        name="actual_end"
-                                        value={formData.actual_end}
-                                        onChange={handleChange}
-                                        disabled={loading}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Задержка (часы)</label>
-                                    <input
-                                        type="number"
-                                        name="delay_hours"
-                                        value={formData.delay_hours}
-                                        onChange={handleChange}
-                                        min="0"
-                                        disabled={loading}
-                                    />
+                                    <small style={{
+                                        color: 'rgba(255, 255, 255, 0.6)',
+                                        fontSize: '0.8rem',
+                                        display: 'block',
+                                        marginTop: '5px'
+                                    }}>
+                                        💡 Введите количество часов (0-100). Можно использовать десятичные: 1.5, 6, 8.5
+                                    </small>
                                 </div>
 
                                 <div className="form-group full-width">
@@ -544,8 +544,34 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
 
                     {activeTab === 'history' && canEdit && (
                         <div className="history-content">
-                            {history.length === 0 ? (
-                                <p className="no-history">История изменений пуста</p>
+                            {historyLoading ? (
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '40px',
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }}>
+                                    <div style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        border: '4px solid rgba(79, 172, 254, 0.2)',
+                                        borderTop: '4px solid #4facfe',
+                                        borderRadius: '50%',
+                                        animation: 'spin 1s linear infinite',
+                                        marginBottom: '15px'
+                                    }}></div>
+                                    <p>Загрузка истории изменений...</p>
+                                </div>
+                            ) : !history || history.length === 0 ? (
+                                <p className="no-history" style={{
+                                    textAlign: 'center',
+                                    padding: '40px',
+                                    color: 'rgba(255, 255, 255, 0.6)'
+                                }}>
+                                    {!history ? 'История недоступна' : 'История изменений пуста'}
+                                </p>
                             ) : (
                                 <div className="history-list">
                                     {history.map((item) => (
@@ -576,7 +602,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                     )}
                 </div>
 
-                {/* Модальное окно подтверждения изменения ID */}
                 {showIdChangeConfirm && (
                     <div className="modal-backdrop" onClick={(e) => {
                         if (e.target === e.currentTarget) setShowIdChangeConfirm(false);
@@ -600,8 +625,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     margin: '15px 0'
                                 }}>
                                     <strong>Старый ID:</strong> {originalId}<br />
-                                    <strong>Новый ID:</strong> {formData.id}<br />
-                                    <strong>Участок:</strong> {getSectionText(formData.section)}
+                                    <strong>Новый ID:</strong> {formData.id}
                                 </div>
                                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>
                                     ⚠️ Это действие изменит ID оборудования во всей системе и истории.
@@ -644,6 +668,13 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                         </div>
                     </div>
                 )}
+
+                <style jsx>{`
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `}</style>
             </div>
         </div>
     );

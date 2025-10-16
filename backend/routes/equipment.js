@@ -16,15 +16,9 @@ router.get('/', (req, res) => {
     let query = 'SELECT * FROM equipment_master WHERE is_active = 1';
     const params = [];
 
-    // Фильтр по участку
-    if (section) {
-        query += ' AND section = ?';
-        params.push(section);
-    }
-
     // Фильтр по статусу
     if (status) {
-        query += ' AND status = ?';
+        query += ' status = ?';
         params.push(status);
     }
 
@@ -46,59 +40,6 @@ router.get('/', (req, res) => {
     });
 });
 
-// Получение списка участков
-router.get('/sections', (req, res) => {
-    const db = getDatabase();
-
-    const query = `
-        SELECT 
-            section,
-            COUNT(*) as total,
-            SUM(CASE WHEN status = 'Down' THEN 1 ELSE 0 END) as down,
-            SUM(CASE WHEN status = 'Ready' THEN 1 ELSE 0 END) as ready,
-            SUM(CASE WHEN status = 'Delay' THEN 1 ELSE 0 END) as delay,
-            SUM(CASE WHEN status = 'Standby' THEN 1 ELSE 0 END) as standby,
-            SUM(CASE WHEN status = 'Shiftchange' THEN 1 ELSE 0 END) as shiftchange
-        FROM equipment_master 
-        WHERE is_active = 1
-        GROUP BY section
-        ORDER BY section
-    `;
-
-    db.all(query, [], (err, sections) => {
-        if (err) {
-            console.error('Error fetching sections:', err);
-            return res.status(500).json({ message: 'Ошибка получения участков' });
-        }
-        res.json(sections);
-    });
-});
-
-
-router.get('/sections', async (req, res) => {
-    try {
-        const sections = await db.query(`
-            SELECT 
-                section,
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'Down' THEN 1 ELSE 0 END) as down_count,
-                SUM(CASE WHEN status = 'Ready' THEN 1 ELSE 0 END) as ready_count
-            FROM equipment
-            WHERE section IS NOT NULL
-            GROUP BY section
-            ORDER BY section
-        `);
-
-        res.json(sections);
-    } catch (error) {
-        console.error('❌ Error getting sections:', error);
-        res.status(500).json({
-            error: 'Ошибка получения участков',
-            message: error.message
-        });
-    }
-});
-
 // Получение статистики
 router.get('/stats', (req, res) => {
     const db = getDatabase();
@@ -106,7 +47,6 @@ router.get('/stats', (req, res) => {
     const query = `
         SELECT 
             status,
-            section,
             COUNT(*) as count
         FROM equipment_master 
         WHERE is_active = 1
@@ -178,17 +118,13 @@ router.put('/:id', authenticateToken, (req, res) => {
     const { id } = req.params;
     const {
         model,
-        section,
         status,
-        priority,
-        planned_start,
-        planned_end,
+        planned_hours,
         actual_start,
         actual_end,
         delay_hours,
         malfunction,
-        mechanic_name,
-        progress
+        mechanic_name
     } = req.body;
 
     // Проверяем права доступа
@@ -211,17 +147,13 @@ router.put('/:id', authenticateToken, (req, res) => {
             UPDATE equipment_master 
             SET 
                 model = COALESCE(?, model),
-                section = COALESCE(?, section),
                 status = COALESCE(?, status),
-                priority = COALESCE(?, priority),
-                planned_start = COALESCE(?, planned_start),
-                planned_end = COALESCE(?, planned_end),
+                planned_hours = COALESCE(?, planned_hours),
                 actual_start = COALESCE(?, actual_start),
                 actual_end = COALESCE(?, actual_end),
                 delay_hours = COALESCE(?, delay_hours),
                 malfunction = COALESCE(?, malfunction),
                 mechanic_name = COALESCE(?, mechanic_name),
-                progress = COALESCE(?, progress),
                 manually_edited = 1,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
@@ -230,9 +162,9 @@ router.put('/:id', authenticateToken, (req, res) => {
         db.run(
             query,
             [
-                model, section, status, priority,
-                planned_start, planned_end, actual_start, actual_end,
-                delay_hours, malfunction, mechanic_name, progress, id
+                model, status,
+                planned_hours, actual_start, actual_end,
+                delay_hours, malfunction, mechanic_name, id
             ],
             function (err) {
                 if (err) {

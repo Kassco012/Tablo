@@ -1,4 +1,4 @@
-﻿// frontend/src/components/AdminPanel.js - обновленная версия с участками
+﻿// frontend/src/components/AdminPanel.js - БЕЗ УЧАСТКОВ
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -8,6 +8,9 @@ import { useEquipment } from '../contexts/EquipmentContext';
 import EquipmentTable from './EquipmentTable';
 import Archive from './archive';
 import './AdminPanel.css';
+import {
+    getEquipmentTypeText
+} from '../components/EquipmentTypes';
 
 const AdminPanel = () => {
     const { user, logout } = useAuth();
@@ -24,28 +27,15 @@ const AdminPanel = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newEquipment, setNewEquipment] = useState({
         id: '',
-        type: 'excavator',
+        type: '',
         model: '',
-        section: 'колесные техники',
-        status: 'ready',
-        priority: 'normal',
+        status: '',
         planned_start: '',
         planned_end: '',
         malfunction: '',
-        mechanic_name: '',
-        progress: 0
+        mechanic_name: ''
     });
     const [activeTab, setActiveTab] = useState('equipment');
-
-    // Список участков
-    const SECTIONS = [
-        'колесные техники',
-        'гусеничные техники',
-        'шиномонтажные работы',
-        'капитальный ремонт',
-        'энергоучасток',
-        'легкотоннажные техники'
-    ];
 
     useEffect(() => {
         const interval = setInterval(refreshData, 60000);
@@ -66,16 +56,14 @@ const AdminPanel = () => {
             setShowCreateModal(false);
             setNewEquipment({
                 id: '',
-                type: 'excavator',
+                type: '',
                 model: '',
-                section: 'колесные техники',
-                status: 'ready',
-                priority: 'normal',
+                status: '',
                 planned_start: '',
                 planned_end: '',
                 malfunction: '',
-                mechanic_name: '',
-                progress: 0
+                mechanic_name: ''
+      
             });
         } catch (error) {
             toast.error(error.message || 'Ошибка создания оборудования');
@@ -97,10 +85,11 @@ const AdminPanel = () => {
 
     const getStatusColor = (status) => {
         const colors = {
-            'in_repair': '#4facfe',
-            'ready': '#28a745',
-            'waiting': '#dc3545',
-            'scheduled': '#ffc107'
+            'Down': '#dc3545', 
+            'Ready': '#28a745',
+            'Delay': ' #4facfe',
+            'Standby': '#ffc107',
+            'Shiftchange': '#17a2b8'
         };
         return colors[status] || '#6c757d';
     };
@@ -114,22 +103,6 @@ const AdminPanel = () => {
             'critical': '#8B0000'
         };
         return colors[priority] || '#6c757d';
-    };
-
-    const getSectionColor = (section) => {
-        const colors = {
-            'колесные техники': '#4facfe',
-            'гусеничные техники': '#fd7e14',
-            'шиномонтажные работы': '#20c997',
-            'капитальный ремонт': '#dc3545',
-            'энергоучасток': '#ffc107',
-            'легкотоннажные техники': '#6f42c1'
-        };
-        return colors[section] || '#6c757d';
-    };
-
-    const getSectionText = (section) => {
-        return section || 'Не указан';
     };
 
     const formatTime = (timeString) => {
@@ -211,12 +184,10 @@ const AdminPanel = () => {
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Участок</th>
                                         <th>Тип/Модель</th>
                                         <th>Статус</th>
                                         <th>Время</th>
                                         <th>Механик</th>
-                                        <th>Прогресс</th>
                                         <th>Действия</th>
                                     </tr>
                                 </thead>
@@ -225,27 +196,6 @@ const AdminPanel = () => {
                                         <tr key={item.id}>
                                             <td>
                                                 <span className="equipment-id">{item.id}</span>
-                                                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
-                                                    Редактируемый
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    style={{
-                                                        background: getSectionColor(item.section) + '20',
-                                                        color: getSectionColor(item.section),
-                                                        padding: '6px 10px',
-                                                        borderRadius: '8px',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: '600',
-                                                        border: `1px solid ${getSectionColor(item.section)}40`,
-                                                        display: 'inline-block',
-                                                        textAlign: 'center',
-                                                        minWidth: '120px'
-                                                    }}
-                                                >
-                                                    {getSectionText(item.section)}
-                                                </span>
                                             </td>
                                             <td>
                                                 <div className="type-model">
@@ -260,22 +210,7 @@ const AdminPanel = () => {
                                                     className="status-indicator"
                                                     style={{ backgroundColor: getStatusColor(item.status) }}
                                                 >
-                                                    {item.status === 'in_repair' ? 'В ремонте' :
-                                                        item.status === 'ready' ? 'Готово' :
-                                                            item.status === 'waiting' ? 'Ожидание' :
-                                                                'Запланировано'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    className="priority-indicator"
-                                                    style={{ backgroundColor: getPriorityColor(item.priority) }}
-                                                >
-                                                    {item.priority === 'low' ? 'Низкий' :
-                                                        item.priority === 'normal' ? 'Обычный' :
-                                                            item.priority === 'medium' ? 'Средний' :
-                                                                item.priority === 'high' ? 'Высокий' :
-                                                                    'Критический'}
+                                                    {item.status}
                                                 </span>
                                             </td>
                                             <td>
@@ -289,22 +224,11 @@ const AdminPanel = () => {
                                             </td>
                                             <td>{item.mechanic_name || '-'}</td>
                                             <td>
-                                                <div className="progress-display">
-                                                    <div className="progress-bar-small">
-                                                        <div
-                                                            className="progress-fill-small"
-                                                            style={{ width: `${item.progress}%` }}
-                                                        />
-                                                    </div>
-                                                    <span>{item.progress}%</span>
-                                                </div>
-                                            </td>
-                                            <td>
                                                 <div className="action-buttons">
                                                     <button
                                                         className="edit-button"
                                                         onClick={() => setSelectedEquipment(item)}
-                                                        title="Редактировать (включая ID и участок)"
+                                                        title="Редактировать"
                                                     >
                                                         ✏️
                                                     </button>
@@ -350,7 +274,7 @@ const AdminPanel = () => {
                             <div className="stat-card-admin repair">
                                 <div className="stat-icon"></div>
                                 <div className="stat-info">
-                                    <div className="stat-number">{stats.in_repair}</div>
+                                    <div className="stat-number">{stats.down || 0}</div>
                                     <div className="stat-label">Down</div>
                                 </div>
                             </div>
@@ -358,7 +282,7 @@ const AdminPanel = () => {
                             <div className="stat-card-admin ready">
                                 <div className="stat-icon"></div>
                                 <div className="stat-info">
-                                    <div className="stat-number">{stats.ready}</div>
+                                    <div className="stat-number">{stats.ready || 0}</div>
                                     <div className="stat-label">Ready</div>
                                 </div>
                             </div>
@@ -366,8 +290,8 @@ const AdminPanel = () => {
                             <div className="stat-card-admin waiting">
                                 <div className="stat-icon"></div>
                                 <div className="stat-info">
-                                    <div className="stat-number">{stats.waiting}</div>
-                                    <div className="stat-label">Standby</div>
+                                    <div className="stat-number">{stats.delay || 0}</div>
+                                    <div className="stat-label">Delay</div>
                                 </div>
                             </div>
 
@@ -379,51 +303,6 @@ const AdminPanel = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Статистика по участкам */}
-                        {stats.by_section && (
-                            <div className="stats-details">
-                                <h3>Статистика по участкам</h3>
-                                <div className="stats-table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Участок</th>
-                                                <th>Down</th>
-                                                <th>Ready</th>
-                                                <th>Delay</th>
-                                                <th>Standby</th>
-                                                <th>Shiftchange</th>
-                                                <th>Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {Object.entries(stats.by_section).map(([section, sectionStats]) => (
-                                                <tr key={section}>
-                                                    <td>
-                                                        <span style={{
-                                                            background: getSectionColor(section) + '20',
-                                                            color: getSectionColor(section),
-                                                            padding: '4px 8px',
-                                                            borderRadius: '6px',
-                                                            fontSize: '0.85rem',
-                                                            fontWeight: '600'
-                                                        }}>
-                                                            {getSectionText(section)}
-                                                        </span>
-                                                    </td>
-                                                    <td>{sectionStats.in_repair || 0}</td>
-                                                    <td>{sectionStats.ready || 0}</td>
-                                                    <td>{sectionStats.waiting || 0}</td>
-                                                    <td>{sectionStats.scheduled || 0}</td>
-                                                    <td><strong>{sectionStats.total || 0}</strong></td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
 
                         <div className="stats-details">
                             <h3>Общая статистика</h3>
@@ -439,27 +318,27 @@ const AdminPanel = () => {
                                     <tbody>
                                         <tr>
                                             <td>Down</td>
-                                            <td>{stats.in_repair}</td>
-                                            <td>{stats.total ? Math.round((stats.down / stats.total) * 100) : 0}%</td>
+                                            <td>{stats.down || 0}</td>
+                                            <td>{stats.total ? Math.round(((stats.down || 0) / stats.total) * 100) : 0}%</td>
                                         </tr>
                                         <tr>
                                             <td>Ready</td>
-                                            <td>{stats.ready}</td>
-                                            <td>{stats.total ? Math.round((stats.ready / stats.total) * 100) : 0}%</td>
+                                            <td>{stats.ready || 0}</td>
+                                            <td>{stats.total ? Math.round(((stats.ready || 0) / stats.total) * 100) : 0}%</td>
                                         </tr>
                                         <tr>
                                             <td>Delay</td>
-                                            <td>{stats.waiting}</td>
-                                            <td>{stats.total ? Math.round((stats.delay / stats.total) * 100) : 0}%</td>
+                                            <td>{stats.delay || 0}</td>
+                                            <td>{stats.total ? Math.round(((stats.delay || 0) / stats.total) * 100) : 0}%</td>
                                         </tr>
                                         <tr>
                                             <td>Standby</td>
-                                            <td>{stats.scheduled || 0}</td>
+                                            <td>{stats.standby || 0}</td>
                                             <td>{stats.total ? Math.round(((stats.standby || 0) / stats.total) * 100) : 0}%</td>
                                         </tr>
                                         <tr>
                                             <td>Shiftchange</td>
-                                            <td>{stats.scheduled || 0}</td>
+                                            <td>{stats.shiftchange || 0}</td>
                                             <td>{stats.total ? Math.round(((stats.shiftchange || 0) / stats.total) * 100) : 0}%</td>
                                         </tr>
                                     </tbody>
@@ -481,42 +360,14 @@ const AdminPanel = () => {
 
                         <div className="settings-section">
                             <h4>Редактирование оборудования</h4>
-                            <p>✅ Диспетчеры и администраторы могут изменять:</p>
+                            <p>Диспетчеры и администраторы могут изменять:</p>
                             <ul style={{ color: 'rgba(255,255,255,0.8)', marginLeft: '20px' }}>
                                 <li>ID оборудования (с подтверждением)</li>
-                                <li>Участок техники</li>
                                 <li>Тип и модель</li>
-                                <li>Статус и приоритет</li>
+                                <li>Статус</li>
                                 <li>Время планового и фактического ремонта</li>
                                 <li>Назначение механиков</li>
-                                <li>Прогресс выполнения работ</li>
                             </ul>
-                        </div>
-
-                        <div className="settings-section">
-                            <h4>Участки техники</h4>
-                            <p>В системе настроены следующие участки:</p>
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                gap: '10px',
-                                marginTop: '15px'
-                            }}>
-                                {SECTIONS.map(section => (
-                                    <div key={section} style={{
-                                        background: getSectionColor(section) + '20',
-                                        color: getSectionColor(section),
-                                        padding: '10px',
-                                        borderRadius: '8px',
-                                        textAlign: 'center',
-                                        border: `1px solid ${getSectionColor(section)}40`,
-                                        fontSize: '0.9rem',
-                                        fontWeight: '500'
-                                    }}>
-                                        {getSectionText(section)}
-                                    </div>
-                                ))}
-                            </div>
                         </div>
 
                         <div className="settings-section">
@@ -572,24 +423,6 @@ const AdminPanel = () => {
                                         placeholder="EX001, LD001, ..."
                                         required
                                     />
-                                    <small style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>
-                                        ID можно будет изменить позже через редактирование
-                                    </small>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Участок*</label>
-                                    <select
-                                        value={newEquipment.section}
-                                        onChange={(e) => setNewEquipment({ ...newEquipment, section: e.target.value })}
-                                        required
-                                    >
-                                        {SECTIONS.map(section => (
-                                            <option key={section} value={section}>
-                                                {getSectionText(section)}
-                                            </option>
-                                        ))}
-                                    </select>
                                 </div>
 
                                 <div className="form-group">
@@ -601,6 +434,11 @@ const AdminPanel = () => {
                                     >
                                         <option value="excavator">Экскаватор</option>
                                         <option value="loader">Погрузчик</option>
+                                        <option value="watertruck">Водовоз</option>
+                                        <option value="dozer">Бульдозер</option>
+                                        <option value="drill">Буровой станок</option>
+                                        <option value="grader">Автогрейдер</option>
+                                        <option value="truck">Самосвал</option>
                                     </select>
                                 </div>
 

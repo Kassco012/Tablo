@@ -36,8 +36,8 @@ const STATUS_MAPPING = {
 const TYPE_MAPPING = {
     'Shovel': 'Экскаватор',
     'Dozer': 'Бульдозер',
-    'Drill': 'Буровая установка',
-    'Truck': 'Грузовик',
+    'Drill': 'Буровой станок',
+    'Truck': 'Самосвал',
     'Grader': 'Грейдер',
     'WaterTruck': 'Поливочная машина',
     'Loader': 'Погрузчик',

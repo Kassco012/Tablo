@@ -6,15 +6,12 @@ class Equipment {
         this.type = data.type;
         this.model = data.model;
         this.status = data.status || 'ready';
-        this.priority = data.priority || 'normal';
-        this.planned_start = data.planned_start;
-        this.planned_end = data.planned_end;
+        this.planned_hours = data.status;
         this.actual_start = data.actual_start;
         this.actual_end = data.actual_end;
         this.delay_hours = data.delay_hours || 0;
         this.malfunction = data.malfunction || '';
         this.mechanic_name = data.mechanic_name || '';
-        this.progress = data.progress || 0;
         this.created_at = data.created_at;
         this.updated_at = data.updated_at;
     }
@@ -74,9 +71,9 @@ class Equipment {
                     reject(err);
                 } else {
                     const stats = {
-                        in_repair: 0,
+                        down: 0,
                         ready: 0,
-                        waiting: 0,
+                        delay: 0,
                         scheduled: 0,
                         total: 0
                     };
@@ -100,17 +97,17 @@ class Equipment {
                 // Update existing
                 const query = `
           UPDATE equipment SET 
-            type = ?, model = ?, status = ?, priority = ?,
-            planned_start = ?, planned_end = ?, actual_start = ?, actual_end = ?,
-            delay_hours = ?, malfunction = ?, mechanic_name = ?, progress = ?,
+            type = ?, model = ?, status = ?, 
+             planned_hours = ?, actual_start = ?, actual_end = ?,
+            delay_hours = ?, malfunction = ?, mechanic_name = ?,
             updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `;
 
                 db.run(query, [
-                    this.type, this.model, this.status, this.priority,
-                    this.planned_start, this.planned_end, this.actual_start, this.actual_end,
-                    this.delay_hours, this.malfunction, this.mechanic_name, this.progress,
+                    this.type, this.model, this.status, 
+                    this.planned_hours , this.actual_start, this.actual_end,
+                    this.delay_hours, this.malfunction, this.mechanic_name,
                     this.id
                 ], function (err) {
                     if (err) reject(err);
@@ -120,15 +117,15 @@ class Equipment {
                 // Create new
                 const query = `
           INSERT INTO equipment 
-          (id, type, model, status, priority, planned_start, planned_end, 
-           actual_start, actual_end, delay_hours, malfunction, mechanic_name, progress)
+          (id, type, model, status, planned_hours, 
+           actual_start, actual_end, delay_hours, malfunction, mechanic_name)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
                 db.run(query, [
-                    this.id, this.type, this.model, this.status, this.priority,
-                    this.planned_start, this.planned_end, this.actual_start, this.actual_end,
-                    this.delay_hours, this.malfunction, this.mechanic_name, this.progress
+                    this.id, this.type, this.model, this.status, 
+                    this.planned_hours, this.actual_start, this.actual_end,
+                    this.delay_hours, this.malfunction, this.mechanic_name
                 ], function (err) {
                     if (err) reject(err);
                     else resolve(this);

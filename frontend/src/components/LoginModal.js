@@ -138,8 +138,6 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
                             <strong>Разработчик</strong>
                             <div className="login-label">Username:</div>
                             <div className="login-value">kassymzhan.nuraliyev@kazminerals.com</div>
-                            <div className="login-label">Password:</div>
-                            <div className="login-value">Kazmin2025</div>
                             <div className="password-hint">Нажмите для автозаполнения username</div>
                         </div>
                         <div

@@ -14,10 +14,10 @@ export const useEquipment = () => {
 export const EquipmentProvider = ({ children }) => {
     const [equipment, setEquipment] = useState([]);
     const [stats, setStats] = useState({
-        in_repair: 0,
+        down: 0,
         ready: 0,
-        waiting: 0,
-        scheduled: 0,
+        delay: 0,
+        standby: 0,
         total: 0
     });
     const [loading, setLoading] = useState(true);
@@ -26,15 +26,15 @@ export const EquipmentProvider = ({ children }) => {
     const fetchEquipment = useCallback(async () => {
         try {
             console.log('\n' + '='.repeat(50));
-            console.log('🔄 НАЧАЛО ЗАГРУЗКИ ОБОРУДОВАНИЯ');
+            console.log('НАЧАЛО ЗАГРУЗКИ ОБОРУДОВАНИЯ');
             console.log('='.repeat(50));
 
             setError(null);
 
-            console.log('📡 Отправка запроса: GET /equipment');
+            console.log('Отправка запроса: GET /equipment');
             const response = await api.get('/equipment');
 
-            console.log('📥 Ответ получен:', {
+            console.log('Ответ получен:', {
                 status: response.status,
                 statusText: response.statusText,
                 headers: response.headers,
@@ -46,12 +46,12 @@ export const EquipmentProvider = ({ children }) => {
 
             // Детальная проверка структуры
             if (equipmentData === null || equipmentData === undefined) {
-                console.error('❌ response.data пустой (null/undefined)!');
+                console.error('response.data пустой (null/undefined)!');
                 setEquipment([]);
                 return;
             }
 
-            console.log('🔍 Анализ структуры данных:', {
+            console.log('Анализ структуры данных:', {
                 type: typeof equipmentData,
                 isArray: Array.isArray(equipmentData),
                 keys: typeof equipmentData === 'object' ? Object.keys(equipmentData) : 'N/A',
@@ -60,27 +60,27 @@ export const EquipmentProvider = ({ children }) => {
 
             // Если это уже массив
             if (Array.isArray(equipmentData)) {
-                console.log(`✅ Это массив! Длина: ${equipmentData.length}`);
+                console.log(`Это массив! Длина: ${equipmentData.length}`);
 
                 if (equipmentData.length > 0) {
-                    console.log('📋 Пример первой записи:', JSON.stringify(equipmentData[0], null, 2));
+                    console.log('Пример первой записи:', JSON.stringify(equipmentData[0], null, 2));
                 }
 
                 setEquipment(equipmentData);
-                console.log('✅ equipment state обновлен');
+                console.log('equipment state обновлен');
                 return;
             }
 
             // Если это объект с вложенным массивом
             if (typeof equipmentData === 'object') {
-                console.log('🔍 Это объект, ищем массив внутри...');
+                console.log('Это объект, ищем массив внутри...');
 
                 // Проверяем различные возможные ключи
                 const possibleKeys = ['equipment', 'data', 'items', 'records', 'results'];
 
                 for (const key of possibleKeys) {
                     if (equipmentData[key] && Array.isArray(equipmentData[key])) {
-                        console.log(`✅ Найден массив в ключе "${key}": ${equipmentData[key].length} записей`);
+                        console.log(`Найден массив в ключе "${key}": ${equipmentData[key].length} записей`);
                         setEquipment(equipmentData[key]);
                         return;
                     }
@@ -125,10 +125,10 @@ export const EquipmentProvider = ({ children }) => {
 
     const fetchStats = useCallback(async () => {
         try {
-            console.log('📊 Загрузка статистики...');
+            console.log('Загрузка статистики...');
             const response = await api.get('/equipment/stats');
 
-            console.log('📊 RAW stats:', response.data);
+            console.log('RAW stats:', response.data);
 
             // Проверяем формат статистики
             const statsData = response.data;
@@ -144,11 +144,11 @@ export const EquipmentProvider = ({ children }) => {
                 by_section: statsData.by_section || {}
             };
 
-            console.log('📊 Normalized stats:', normalizedStats);
+            console.log('Normalized stats:', normalizedStats);
             setStats(normalizedStats);
 
         } catch (error) {
-            console.error('❌ Ошибка загрузки статистики:', error);
+            console.error('Ошибка загрузки статистики:', error);
 
             // Вычисляем локально если запрос провалился
             if (Array.isArray(equipment) && equipment.length > 0) {
@@ -178,14 +178,14 @@ export const EquipmentProvider = ({ children }) => {
                     }
                 });
 
-                console.log('📊 Локально вычисленная статистика:', localStats);
+                console.log('Локально вычисленная статистика:', localStats);
                 setStats(localStats);
             }
         }
     }, [equipment]);
 
     const refreshData = useCallback(async () => {
-        console.log('🔄 Обновление данных...');
+        console.log('Обновление данных...');
         setLoading(true);
         try {
             await fetchEquipment();
@@ -196,7 +196,7 @@ export const EquipmentProvider = ({ children }) => {
     }, [fetchEquipment]);
 
     useEffect(() => {
-        console.log('📊 Инициализация EquipmentProvider');
+        console.log('Инициализация EquipmentProvider');
         refreshData();
     }, []);
 
@@ -210,7 +210,7 @@ export const EquipmentProvider = ({ children }) => {
 
 
     useEffect(() => {
-        console.log('🔍 СОСТОЯНИЕ EQUIPMENT CONTEXT:', {
+        console.log('СОСТОЯНИЕ EQUIPMENT CONTEXT:', {
             equipment_count: Array.isArray(equipment) ? equipment.length : 'NOT ARRAY',
             equipment_type: typeof equipment,
             stats: stats,

@@ -5,6 +5,10 @@ import EquipmentTable from './EquipmentTable';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 
+import {
+    getEquipmentTypeText
+} from '../components/EquipmentTypes';
+
 // Компонент пользовательского dropdown
 const UserProfileDropdown = ({ user }) => {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -28,8 +32,8 @@ const UserProfileDropdown = ({ user }) => {
             'admin': 'Администратор',
             'dispatcher': 'Диспетчер',
             'mechanic': 'Механик',
-            'viewer': 'Наблюдатель', 
-            'programmer' : 'Программист'
+            'viewer': 'Наблюдатель',
+            'programmer': 'Программист'
         };
         return roleMap[role] || role;
     };
@@ -39,7 +43,7 @@ const UserProfileDropdown = ({ user }) => {
             'admin': '#dc3545',
             'dispatcher': '#ffc107',
             'mechanic': '#28a745',
-            'viewer': '#6c757d', 
+            'viewer': '#6c757d',
             'programmer': '#dc3545'
         };
         return colorMap[role] || '#6c757d';
@@ -59,8 +63,8 @@ const UserProfileDropdown = ({ user }) => {
                     background: 'rgba(255, 255, 255, 0.1)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
-                    width: '40px',
-                    height: '40px',
+                    width: '60px',
+                    height: '60px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -78,7 +82,7 @@ const UserProfileDropdown = ({ user }) => {
                 }}
                 title="Информация о пользователе"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                 </svg>
             </button>
@@ -87,12 +91,12 @@ const UserProfileDropdown = ({ user }) => {
                 <div
                     style={{
                         position: 'absolute',
-                        top: '45px',
+                        top: '65px',
                         right: '0',
                         background: 'rgba(30, 39, 46, 0.95)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '12px',
-                        padding: '15px',
+                        padding: '20px',
                         minWidth: '220px',
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
                         backdropFilter: 'blur(10px)',
@@ -102,18 +106,18 @@ const UserProfileDropdown = ({ user }) => {
                 >
                     <div style={{
                         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                        paddingBottom: '12px',
-                        marginBottom: '12px'
+                        paddingBottom: '15px',
+                        marginBottom: '15px'
                     }}>
                         <div style={{
-                            fontSize: '0.9rem',
+                            fontSize: '1rem',
                             color: 'rgba(255, 255, 255, 0.6)',
                             marginBottom: '4px'
                         }}>
                             Авторизован как:
                         </div>
                         <div style={{
-                            fontSize: '1rem',
+                            fontSize: '1.3rem',
                             fontWeight: '600',
                             color: '#ffffff',
                             marginBottom: '6px'
@@ -256,33 +260,119 @@ const Dashboard = ({ onLoginClick }) => {
     const [selectedEquipment, setSelectedEquipment] = useState(null);
     const [launchingIds, setLaunchingIds] = useState(new Set());
     const [showLaunchConfirm, setShowLaunchConfirm] = useState(null);
-
-    // ПАГИНАЦИЯ - 10 записей на страницу
+    const [previousEquipment, setPreviousEquipment] = useState([]);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+    // ПАГИНАЦИЯ - 9 записей на страницу
     const ITEMS_PER_PAGE = 9;
     const AUTO_SWITCH_INTERVAL = 15000; // 15 секунд
 
     const [currentPage, setCurrentPage] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
 
-    // Состояния для фильтрации
-    const [selectedSection, setSelectedSection] = useState('');
-    const [sections, setSections] = useState([]);
-    const [filteredEquipment, setFilteredEquipment] = useState([]);
-
-    const SECTIONS = [
-        'колесные техники',
-        'гусеничные техники',
-        'шиномонтажные работы',
-        'капитальный ремонт',
-        'энергоучасток',
-        'легкотоннажные техники'
-    ];
-
-    const totalPages = Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE);
-    const currentEquipment = filteredEquipment.slice(
+    const totalPages = Math.ceil(equipment.length / ITEMS_PER_PAGE);
+    const currentEquipment = equipment.slice(
         currentPage * ITEMS_PER_PAGE,
         (currentPage + 1) * ITEMS_PER_PAGE
     );
+
+
+    const autoArchiveChangedEquipment = async (currentEquipment, previousEquipment) => {
+        // Пропускаем первую загрузку
+        if (isInitialLoad || previousEquipment.length === 0) {
+            return;
+        }
+
+        // Создаем Map для быстрого поиска предыдущего состояния
+        const previousMap = new Map(
+            previousEquipment.map(item => [item.id, item])
+        );
+
+        // Находим оборудование, у которого изменился статус с DOWN
+        const changedEquipment = currentEquipment.filter(current => {
+            const previous = previousMap.get(current.id);
+
+            // Если оборудование новое - пропускаем
+            if (!previous) return false;
+
+            // Если статус был DOWN, а стал другим - нужно архивировать
+            const wasDown = previous.status?.toLowerCase() === 'down';
+            const isNotDownNow = current.status?.toLowerCase() !== 'down';
+
+            return wasDown && isNotDownNow;
+        });
+
+        // Архивируем каждую измененную единицу
+        for (const item of changedEquipment) {
+            const previous = previousMap.get(item.id);
+
+            console.log(`🔄 Автоархивация: ${item.id} (${previous.status} → ${item.status})`);
+
+            try {
+                await api.post(`/archive/launch/${item.id}`, {
+                    completion_reason: 'status_changed', // Причина: изменение статуса
+                    auto_archived: true, // Флаг автоматической архивации
+                    previous_status: previous.status,
+                    new_status: item.status
+                });
+
+                toast.success(
+                    `✅ ${item.id} автоматически отправлен в архив (${previous.status} → ${item.status})`,
+                    { autoClose: 3000 }
+                );
+            } catch (error) {
+                console.error(`❌ Ошибка автоархивации ${item.id}:`, error);
+
+                // Показываем ошибку только если это не 404 (оборудование уже удалено)
+                if (error.response?.status !== 404) {
+                    toast.error(
+                        `Не удалось автоматически архивировать ${item.id}`,
+                        { autoClose: 3000 }
+                    );
+                }
+            }
+        }
+
+        // Если были изменения - обновляем данные
+        if (changedEquipment.length > 0) {
+            console.log(`📊 Автоархивировано единиц: ${changedEquipment.length}`);
+            // Даем время на обработку на бэкенде, затем обновляем
+            setTimeout(() => {
+                refreshData();
+            }, 1000);
+        }
+    };
+
+    useEffect(() => {
+        if (loading || equipment.length === 0) return;
+
+        // После первой загрузки данных
+        if (isInitialLoad) {
+            setPreviousEquipment(equipment);
+            setIsInitialLoad(false);
+            console.log('📥 Начальная загрузка:', equipment.length, 'единиц');
+            return;
+        }
+
+        // Сравниваем с предыдущим состоянием
+        autoArchiveChangedEquipment(equipment, previousEquipment);
+
+        // Сохраняем текущее состояние для следующего сравнения
+        setPreviousEquipment(equipment);
+
+    }, [equipment, loading]); // Срабатывает при изменении equipment
+
+    // ✅ ОБНОВЛЕННЫЙ ЭФФЕКТ: Автообновление каждые 30 секунд
+    useEffect(() => {
+        const interval = setInterval(() => {
+            // Обновляем данные ТОЛЬКО если модальные окна закрыты
+            if (!selectedEquipment && !showLaunchConfirm) {
+                console.log('🔄 Автообновление данных...');
+                refreshData();
+            }
+        }, 30000); // 30 секунд
+
+        return () => clearInterval(interval);
+    }, [refreshData, selectedEquipment, showLaunchConfirm]);
 
     // Автоматическое переключение страниц
     useEffect(() => {
@@ -295,10 +385,10 @@ const Dashboard = ({ onLoginClick }) => {
         return () => clearInterval(interval);
     }, [totalPages, isPaused]);
 
-    // Сброс на первую страницу при изменении фильтров
+    // Сброс на первую страницу при изменении данных
     useEffect(() => {
         setCurrentPage(0);
-    }, [selectedSection, filteredEquipment.length]);
+    }, [equipment.length]);
 
     // ОБНОВЛЕНИЕ ВРЕМЕНИ КАЖДУЮ СЕКУНДУ
     useEffect(() => {
@@ -309,51 +399,20 @@ const Dashboard = ({ onLoginClick }) => {
         return () => clearInterval(timer);
     }, []);
 
+    // ✅ Автообновление - НЕ обновляет при открытом модальном окне
     useEffect(() => {
-        const interval = setInterval(refreshData, 30000);
+        const interval = setInterval(() => {
+            // Обновляем данные ТОЛЬКО если модальные окна закрыты
+            if (!selectedEquipment && !showLaunchConfirm) {
+                refreshData();
+            }
+        }, 30000); // 30 секунд
+
         return () => clearInterval(interval);
-    }, [refreshData]);
-
-    useEffect(() => {
-        loadSections();
-    }, []);
-
-    useEffect(() => {
-        if (selectedSection) {
-            setFilteredEquipment(equipment.filter(item => item.section === selectedSection));
-        } else {
-            setFilteredEquipment(equipment);
-        }
-    }, [equipment, selectedSection]);
-
-    // Замените функцию loadSections на эту:
-    const loadSections = async () => {
-        try {
-            const response = await api.get('/equipment/sections');
-
-            // ✅ Проверяем, что данные - это массив
-            if (response.data && Array.isArray(response.data)) {
-                setSections(response.data);
-            } else {
-                console.warn('⚠️ Sections API вернул не массив:', response.data);
-                setSections([]); // Устанавливаем пустой массив
-            }
-        } catch (error) {
-            console.error('❌ Error loading sections:', error);
-
-            // Устанавливаем пустой массив при ошибке
-            setSections([]);
-
-            // Если 404 - значит эндпоинт не существует
-            if (error.response?.status === 404) {
-                console.warn('⚠️ API /equipment/sections не найден');
-                toast.warning('Фильтр по участкам недоступен');
-            }
-        }
-    };
+    }, [refreshData, selectedEquipment, showLaunchConfirm]);
 
     const handleLaunchEquipment = async (equipmentItem) => {
-        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'programmer' )) {
+        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'programmer')) {
             toast.error('Недостаточно прав для запуска техники');
             return;
         }
@@ -393,24 +452,107 @@ const Dashboard = ({ onLoginClick }) => {
         }
     };
 
-    const formatTime = (timeString) => {
-        if (!timeString) return '-';
+    // ✅ ИСПРАВЛЕНО: Парсинг русского формата даты
+    const parseRussianDate = (dateString) => {
+        if (!dateString) return null;
 
-        // Если это полная дата-время ISO
-        if (timeString.includes('T') || timeString.includes('Z')) {
-            const date = new Date(timeString);
-            return date.toLocaleTimeString('ru-RU', {
+        try {
+            // Если уже в формате ISO - парсим как есть
+            if (dateString.includes('T') || dateString.includes('Z')) {
+                return new Date(dateString);
+            }
+
+            // Парсим русский формат: "14.10.2025 21:54"
+            const match = dateString.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+            if (match) {
+                const [, day, month, year, hour, minute] = match;
+                return new Date(year, month - 1, day, hour, minute);
+            }
+
+            // Пытаемся парсить как есть
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? null : date;
+        } catch (error) {
+            console.error('Error parsing date:', error);
+            return null;
+        }
+    };
+
+    // ✅ ИСПРАВЛЕНО: Форматирование даты и времени
+    const formatDateTime = (timeString) => {
+        if (!timeString) return '';
+
+        const date = parseRussianDate(timeString);
+        if (!date) return '';
+
+        return date.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    // ✅ ИСПРАВЛЕНО: Расчет задержки в реальном времени
+    const calculateDelay = (actualStart, plannedHours) => {
+        if (!actualStart || !plannedHours || plannedHours <= 0) return 0;
+
+        try {
+            const startTime = parseRussianDate(actualStart);
+            if (!startTime) {
+                console.log('❌ Не удалось распарсить дату:', actualStart);
+                return 0;
+            }
+
+            const plannedEndTime = new Date(startTime.getTime() + (plannedHours * 60 * 60 * 1000));
+            const now = currentTime;
+
+            console.log('📊 Расчет задержки:', {
+                actualStart,
+                startTime: startTime.toLocaleString('ru-RU'),
+                plannedHours,
+                plannedEndTime: plannedEndTime.toLocaleString('ru-RU'),
+                now: now.toLocaleString('ru-RU'),
+                isPastDue: now > plannedEndTime
+            });
+
+            if (now > plannedEndTime) {
+                const delayMs = now - plannedEndTime;
+                const delayHours = Math.floor(delayMs / (1000 * 60 * 60));
+                console.log('✅ Задержка:', delayHours, 'часов');
+                return delayHours;
+            }
+
+            console.log('⏰ Еще не просрочено');
+            return 0;
+        } catch (error) {
+            console.error('❌ Error calculating delay:', error);
+            return 0;
+        }
+    };
+
+    // ✅ ИСПРАВЛЕНО: Расчет планового окончания с датой
+    const calculatePlannedEnd = (actualStart, plannedHours) => {
+        if (!actualStart || !plannedHours || plannedHours <= 0) return '';
+
+        try {
+            const startTime = parseRussianDate(actualStart);
+            if (!startTime) return '';
+
+            const plannedEndTime = new Date(startTime.getTime() + (plannedHours * 60 * 60 * 1000));
+
+            return plannedEndTime.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        } catch (error) {
+            console.error('Error calculating planned end:', error);
+            return '';
         }
-
-        // Если это уже время HH:MM
-        if (timeString.match(/^\d{2}:\d{2}/)) {
-            return timeString.substring(0, 5);
-        }
-
-        return timeString;
     };
 
     const getStatusText = (status) => {
@@ -424,21 +566,9 @@ const Dashboard = ({ onLoginClick }) => {
         return statusMap[status] || status;
     };
 
-    const getEquipmentTypeText = (type) => {
-        return type === 'excavator' ? 'Экскаватор' : 'Погрузчик';
-    };
-
-    const getSectionText = (section) => {
-        return section || 'Не указан';
-    };
-
     const canLaunch = (equipmentItem) => {
         const status = equipmentItem.status?.toLowerCase();
         return status === 'ready' || status === 'standby';
-    };
-
-    const clearFilter = () => {
-        setSelectedSection('');
     };
 
     const togglePause = () => {
@@ -449,19 +579,6 @@ const Dashboard = ({ onLoginClick }) => {
         setCurrentPage(page);
         setIsPaused(true);
     };
-
-
-    useEffect(() => {
-        if (equipment && equipment.length > 0) {
-            console.log('📊 ДАННЫЕ НА ФРОНТЕ:', {
-                total: equipment.length,
-                sample: equipment[0], // Первая запись
-                statuses: [...new Set(equipment.map(e => e.status))] // Уникальные статусы
-            });
-        } else {
-            console.warn('⚠️ НЕТ ДАННЫХ equipment:', equipment);
-        }
-    }, [equipment]);
 
     if (loading) {
         return (
@@ -488,7 +605,7 @@ const Dashboard = ({ onLoginClick }) => {
 
     return (
         <div className="dashboard">
-            {/* НОВЫЙ ХЕДЕР: ВРЕМЯ + DOWN/READY + ФИЛЬТР/КНОПКИ */}
+            {/* ХЕДЕР: ВРЕМЯ + DOWN/READY + КНОПКИ */}
             <div className="dashboard-header" style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -498,115 +615,52 @@ const Dashboard = ({ onLoginClick }) => {
                 gap: '20px',
                 padding: '0 20px'
             }}>
-                {/* ЛЕВАЯ ЧАСТЬ: ВРЕМЯ */}
-                <div className="header-left">
-                    <div className="current-time">
-                        <div className="date">
-                            {currentTime.toLocaleDateString('ru-RU', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            })}
-                        </div>
-                        <div className="time">
-                            {currentTime.toLocaleTimeString('ru-RU', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit'
-                            })}
-                        </div>
-                    </div>
-                </div>
-
-                {/* ЦЕНТР: DOWN И READY */}
+                {/* ЛЕВАЯ ЧАСТЬ: ВРЕМЯ + DOWN/READY */}
                 <div style={{
                     display: 'flex',
-                    gap: '20px',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: '30px'
                 }}>
-                    <div className="stat-card-inline down">
-                        <h3>DOWN</h3>
-                        <div className="number">
-                            {selectedSection
-                                ? filteredEquipment.filter(item => item.status === 'Down').length
-                                : stats.down || 0
-                            }
+                    <div className="header-left">
+                        <div className="current-time">
+                            <div className="date">
+                                {currentTime.toLocaleDateString('ru-RU', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </div>
+                            <div className="time">
+                                {currentTime.toLocaleTimeString('ru-RU', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                })}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="stat-card-inline ready">
-                        <h3>READY</h3>
-                        <div className="number">
-                            {selectedSection
-                                ? filteredEquipment.filter(item => item.status === 'Ready').length
-                                : stats.ready || 0
-                            }
+                    {/* DOWN И READY рядом со временем */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '15px',
+                        alignItems: 'center'
+                    }}>
+                        <div className="stat-card-inline down">
+                            <h3>DOWN</h3>
+                            <div className="number">{stats.down || 0}</div>
+                        </div>
+
+                        <div className="stat-card-inline ready">
+                            <h3>READY</h3>
+                            <div className="number">{stats.ready || 0}</div>
                         </div>
                     </div>
                 </div>
 
-                {/* ПРАВАЯ ЧАСТЬ: ФИЛЬТР И КНОПКИ */}
+                {/* ПРАВАЯ ЧАСТЬ: КНОПКИ */}
                 <div className="header-right">
-                    {/* ФИЛЬТР УЧАСТКОВ */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{
-                            fontSize: '0.9rem',
-                            color: 'rgba(255, 255, 255, 0.8)',
-                            whiteSpace: 'nowrap'
-                        }}>
-                            Фильтр по участкам:
-                        </span>
-                        <select
-                            value={selectedSection}
-                            onChange={(e) => setSelectedSection(e.target.value)}
-                            style={{
-                                padding: '8px 12px',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                color: '#ffffff',
-                                fontSize: '0.9rem',
-                                minWidth: '160px',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <option value="">Все участки</option>
-                            {SECTIONS.map(section => (
-                                <option key={section} value={section}>
-                                    {getSectionText(section)}
-                                    {sections.find(s => s.section === section) &&
-                                        ` (${sections.find(s => s.section === section).total})`
-                                    }
-                                </option>
-                            ))}
-                        </select>
-                        {selectedSection && (
-                            <button
-                                onClick={clearFilter}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.1)',
-                                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                                    color: 'rgba(255, 255, 255, 0.8)',
-                                    padding: '8px 12px',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.8rem',
-                                    transition: 'all 0.3s ease'
-                                }}
-                                onMouseOver={(e) => {
-                                    e.target.style.background = 'rgba(255, 255, 255, 0.2)';
-                                }}
-                                onMouseOut={(e) => {
-                                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                                }}
-                            >
-                                ✕
-                            </button>
-                        )}
-                    </div>
-
-                    {/* КНОПКИ И ПОЛЬЗОВАТЕЛЬ */}
                     {user ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -620,9 +674,9 @@ const Dashboard = ({ onLoginClick }) => {
                                                 background: 'rgba(0, 123, 255, 0.8)',
                                                 border: 'none',
                                                 color: 'white',
-                                                padding: '8px 12px',
+                                                padding: '15px 15px',
                                                 borderRadius: '6px',
-                                                fontSize: '0.8rem',
+                                                fontSize: '1rem',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.3s ease'
                                             }}
@@ -637,9 +691,9 @@ const Dashboard = ({ onLoginClick }) => {
                                                 background: 'rgba(108, 117, 125, 0.8)',
                                                 border: 'none',
                                                 color: 'white',
-                                                padding: '8px 12px',
+                                                padding: '15px 15px',
                                                 borderRadius: '6px',
-                                                fontSize: '0.8rem',
+                                                fontSize: '1rem',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.3s ease'
                                             }}
@@ -656,9 +710,9 @@ const Dashboard = ({ onLoginClick }) => {
                                         background: 'rgba(220, 53, 69, 0.8)',
                                         border: 'none',
                                         color: 'white',
-                                        padding: '8px 12px',
+                                        padding: '15px 15px',
                                         borderRadius: '6px',
-                                        fontSize: '0.8rem',
+                                        fontSize: '1rem',
                                         cursor: 'pointer',
                                         transition: 'all 0.3s ease'
                                     }}
@@ -682,7 +736,6 @@ const Dashboard = ({ onLoginClick }) => {
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Участок</th>
                             <th>Тип/Модель</th>
                             <th>Факт</th>
                             <th>План</th>
@@ -706,20 +759,6 @@ const Dashboard = ({ onLoginClick }) => {
                                     <span className="equipment-id">{item.id}</span>
                                 </td>
                                 <td>
-                                    <div style={{
-                                        fontSize: '0.85rem',
-                                        fontWeight: '500',
-                                        color: '#4facfe',
-                                        background: 'rgba(79, 172, 254, 0.1)',
-                                        padding: '4px 8px',
-                                        borderRadius: '6px',
-                                        textAlign: 'center',
-                                        whiteSpace: 'nowrap'
-                                    }}>
-                                        {getSectionText(item.section)}
-                                    </div>
-                                </td>
-                                <td>
                                     <div className="equipment-type">
                                         <span className="type">
                                             {getEquipmentTypeText(item.type)}
@@ -727,32 +766,66 @@ const Dashboard = ({ onLoginClick }) => {
                                         <span className="model">{item.model}</span>
                                     </div>
                                 </td>
+                                {/* ✅ ФАКТ: Показываем дату и время начала */}
                                 <td>
                                     <div className="time-info">
                                         <div>
-                                            {formatTime(item.planned_start) || '-'} - {formatTime(item.planned_end) || '-'}
+                                            {formatDateTime(item.actual_start)}
                                         </div>
                                     </div>
                                 </td>
+                                {/* ✅ ПЛАН: Показываем дату и время окончания ТОЛЬКО если planned_hours > 0 */}
                                 <td>
                                     <div className="time-info">
-                                        <div>
-                                            {formatTime(item.actual_start) || '-'} - {formatTime(item.actual_end) || '-'}
-                                        </div>
+                                        {item.planned_hours > 0 && item.actual_start ? (
+                                            <>
+                                                <div>
+                                                    {calculatePlannedEnd(item.actual_start, item.planned_hours)}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.75rem',
+                                                    color: 'rgba(255, 255, 255, 0.5)',
+                                                    marginTop: '2px'
+                                                }}>
+                                                    ({item.planned_hours}ч)
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <span style={{
+                                                color: 'rgba(255, 255, 255, 0.4)',
+                                                fontSize: '0.85rem',
+                                                fontStyle: 'italic'
+                                            }}>
+                                                Не указано
+                                            </span>
+                                        )}
                                     </div>
                                 </td>
+                                {/* ✅ ЗАДЕРЖКА: Показывается ТОЛЬКО если есть planned_hours */}
                                 <td>
-                                    <span className={`delay ${item.delay_hours > 0 ? 'positive' : 'zero'}`}>
-                                        {item.delay_hours > 0 ? `+${item.delay_hours}ч` : '-'}
-                                    </span>
+                                    {item.planned_hours > 0 && item.actual_start ? (
+                                        <span className={`delay ${calculateDelay(item.actual_start, item.planned_hours) > 0 ? 'positive' : 'zero'}`}>
+                                            {calculateDelay(item.actual_start, item.planned_hours) > 0
+                                                ? `+${calculateDelay(item.actual_start, item.planned_hours)}ч`
+                                                : '0ч'}
+                                        </span>
+                                    ) : (
+                                        <span style={{
+                                            color: 'rgba(255, 255, 255, 0.4)',
+                                            fontSize: '0.85rem',
+                                            fontStyle: 'italic'
+                                        }}>
+                                            -
+                                        </span>
+                                    )}
                                 </td>
                                 <td>
                                     <span className={`status-badge ${item.status}`}>
                                         {getStatusText(item.status)}
                                     </span>
                                 </td>
-                                <td>{item.malfunction || '-'}</td>
-                                <td>{item.mechanic_name || '-'}</td>
+                                <td>{item.malfunction || ''}</td>
+                                <td>{item.mechanic_name || ''}</td>
                                 <td>
                                     {user && (user.role === 'admin' || user.role === 'dispatcher') && (
                                         <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -797,7 +870,7 @@ const Dashboard = ({ onLoginClick }) => {
                                                             Запуск...
                                                         </>
                                                     ) : (
-                                                        <> ЗАПУСК</>
+                                                        <>ЗАПУСК</>
                                                     )}
                                                 </button>
                                             ) : (
@@ -809,7 +882,6 @@ const Dashboard = ({ onLoginClick }) => {
                                                     }}
                                                     title="Нельзя запустить в текущем статусе"
                                                 >
-                                                    -
                                                 </span>
                                             )}
                                         </div>
@@ -822,7 +894,6 @@ const Dashboard = ({ onLoginClick }) => {
                             Array.from({ length: ITEMS_PER_PAGE - currentEquipment.length }, (_, i) => (
                                 <tr key={`empty-${i}`} style={{ opacity: 0.3 }}>
                                     <td colSpan="9" style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
-                                        -
                                     </td>
                                 </tr>
                             ))
@@ -926,7 +997,7 @@ const Dashboard = ({ onLoginClick }) => {
                 borderRadius: '16px'
             }}>
                 <div className="status-dot"></div>
-                <span>Показано: {currentEquipment.length} из {filteredEquipment.length}</span>
+                <span>Показано: {currentEquipment.length} из {equipment.length}</span>
                 {totalPages > 1 && (
                     <span style={{
                         marginLeft: '5px',
@@ -936,17 +1007,6 @@ const Dashboard = ({ onLoginClick }) => {
                         fontSize: '0.7rem'
                     }}>
                         Стр. {currentPage + 1}/{totalPages}
-                    </span>
-                )}
-                {selectedSection && (
-                    <span style={{
-                        marginLeft: '5px',
-                        padding: '2px 6px',
-                        background: 'rgba(79, 172, 254, 0.2)',
-                        borderRadius: '4px',
-                        fontSize: '0.7rem'
-                    }}>
-                        {getSectionText(selectedSection)}
                     </span>
                 )}
             </div>
@@ -974,7 +1034,7 @@ const Dashboard = ({ onLoginClick }) => {
                 <div className="modal-backdrop" onClick={() => setShowLaunchConfirm(null)}>
                     <div className="modal-content" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3> Подтверждение запуска</h3>
+                            <h3>⚡ Подтверждение запуска</h3>
                             <button
                                 className="close-button"
                                 onClick={() => setShowLaunchConfirm(null)}
@@ -992,7 +1052,6 @@ const Dashboard = ({ onLoginClick }) => {
                                 borderRadius: '8px',
                                 marginBottom: '20px'
                             }}>
-                                <div><strong>Участок:</strong> {getSectionText(showLaunchConfirm.section)}</div>
                                 <div><strong>Тип:</strong> {getEquipmentTypeText(showLaunchConfirm.type)}</div>
                                 <div><strong>Модель:</strong> {showLaunchConfirm.model}</div>
                                 <div><strong>Статус:</strong> {getStatusText(showLaunchConfirm.status)}</div>
@@ -1044,7 +1103,7 @@ const Dashboard = ({ onLoginClick }) => {
                                         fontSize: '0.95rem'
                                     }}
                                 >
-                                     Запустить в работу
+                                    ⚡ Запустить в работу
                                 </button>
                             </div>
                         </div>
@@ -1067,4 +1126,4 @@ const Dashboard = ({ onLoginClick }) => {
 
 export default Dashboard;
 
-
+console.log('🔍 Что в БД:', equipment[0]);

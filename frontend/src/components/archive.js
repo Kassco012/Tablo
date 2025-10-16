@@ -1,6 +1,10 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import {
+    getEquipmentTypeText,
+    getEquipmentTypeOptions
+} from '../components/EquipmentTypes';
 
 const Archive = () => {
     const { user } = useAuth();
@@ -133,11 +137,9 @@ const Archive = () => {
                 'Тип': getEquipmentTypeText(item.type),
                 'Модель': item.model,
                 'Механик': item.mechanic_name || '-',
-                'Прогресс (%)': item.progress || 0,
                 'Плановое начало': item.planned_start || '-',
                 'Плановое окончание': item.planned_end || '-',
                 'Фактическое начало': item.actual_start || '-',
-                'Фактическое окончание': item.actual_end || '-',
                 'Задержка (часы)': item.delay_hours || 0,
                 'Неисправность': item.malfunction || '-',
                 'Дата архивирования': formatDateTime(item.completed_date),
@@ -195,10 +197,6 @@ const Archive = () => {
     const formatDateTime = (dateString) => {
         if (!dateString) return '-';
         return new Date(dateString).toLocaleString('ru-RU');
-    };
-
-    const getEquipmentTypeText = (type) => {
-        return type === 'excavator' ? 'Экскаватор' : 'Погрузчик';
     };
 
     const getPriorityText = (priority) => {
@@ -430,6 +428,11 @@ const Archive = () => {
                             <option value="">Все типы</option>
                             <option value="excavator">Экскаватор</option>
                             <option value="loader">Погрузчик</option>
+                            <option value="watertruck">Водовоз</option>
+                            <option value="dozer">Бульдозер</option>
+                            <option value="drill">Буровой станок</option>
+                            <option value="grader">Автогрейдер</option>
+                            <option value="truck">Самосвал</option>
                         </select>
                     </div>
 
@@ -575,7 +578,7 @@ const Archive = () => {
                         fontSize: '0.9rem',
                         fontStyle: 'italic'
                     }}>
-                        Найдено записей: {filteredArchives.length} из {archives.length}
+                        
                     </div>
                 </div>
             </div>
@@ -646,7 +649,6 @@ const Archive = () => {
                                 <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>ID</th>
                                 <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Тип/Модель</th>
                                 <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Механик</th>
-                                <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Прогресс</th>
                                 <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Дата архивирования</th>
                             </tr>
                         </thead>
@@ -678,25 +680,6 @@ const Archive = () => {
                                     </td>
                                     <td style={{ padding: '15px' }}>
                                         {item.mechanic_name || '-'}
-                                    </td>
-                                    <td style={{ padding: '15px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{
-                                                width: '50px',
-                                                height: '6px',
-                                                background: 'rgba(255, 255, 255, 0.1)',
-                                                borderRadius: '3px',
-                                                overflow: 'hidden'
-                                            }}>
-                                                <div style={{
-                                                    height: '100%',
-                                                    width: `${item.progress || 0}%`,
-                                                    background: 'linear-gradient(90deg, #28a745, #20c997)',
-                                                    borderRadius: '3px'
-                                                }}></div>
-                                            </div>
-                                            <span>{item.progress || 0}%</span>
-                                        </div>
                                     </td>
                                     <td style={{
                                         padding: '15px',

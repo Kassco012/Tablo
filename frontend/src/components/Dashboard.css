@@ -1,8 +1,5 @@
-﻿/* Фиксированное табло с автопагинацией */
-
-/* Фиксированные размеры - запрет масштабирования */
-.dashboard-fixed {
-    min-width: 1400px;
+﻿.dashboard-fixed {
+    min-width: 1500px;
     zoom: 1;
     transform: scale(1);
     transform-origin: top left;

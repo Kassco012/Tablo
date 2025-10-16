@@ -6,32 +6,25 @@ const { getDatabase } = require('../config/database');
 // Маппинг типов техники из MSSQL
 const TYPE_MAPPING = {
     'Shovel': {
-        equipment_type: 'Экскаватор',
-        section: 'гусеничные техники'
+        equipment_type: 'Экскаватор'
     },
     'Dozer': {
-        equipment_type: 'Бульдозер',
-        section: 'колесные техники'
+        equipment_type: 'Бульдозер'
     },
     'Drill': {
-        equipment_type: 'Буровая установка',
-        section: 'легкотоннажные техники'
+        equipment_type: 'Буровой станок'
     },
     'Truck': {
-        equipment_type: 'Грузовик',
-        section: 'колесные техники'
+        equipment_type: 'Самосвал'
     },
     'Grader': {
-        equipment_type: 'Грейдер',
-        section: 'колесные техники'
+        equipment_type: 'Грейдер'
     },
     'WaterTruck': {
-        equipment_type: 'Поливочная машина',
-        section: 'колесные техники'
+        equipment_type: 'Поливочная машина'
     },
     'AuxE': {
-        equipment_type: 'Вспомогательное оборудование',
-        section: 'легкотоннажные техники'
+        equipment_type: 'Вспомогательное оборудование'
     }
 };
 
@@ -59,18 +52,7 @@ const STATUS_MAPPING = {
     347: 'Down'            // OTHER (Другое)
 };
 
-// Маппинг причин простоя на участки (для более точной категоризации)
-const REASON_TO_SECTION = {
-    'PM SERVICE': 'капитальный ремонт',
-    'WAIT PARTS': 'колесные техники',
-    'ENGINE': 'капитальный ремонт',
-    'HYDRAULIC': 'гусеничные техники',
-    'ELECTRICAL': 'энергоучасток',
-    'TRANSMISSION': 'капитальный ремонт',
-    'GEAR BOX': 'капитальный ремонт',
-    'TIRES': 'шиномонтажные работы',
-    'UNDERCARRIAGE': 'гусеничные техники'
-};
+
 
 class MSSQLSyncService {
     constructor() {
@@ -240,7 +222,6 @@ class MSSQLSyncService {
                             mssql_status_id: statusId,
                             equipment_type: typeInfo.equipment_type,
                             model: equipment.equipment_model || '',
-                            section: existingRecord.section || '', // Сохраняем участок
                             status: status,
                             malfunction: malfunction,
                             actual_start: actual_start,
@@ -261,17 +242,13 @@ class MSSQLSyncService {
                             mssql_status_id: statusId,
                             equipment_type: typeInfo.equipment_type,
                             model: equipment.equipment_model || '',
-                            section: '', // Диспетчер заполнит
                             status: status,
-                            priority: status === 'Down' ? 'high' : 'normal',
-                            planned_start: '', // Ручной
-                            planned_end: '', // Ручной
+                            planned_hours: '',
                             actual_start: actual_start,
                             actual_end: '',
                             delay_hours: 0, // Ручной
                             malfunction: malfunction,
                             mechanic_name: '', // Ручной
-                            progress: 0,
                             mssql_reason: reasonName,
                             last_sync_time: new Date().toISOString(),
                             is_active: 1,
@@ -341,12 +318,7 @@ class MSSQLSyncService {
             const query = `
             UPDATE equipment_master 
             SET 
-                mssql_equipment_id = ?,
-                mssql_type = ?,
-                mssql_status_id = ?,
-                equipment_type = ?,
-                model = ?,
-                section = ?,
+  
                 status = ?,
                 malfunction = ?,
                 actual_start = ?,
@@ -369,13 +341,11 @@ class MSSQLSyncService {
                     data.mssql_status_id,
                     data.equipment_type,
                     data.model,
-                    data.section,
                     data.status,
                     data.malfunction,
                     data.actual_start,
                     data.mechanic_name,
-                    data.planned_start,
-                    data.planned_end,
+                    data.planned_hours,
                     data.delay_hours,
                     data.mssql_reason,
                     data.last_sync_time,
@@ -414,17 +384,13 @@ class MSSQLSyncService {
                     data.mssql_status_id,
                     data.equipment_type,
                     data.model,
-                    data.section,
                     data.status,
-                    data.priority,
-                    data.planned_start,
-                    data.planned_end,
+                    data.planned_hours,
                     data.actual_start,
                     data.actual_end,
                     data.delay_hours,
                     data.malfunction,
                     data.mechanic_name,
-                    data.progress,
                     data.mssql_reason,
                     data.last_sync_time,
                     data.is_active,

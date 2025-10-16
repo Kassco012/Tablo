@@ -39,26 +39,22 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
             // Переносим в архив
             const archiveQuery = `
                 INSERT INTO equipment_archive 
-                (id, section, equipment_type, model, status, priority, 
-                 planned_start, planned_end, actual_start, actual_end, 
-                 delay_hours, malfunction, mechanic_name, progress, 
+                (id, equipment_type, model, status, actual_start, actual_end, 
+                 delay_hours, malfunction, mechanic_name,
                  created_at, updated_at, completed_date, completion_user, archive_reason) 
                 VALUES (?, ?, ?, ?, 'launched', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
             `;
 
             db.run(archiveQuery, [
                 equipment.id,
-                equipment.section,
                 equipment.equipment_type,
                 equipment.model,
-                equipment.planned_start,
-                equipment.planned_end,
+                equipment.planned_hours, 
                 equipment.actual_start,
                 equipment.actual_end,
                 equipment.delay_hours || 0,
                 equipment.malfunction,
                 equipment.mechanic_name,
-                equipment.progress || 100,
                 equipment.created_at,
                 equipment.updated_at,
                 req.user.userId,
@@ -128,7 +124,6 @@ router.get('/', authenticateToken, (req, res) => {
     const {
         page = 1,
         limit = 50,
-        section,
         equipment_type,
         mechanic,
         date_from,
@@ -147,11 +142,7 @@ router.get('/', authenticateToken, (req, res) => {
 
     const params = [];
 
-    // Фильтры
-    if (section) {
-        query += ' AND ea.section = ?';
-        params.push(section);
-    }
+    
 
     if (equipment_type) {
         query += ' AND ea.equipment_type LIKE ?';
@@ -191,7 +182,6 @@ router.get('/', authenticateToken, (req, res) => {
         const countParams = params.slice(0, -2); // Убираем LIMIT и OFFSET
 
         // Добавляем те же условия фильтрации
-        if (section) countQuery += ' AND ea.section = ?';
         if (equipment_type) countQuery += ' AND ea.equipment_type LIKE ?';
         if (mechanic) countQuery += ' AND ea.mechanic_name LIKE ?';
         if (date_from) countQuery += ' AND DATE(ea.completed_date) >= ?';
