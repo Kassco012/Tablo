@@ -2,8 +2,7 @@
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import {
-    getEquipmentTypeText,
-    getEquipmentTypeOptions
+    getEquipmentTypeText
 } from '../components/EquipmentTypes';
 
 const Archive = () => {
@@ -39,6 +38,7 @@ const Archive = () => {
         applyFilters();
     }, [archives, filters]);
 
+
     const fetchArchives = async () => {
         try {
             setLoading(true);
@@ -46,10 +46,13 @@ const Archive = () => {
             const response = await api.get('/archive');
             console.log('Получены архивные данные:', response.data);
 
-            setArchives(response.data.archives || []);
+            const archivesData = response.data.archives || [];
+            setArchives(archivesData);
+            setFilteredArchives(archivesData); // ✅ ДОБАВЬТЕ ЭТУ СТРОКУ!
         } catch (error) {
             console.error('Ошибка загрузки архива:', error);
             setArchives([]);
+            setFilteredArchives([]); // ✅ И ЭТУ!
         } finally {
             setLoading(false);
         }
@@ -199,17 +202,6 @@ const Archive = () => {
         return new Date(dateString).toLocaleString('ru-RU');
     };
 
-    const getPriorityText = (priority) => {
-        const priorityMap = {
-            'low': 'Низкий',
-            'normal': 'Обычный',
-            'medium': 'Средний',
-            'high': 'Высокий',
-            'critical': 'Критический'
-        };
-        return priorityMap[priority] || priority;
-    };
-
     const getUniqueValues = (data, key) => {
         return [...new Set(data.map(item => item[key]).filter(Boolean))];
     };
@@ -229,7 +221,7 @@ const Archive = () => {
     }
 
     return (
-        <div style={{ padding: '20px 0' }}>
+        <div style={{ padding: '20px 30px' }}>
             {/* Заголовок с кнопкой "Назад к табло" */}
             <div style={{
                 display: 'flex',
@@ -241,15 +233,21 @@ const Archive = () => {
             }}>
                 <div>
                     <h2 style={{
-                        fontSize: '1.8rem',
+                        fontSize: '2rem',
                         color: '#4facfe',  // ← Обычный цвет вместо градиента
                         fontWeight: 700,
                         textShadow: '0 2px 8px rgba(79, 172, 254, 0.3)',
-                        marginBottom: '10px'
+                        marginBottom: '15px',
+                        lineHeight: '1.2'  
                     }}>
                         Архив Техники
                     </h2>
-                    <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0 }}>
+                    <p style={{
+                        color: 'rgba(255,255,255,0.7)',
+                        margin: 0,
+                        fontSize: '1rem',      
+                        lineHeight: '1.5'      
+                    }}>
                         История запущенного и завершенного оборудования
                     </p>
                 </div>
@@ -260,7 +258,7 @@ const Archive = () => {
                         style={{
                             background: 'rgba(255, 255, 255, 0.1)',
                             border: '1px solid rgba(255, 255, 255, 0.2)',
-                            padding: '10px 20px',
+                            padding: '12px 24px',
                             borderRadius: '8px',
                             color: '#ffffff',
                             cursor: 'pointer',
@@ -269,7 +267,8 @@ const Archive = () => {
                             fontWeight: '500',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '8px'
+                            gap: '8px',
+                            whiteSpace: 'nowrap' 
                         }}
                         onMouseEnter={(e) => {
                             e.target.style.background = 'rgba(255, 255, 255, 0.2)';
@@ -286,10 +285,11 @@ const Archive = () => {
                     <div style={{
                         color: 'rgba(255, 255, 255, 0.8)',
                         fontSize: '0.9rem',
-                        padding: '8px 15px',
+                        padding: '10px 16px',  
                         background: 'rgba(255, 255, 255, 0.05)',
                         borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        whiteSpace: 'nowrap'  
                     }}>
                         {user?.fullName || user?.username} ({user?.role === 'admin' ? 'Администратор' : 'Диспетчер' })
                     </div>
@@ -300,7 +300,7 @@ const Archive = () => {
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '15px',
+                gap: '20px',
                 marginBottom: '30px'
             }}>
                 <div style={{
@@ -426,13 +426,14 @@ const Archive = () => {
                             }}
                         >
                             <option value="">Все типы</option>
-                            <option value="excavator">Экскаватор</option>
+                            <option value="shovel">Экскаватор</option>
                             <option value="loader">Погрузчик</option>
                             <option value="watertruck">Водовоз</option>
                             <option value="dozer">Бульдозер</option>
                             <option value="drill">Буровой станок</option>
-                            <option value="grader">Автогрейдер</option>
+                            <option value="grader">Грейдер</option>
                             <option value="truck">Самосвал</option>
+                            <option value="auxequipment">Вспомогательное оборудование</option>
                         </select>
                     </div>
 
@@ -584,6 +585,7 @@ const Archive = () => {
             </div>
 
             {/* Содержимое */}
+            {/* Содержимое */}
             {loading ? (
                 <div style={{
                     textAlign: 'center',
@@ -647,7 +649,8 @@ const Archive = () => {
                         <thead>
                             <tr style={{ background: 'rgba(255, 255, 255, 0.1)' }}>
                                 <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>ID</th>
-                                <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Тип/Модель</th>
+                                <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Тип</th>
+                                <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Модель</th>
                                 <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Механик</th>
                                 <th style={{ padding: '15px', textAlign: 'left', fontWeight: '600' }}>Дата архивирования</th>
                             </tr>
@@ -657,6 +660,7 @@ const Archive = () => {
                                 <tr key={item.archive_id || index} style={{
                                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
                                 }}>
+                                    {/* ✅ ID */}
                                     <td style={{ padding: '15px' }}>
                                         <span style={{
                                             fontWeight: 'bold',
@@ -665,22 +669,32 @@ const Archive = () => {
                                             {item.id}
                                         </span>
                                     </td>
+
+                                    {/* ✅ ТИП */}
                                     <td style={{ padding: '15px' }}>
-                                        <div>
-                                            <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                                                {getEquipmentTypeText(item.type)}
-                                            </div>
-                                            <div style={{
-                                                fontSize: '0.8rem',
-                                                color: 'rgba(255,255,255,0.7)'
-                                            }}>
-                                                {item.model}
-                                            </div>
-                                        </div>
+                                        <span style={{
+                                            background: 'rgba(79, 172, 254, 0.15)',
+                                            color: '#4facfe',
+                                            padding: '4px 10px',
+                                            borderRadius: '6px',
+                                            fontSize: '0.85rem',
+                                            fontWeight: '600'
+                                        }}>
+                                            {getEquipmentTypeText(item.equipment_type)}
+                                        </span>
                                     </td>
+
+                                    {/* ✅ МОДЕЛЬ */}
+                                    <td style={{ padding: '15px' }}>
+                                        {item.model}
+                                    </td>
+
+                                    {/* ✅ МЕХАНИК */}
                                     <td style={{ padding: '15px' }}>
                                         {item.mechanic_name || '-'}
                                     </td>
+
+                                    {/* ✅ ДАТА АРХИВИРОВАНИЯ */}
                                     <td style={{
                                         padding: '15px',
                                         fontSize: '0.85rem',

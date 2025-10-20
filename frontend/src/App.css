@@ -216,11 +216,6 @@ body {
     }
 
 /* ========================================
-   STATS CARDS
-   ======================================== */
-
-
-/* ========================================
    INLINE STAT CARDS (для header)
    ======================================== */
 
@@ -261,6 +256,7 @@ body {
         border-color: rgba(220, 53, 69, 0.3);
     }
 
+        .stat-card-inline.down h3,
         .stat-card-inline.down h4 {
             color: #dc3545;
             font-size: 1rem;
@@ -284,6 +280,7 @@ body {
         border-color: rgba(40, 167, 69, 0.3);
     }
 
+        .stat-card-inline.ready h3,
         .stat-card-inline.ready h4 {
             color: #28a745;
             font-size: 1rem;
@@ -345,6 +342,9 @@ body {
         }
 }
 
+/* ========================================
+   STATS CARDS
+   ======================================== */
 
 .stats-grid {
     display: grid;
@@ -454,20 +454,28 @@ body {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .equipment-table td {
-        padding: 20px 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        vertical-align: middle;
-    }
-
+    /* ✅ ФИКСИРОВАННАЯ ВЫСОТА ДЛЯ ВСЕХ СТРОК */
     .equipment-table tbody tr {
+        height: 90px;
+        min-height: 90px;
+        max-height: 90px;
         transition: all 0.3s ease;
     }
 
         .equipment-table tbody tr:hover {
             background: rgba(255, 255, 255, 0.05);
-            transform: scale(1.01);
+            transform: scale(1.005);
         }
+
+    .equipment-table tbody td {
+        height: 90px;
+        min-height: 90px;
+        max-height: 90px;
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        vertical-align: middle;
+        overflow: hidden;
+    }
 
 .equipment-id {
     font-weight: bold;
@@ -491,11 +499,15 @@ body {
         color: rgba(255, 255, 255, 0.7);
     }
 
+/* ✅ ОГРАНИЧЕНИЕ ВЫСОТЫ ДЛЯ ВРЕМЕНИ */
 .time-info {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 3px;
     font-size: 0.85rem;
+    max-height: 70px;
+    overflow: hidden;
+    line-height: 1.4;
 }
 
     .time-info .planned {
@@ -505,6 +517,12 @@ body {
     .time-info .actual {
         color: #ffffff;
         font-weight: 500;
+    }
+
+    .time-info > div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
 .delay {

@@ -148,18 +148,6 @@ class MSSQLSyncService {
 
 
 
-    determineSection(mssqlType, reasonName) {
-        // Если есть специфическая причина - используем её
-        if (reasonName && REASON_TO_SECTION[reasonName]) {
-            return REASON_TO_SECTION[reasonName];
-        }
-
-        // Иначе используем базовый маппинг по типу
-        const typeInfo = TYPE_MAPPING[mssqlType];
-        return typeInfo ? typeInfo.section : 'колесные техники';
-    }
-
-
     async syncEquipment() {
         if (this.isRunning) {
             console.log('⚠️ Синхронизация уже выполняется, пропуск...');
@@ -191,11 +179,7 @@ class MSSQLSyncService {
                     const statusId = equipment.status_id;
                     const reasonName = equipment.reason_name;
 
-                    // Маппинг типа
-                    const typeInfo = TYPE_MAPPING[mssqlType] || {
-                        equipment_type: mssqlType,
-                        section: 'колесные техники'
-                    };
+                    
 
                     // Маппинг статуса
                     const status = STATUS_MAPPING[statusId] || 'Down';
@@ -368,7 +352,7 @@ class MSSQLSyncService {
             const query = `
                 INSERT INTO equipment_master (
                     id, mssql_equipment_id, mssql_type, mssql_status_id,
-                    equipment_type, model, section, status, priority,
+                    equipment_type, model, status, 
                     planned_start, planned_end, actual_start, actual_end,
                     delay_hours, malfunction, mechanic_name, progress,
                     mssql_reason, last_sync_time, is_active, manually_edited

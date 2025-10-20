@@ -120,7 +120,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             const numValue = parseFloat(normalizedValue);
 
             // Если значение корректное число
-            if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+            if (!isNaN(numValue) && numValue >= 0 && numValue <= 1000) {
                 setFormData(prev => ({
                     ...prev,
                     planned_hours: numValue
@@ -134,7 +134,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             } else {
                 // Показываем предупреждение только если число вне диапазона
                 if (!isNaN(numValue)) {
-                    toast.warning('Плановое время должно быть от 0 до 100 часов');
+                    toast.warning('Плановое время должно быть от 0 до 1000 часов');
                 }
             }
         }
@@ -143,7 +143,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher')) {
+        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'programmer')) {
             toast.error('Недостаточно прав для редактирования');
             return;
         }
@@ -151,8 +151,8 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         // ✅ Валидация планового времени
         const plannedHours = parseFloat(formData.planned_hours);
 
-        if (isNaN(plannedHours) || plannedHours < 0 || plannedHours > 100) {
-            toast.error('Плановое время должно быть числом от 0 до 100 часов');
+        if (isNaN(plannedHours) || plannedHours < 0 || plannedHours > 1000) {
+            toast.error('Плановое время должно быть числом от 0 до 1000 часов');
             return;
         }
 
@@ -395,13 +395,14 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         onChange={handleChange}
                                         disabled={loading}
                                     >
-                                        <option value="excavator">Экскаватор</option>
+                                        <option value="shovel">Экскаватор</option>
                                         <option value="loader">Погрузчик</option>
                                         <option value="watertruck">Водовоз</option>
                                         <option value="dozer">Бульдозер</option>
                                         <option value="drill">Буровой станок</option>
                                         <option value="grader">Автогрейдер</option>
-                                        <option value="truck">Самосвал</option>
+                                        <option value="truck">Самосвал</option>  
+                                        <option value="auxequipment">Вспомогательное оборудование</option> 
                                     </select>
                                 </div>
 
@@ -493,7 +494,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         display: 'block',
                                         marginTop: '5px'
                                     }}>
-                                        💡 Введите количество часов (0-100). Можно использовать десятичные: 1.5, 6, 8.5
+                                        
                                     </small>
                                 </div>
 

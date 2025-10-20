@@ -269,12 +269,61 @@ const Dashboard = ({ onLoginClick }) => {
     const [currentPage, setCurrentPage] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
 
-    const totalPages = Math.ceil(equipment.length / ITEMS_PER_PAGE);
-    const currentEquipment = equipment.slice(
+    
+    // ✅ ИСПРАВЛЕНО: Парсинг русского формата даты
+    const parseRussianDate = (dateString) => {
+        if (!dateString) return null;
+
+        try {
+            // Если уже в формате ISO - парсим как есть
+            if (dateString.includes('T') || dateString.includes('Z')) {
+                return new Date(dateString);
+            }
+
+            // Парсим русский формат: "14.10.2025 21:54"
+            const match = dateString.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+            if (match) {
+                const [, day, month, year, hour, minute] = match;
+                return new Date(year, month - 1, day, hour, minute);
+            }
+
+            // Пытаемся парсить как есть
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? null : date;
+        } catch (error) {
+            console.error('Error parsing date:', error);
+            return null;
+        }
+    };
+
+    const sortEquipmentByDate = (equipmentList) => {
+        return [...equipmentList].sort((a, b) => {
+            const dateA = parseRussianDate(a.actual_start);
+            const dateB = parseRussianDate(b.actual_start);
+
+            // Если обе даты валидны - сортируем от НОВЫХ к СТАРЫМ
+            if (dateA && dateB) {
+                return dateB - dateA; // НОВЫЕ СНАЧАЛА (больше timestamp = новее)
+            }
+
+            // Если только у A есть дата - A идет первым
+            if (dateA && !dateB) return -1;
+
+            // Если только у B есть дата - B идет первым
+            if (!dateA && dateB) return 1;
+
+            // Если обе без дат - сортируем по ID
+            return a.id.localeCompare(b.id);
+        });
+    };
+
+
+    const sortedEquipment = sortEquipmentByDate(equipment);
+    const totalPages = Math.ceil(sortedEquipment.length / ITEMS_PER_PAGE);
+    const currentEquipment = sortedEquipment.slice(
         currentPage * ITEMS_PER_PAGE,
         (currentPage + 1) * ITEMS_PER_PAGE
     );
-
 
     const autoArchiveChangedEquipment = async (currentEquipment, previousEquipment) => {
         // Пропускаем первую загрузку
@@ -425,6 +474,9 @@ const Dashboard = ({ onLoginClick }) => {
         setShowLaunchConfirm(equipmentItem);
     };
 
+ 
+   
+
     const confirmLaunch = async () => {
         if (!showLaunchConfirm) return;
 
@@ -452,32 +504,7 @@ const Dashboard = ({ onLoginClick }) => {
         }
     };
 
-    // ✅ ИСПРАВЛЕНО: Парсинг русского формата даты
-    const parseRussianDate = (dateString) => {
-        if (!dateString) return null;
-
-        try {
-            // Если уже в формате ISO - парсим как есть
-            if (dateString.includes('T') || dateString.includes('Z')) {
-                return new Date(dateString);
-            }
-
-            // Парсим русский формат: "14.10.2025 21:54"
-            const match = dateString.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
-            if (match) {
-                const [, day, month, year, hour, minute] = match;
-                return new Date(year, month - 1, day, hour, minute);
-            }
-
-            // Пытаемся парсить как есть
-            const date = new Date(dateString);
-            return isNaN(date.getTime()) ? null : date;
-        } catch (error) {
-            console.error('Error parsing date:', error);
-            return null;
-        }
-    };
-
+   
     // ✅ ИСПРАВЛЕНО: Форматирование даты и времени
     const formatDateTime = (timeString) => {
         if (!timeString) return '';
@@ -575,10 +602,19 @@ const Dashboard = ({ onLoginClick }) => {
         setIsPaused(!isPaused);
     };
 
+
+
     const goToPage = (page) => {
         setCurrentPage(page);
         setIsPaused(true);
     };
+
+
+   
+
+
+   
+
 
     if (loading) {
         return (
@@ -652,9 +688,27 @@ const Dashboard = ({ onLoginClick }) => {
                             <div className="number">{stats.down || 0}</div>
                         </div>
 
-                        <div className="stat-card-inline ready">
+                        <div
+                            className="stat-card-inline ready"
+                            title={`Отремонтировано и запущено с 00:00 до ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`}
+                        >
                             <h3>READY</h3>
-                            <div className="number">{stats.ready || 0}</div>
+                            <div className="number">{stats.ready_today || 0}</div>
+                            <div style={{
+                                fontSize: '0.7rem',
+                                color: 'rgba(40, 167, 69, 0.8)',
+                                marginTop: '4px',
+                                fontStyle: 'italic',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px'
+                            }}>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z" />
+                                </svg>
+                                За сегодня
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -736,7 +790,8 @@ const Dashboard = ({ onLoginClick }) => {
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Тип/Модель</th>
+                            <th>Тип</th>
+                            <th>Модель</th>
                             <th>Факт</th>
                             <th>План</th>
                             <th>Задержка</th>
@@ -759,12 +814,14 @@ const Dashboard = ({ onLoginClick }) => {
                                     <span className="equipment-id">{item.id}</span>
                                 </td>
                                 <td>
-                                    <div className="equipment-type">
-                                        <span className="type">
-                                            {getEquipmentTypeText(item.type)}
-                                        </span>
-                                        <span className="model">{item.model}</span>
-                                    </div>
+                                    <span className="equipment-type-badge">
+                                        {getEquipmentTypeText(item.equipment_type)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className="equipment-model">
+                                        {item.model}
+                                    </span>
                                 </td>
                                 {/* ✅ ФАКТ: Показываем дату и время начала */}
                                 <td>
@@ -982,33 +1039,50 @@ const Dashboard = ({ onLoginClick }) => {
                 </div>
             )}
 
-            {/* ИНДИКАТОР ВНИЗУ СПРАВА */}
             <div style={{
                 position: 'fixed',
                 bottom: '20px',
                 right: '20px',
                 display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: '8px',
                 fontSize: '0.8rem',
                 color: 'rgba(255,255,255,0.6)',
                 background: 'rgba(0,0,0,0.5)',
-                padding: '8px 12px',
-                borderRadius: '16px'
+                padding: '10px 14px',
+                borderRadius: '16px',
+                border: '1px solid rgba(79, 172, 254, 0.3)'
             }}>
-                <div className="status-dot"></div>
-                <span>Показано: {currentEquipment.length} из {equipment.length}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="status-dot"></div>
+                    <span>Показано: {currentEquipment.length} из {equipment.length}</span>
+                </div>
                 {totalPages > 1 && (
                     <span style={{
-                        marginLeft: '5px',
-                        padding: '2px 6px',
+                        padding: '2px 8px',
                         background: 'rgba(79, 172, 254, 0.2)',
                         borderRadius: '4px',
-                        fontSize: '0.7rem'
+                        fontSize: '0.7rem',
+                        border: '1px solid rgba(79, 172, 254, 0.4)'
                     }}>
                         Стр. {currentPage + 1}/{totalPages}
                     </span>
                 )}
+                {/* ✅ ИНДИКАТОР СОРТИРОВКИ */}
+                <div style={{
+                    fontSize: '0.7rem',
+                    color: 'rgba(79, 172, 254, 0.8)',
+                    fontStyle: 'italic',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L8 8h8l-4-6zm0 20l4-6H8l4 6z" />
+                    </svg>
+                    Новые сначала
+                </div>
             </div>
 
             <style jsx>{`
@@ -1124,6 +1198,6 @@ const Dashboard = ({ onLoginClick }) => {
     );
 };
 
-export default Dashboard;
 
-console.log('🔍 Что в БД:', equipment[0]);
+
+export default Dashboard;

@@ -37,8 +37,8 @@ async function runMigration() {
               delay_hours INTEGER DEFAULT 0,
               
               -- 7. Статус
-              status TEXT NOT NULL DEFAULT 'Ready',
-              priority TEXT DEFAULT 'normal',
+              status TEXT NOT NULL DEFAULT 'Ready'
+            
               
               -- 8. Неисправность
               malfunction TEXT,

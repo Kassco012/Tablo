@@ -127,39 +127,6 @@ const LoginModal = ({ isOpen, onClose, onSuccess }) => {
                         </button>
                     </div>
                 </form>
-
-                <div className="login-info">
-                    <h3>Доступные учетные записи:</h3>
-                    <div className="test-accounts">
-                        <div
-                            className="account-info"
-                            onClick={() => handleAccountClick('kassymzhan.nuraliyev@kazminerals.com')}
-                        >
-                            <strong>Разработчик</strong>
-                            <div className="login-label">Username:</div>
-                            <div className="login-value">kassymzhan.nuraliyev@kazminerals.com</div>
-                            <div className="password-hint">Нажмите для автозаполнения username</div>
-                        </div>
-                        <div
-                            className="account-info"
-                            onClick={() => handleAccountClick('timur.abitov@kazminerals.com')}
-                        >
-                            <strong>Администратор</strong>
-                            <div className="login-label">Username:</div>
-                            <div className="login-value">timur.abitov@kazminerals.com</div>
-                            <div className="password-hint">Нажмите для автозаполнения username</div>
-                        </div>
-                        <div
-                            className="account-info"
-                            onClick={() => handleAccountClick('ualikhan.belgibay@kazminerals.com')}
-                        >
-                            <strong>Диспетчер</strong>
-                            <div className="login-label">Username:</div>
-                            <div className="login-value">ualikhan.belgibay@kazminerals.com</div>
-                            <div className="password-hint">Нажмите для автозаполнения username</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );

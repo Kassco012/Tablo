@@ -15,7 +15,8 @@ export const EquipmentProvider = ({ children }) => {
     const [equipment, setEquipment] = useState([]);
     const [stats, setStats] = useState({
         down: 0,
-        ready: 0,
+        ready: 0,          // ❌ Убираем (больше не используем)
+        ready_today: 0,    // ✅ НОВЫЙ: отремонтировано за сегодня
         delay: 0,
         standby: 0,
         total: 0
@@ -23,215 +24,160 @@ export const EquipmentProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // ✅ Загрузка оборудования
     const fetchEquipment = useCallback(async () => {
         try {
-            console.log('\n' + '='.repeat(50));
-            console.log('НАЧАЛО ЗАГРУЗКИ ОБОРУДОВАНИЯ');
-            console.log('='.repeat(50));
-
+            console.log('📥 Загрузка оборудования...');
             setError(null);
 
-            console.log('Отправка запроса: GET /equipment');
             const response = await api.get('/equipment');
-
-            console.log('Ответ получен:', {
-                status: response.status,
-                statusText: response.statusText,
-                headers: response.headers,
-                dataType: typeof response.data,
-                dataIsArray: Array.isArray(response.data)
-            });
-
             let equipmentData = response.data;
 
-            // Детальная проверка структуры
             if (equipmentData === null || equipmentData === undefined) {
-                console.error('response.data пустой (null/undefined)!');
+                console.error('response.data пустой!');
                 setEquipment([]);
                 return;
             }
 
-            console.log('Анализ структуры данных:', {
-                type: typeof equipmentData,
-                isArray: Array.isArray(equipmentData),
-                keys: typeof equipmentData === 'object' ? Object.keys(equipmentData) : 'N/A',
-                length: Array.isArray(equipmentData) ? equipmentData.length : 'N/A'
-            });
-
-            // Если это уже массив
+            // Если это массив
             if (Array.isArray(equipmentData)) {
-                console.log(`Это массив! Длина: ${equipmentData.length}`);
-
-                if (equipmentData.length > 0) {
-                    console.log('Пример первой записи:', JSON.stringify(equipmentData[0], null, 2));
-                }
-
+                console.log(`✅ Загружено: ${equipmentData.length} единиц`);
                 setEquipment(equipmentData);
-                console.log('equipment state обновлен');
                 return;
             }
 
             // Если это объект с вложенным массивом
             if (typeof equipmentData === 'object') {
-                console.log('Это объект, ищем массив внутри...');
-
-                // Проверяем различные возможные ключи
                 const possibleKeys = ['equipment', 'data', 'items', 'records', 'results'];
 
                 for (const key of possibleKeys) {
                     if (equipmentData[key] && Array.isArray(equipmentData[key])) {
-                        console.log(`Найден массив в ключе "${key}": ${equipmentData[key].length} записей`);
+                        console.log(`✅ Найден массив в "${key}": ${equipmentData[key].length} записей`);
                         setEquipment(equipmentData[key]);
                         return;
                     }
                 }
 
-                console.error('❌ Массив не найден ни в одном из ожидаемых ключей');
-                console.error('Доступные ключи:', Object.keys(equipmentData));
-                console.error('Структура:', JSON.stringify(equipmentData, null, 2).substring(0, 500));
+                console.error('❌ Массив не найден');
             }
 
-            // Если ничего не подошло
-            console.error('❌ НЕИЗВЕСТНЫЙ ФОРМАТ ДАННЫХ');
-            console.error('Full response.data:', JSON.stringify(equipmentData, null, 2).substring(0, 1000));
             setEquipment([]);
 
-            console.log('='.repeat(50));
-            console.log('❌ КОНЕЦ ЗАГРУЗКИ (ОШИБКА)');
-            console.log('='.repeat(50) + '\n');
-
         } catch (error) {
-            console.error('\n' + '='.repeat(50));
-            console.error('❌ КРИТИЧЕСКАЯ ОШИБКА ЗАГРУЗКИ');
-            console.error('='.repeat(50));
-            console.error('Error type:', error.name);
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
-
-            if (error.response) {
-                console.error('Response status:', error.response.status);
-                console.error('Response data:', error.response.data);
-                console.error('Response headers:', error.response.headers);
-            } else if (error.request) {
-                console.error('Request made but no response:', error.request);
-            }
-
+            console.error('❌ Ошибка загрузки оборудования:', error);
             setError(error.response?.data?.message || error.message || 'Ошибка загрузки оборудования');
             setEquipment([]);
-
-            console.error('='.repeat(50) + '\n');
         }
-    }, []); 
+    }, []);
 
-    const fetchStats = useCallback(async () => {
+    // ✅ Загрузка статистики Dashboard (DOWN + READY TODAY)
+    const fetchDashboardStats = useCallback(async () => {
         try {
-            console.log('Загрузка статистики...');
-            const response = await api.get('/equipment/stats');
+            console.log('📊 Загрузка статистики dashboard...');
+            const response = await api.get('/stats/dashboard');
 
-            console.log('RAW stats:', response.data);
+            if (response.data.success) {
+                const { down, ready_today, total } = response.data.stats;
 
-            // Проверяем формат статистики
-            const statsData = response.data;
+                setStats(prev => ({
+                    ...prev,
+                    down: down || 0,
+                    ready_today: ready_today || 0,
+                    total: total || 0
+                }));
 
-            // Нормализуем ключи статистики
-            const normalizedStats = {
-                down: statsData.down || statsData.in_repair || 0,
-                ready: statsData.ready || 0,
-                delay: statsData.delay || statsData.waiting || 0,
-                standby: statsData.standby || statsData.scheduled || 0,
-                shiftchange: statsData.shiftchange || 0,
-                total: statsData.total || 0,
-                by_section: statsData.by_section || {}
-            };
-
-            console.log('Normalized stats:', normalizedStats);
-            setStats(normalizedStats);
+                console.log(`✅ Stats: DOWN=${down}, READY TODAY=${ready_today}`);
+            }
 
         } catch (error) {
-            console.error('Ошибка загрузки статистики:', error);
+            console.error('❌ Ошибка загрузки stats:', error);
 
-            // Вычисляем локально если запрос провалился
+            // Фоллбэк: считаем DOWN локально
             if (Array.isArray(equipment) && equipment.length > 0) {
-                const localStats = {
-                    down: 0,
-                    ready: 0,
-                    delay: 0,
-                    standby: 0,
-                    shiftchange: 0,
-                    total: equipment.length,
-                    by_section: {}
-                };
+                const downCount = equipment.filter(
+                    item => item.status?.toLowerCase() === 'down'
+                ).length;
 
-                equipment.forEach(item => {
-                    const status = (item.status || '').toLowerCase();
+                setStats(prev => ({
+                    ...prev,
+                    down: downCount,
+                    total: equipment.length
+                }));
 
-                    if (status === 'down' || status === 'in_repair') {
-                        localStats.down++;
-                    } else if (status === 'ready') {
-                        localStats.ready++;
-                    } else if (status === 'delay' || status === 'waiting') {
-                        localStats.delay++;
-                    } else if (status === 'standby' || status === 'scheduled') {
-                        localStats.standby++;
-                    } else if (status === 'shiftchange') {
-                        localStats.shiftchange++;
-                    }
-                });
-
-                console.log('Локально вычисленная статистика:', localStats);
-                setStats(localStats);
+                console.log(`⚠️ Используем локальный подсчет DOWN: ${downCount}`);
             }
         }
     }, [equipment]);
 
+    // ✅ Проверка на смену дня (обнуление READY в 00:00)
+    useEffect(() => {
+        const checkMidnight = () => {
+            const now = new Date();
+            const seconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+            // Если сейчас 00:00:xx (первая минута нового дня)
+            if (seconds < 60) {
+                console.log('🕐 Новый день! Обнуляем счетчик READY');
+                setStats(prev => ({
+                    ...prev,
+                    ready_today: 0
+                }));
+                // Обновляем данные
+                refreshData();
+            }
+        };
+
+        // Проверяем каждую минуту
+        const interval = setInterval(checkMidnight, 60000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // ✅ Объединенная функция обновления
     const refreshData = useCallback(async () => {
-        console.log('Обновление данных...');
+        console.log('🔄 Обновление всех данных...');
         setLoading(true);
         try {
             await fetchEquipment();
-            // Статистика будет обновлена автоматически через useEffect
+            // Статистика обновится автоматически через useEffect
         } finally {
             setLoading(false);
         }
     }, [fetchEquipment]);
 
+    // ✅ Первоначальная загрузка
     useEffect(() => {
-        console.log('Инициализация EquipmentProvider');
+        console.log('🚀 Инициализация EquipmentProvider');
         refreshData();
     }, []);
 
+    // ✅ Обновление статистики при изменении equipment
     useEffect(() => {
-        // Пересчитываем статистику при изменении оборудования
-        if (Array.isArray(equipment) && equipment.length > 0) {
-            fetchStats();
+        if (Array.isArray(equipment) && equipment.length >= 0) {
+            fetchDashboardStats();
         }
-    }, [equipment, fetchStats]);
+    }, [equipment, fetchDashboardStats]);
 
-
-
+    // ✅ Автообновление каждые 30 секунд
     useEffect(() => {
-        console.log('СОСТОЯНИЕ EQUIPMENT CONTEXT:', {
-            equipment_count: Array.isArray(equipment) ? equipment.length : 'NOT ARRAY',
-            equipment_type: typeof equipment,
-            stats: stats,
-            loading: loading,
-            error: error,
-            sample: Array.isArray(equipment) && equipment.length > 0 ? equipment[0] : null
-        });
-    }, [equipment, stats, loading, error]);
+        const interval = setInterval(() => {
+            console.log('⏰ Автообновление: оборудование + статистика');
+            refreshData();
+        }, 30000); // 30 секунд
 
+        return () => clearInterval(interval);
+    }, [refreshData]);
+
+    // Остальные методы без изменений
     const updateEquipment = async (id, updateData) => {
         try {
             const response = await api.put(`/equipment/${id}`, updateData);
-
-            // Обновляем локальное состояние
             setEquipment(prev => {
                 if (!Array.isArray(prev)) return [];
                 return prev.map(item =>
                     item.id === id ? { ...item, ...response.data.equipment } : item
                 );
             });
-
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Ошибка обновления оборудования' };
@@ -241,7 +187,7 @@ export const EquipmentProvider = ({ children }) => {
     const createEquipment = async (equipmentData) => {
         try {
             const response = await api.post('/equipment', equipmentData);
-            await refreshData(); // Перезагружаем данные
+            await refreshData();
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Ошибка создания оборудования' };
@@ -273,17 +219,8 @@ export const EquipmentProvider = ({ children }) => {
         return Array.isArray(equipment) ? equipment.filter(item => item.type === type) : [];
     };
 
-    const getEquipmentByPriority = (priority) => {
-        return Array.isArray(equipment) ? equipment.filter(item => item.priority === priority) : [];
-    };
+   
 
-    const getCriticalEquipment = () => {
-        if (!Array.isArray(equipment)) return [];
-        return equipment.filter(item =>
-            item.priority === 'critical' ||
-            (item.status === 'waiting' && item.delay_hours > 4)
-        );
-    };
 
     const value = {
         equipment: Array.isArray(equipment) ? equipment : [],
@@ -296,9 +233,7 @@ export const EquipmentProvider = ({ children }) => {
         deleteEquipment,
         getEquipmentById,
         getEquipmentByStatus,
-        getEquipmentByType,
-        getEquipmentByPriority,
-        getCriticalEquipment
+        getEquipmentByType
     };
 
     return (

@@ -223,8 +223,7 @@ router.get('/stats', authenticateToken, (req, res) => {
             SUM(CASE WHEN archive_reason = 'completed' THEN 1 ELSE 0 END) as completed,
             SUM(CASE WHEN archive_reason = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
             AVG(progress) as avg_progress,
-            equipment_type,
-            section
+            equipment_type
         FROM equipment_archive
         WHERE 1=1
     `;
@@ -246,7 +245,7 @@ router.get('/stats', authenticateToken, (req, res) => {
         query += ' AND ' + conditions.join(' AND ');
     }
 
-    query += ' GROUP BY equipment_type, section';
+    query += ' GROUP BY equipment_type';
 
     db.all(query, params, (err, typeStats) => {
         if (err) {

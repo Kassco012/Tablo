@@ -14,7 +14,10 @@
         user-select: none;
     }
 
-/* Фиксированная высота таблицы для точно 5 строк */
+/* ===================================
+   ФИКСИРОВАННАЯ ВЫСОТА ТАБЛИЦЫ
+   =================================== */
+
 .equipment-fixed-height {
     height: 560px;
     overflow: hidden;
@@ -31,16 +34,24 @@
             display: table-row-group;
         }
 
+            /* ✅ ЕДИНАЯ ВЫСОТА СТРОК - 90px */
             .equipment-fixed-height .equipment-table tbody tr {
-                height: 70px;
+                height: 90px !important;
+                max-height: 90px !important;
                 display: table-row;
+                transition: all 0.3s ease;
             }
 
+            /* ✅ ЕДИНАЯ ВЫСОТА ЯЧЕЕК - 90px */
             .equipment-fixed-height .equipment-table tbody td {
-                height: 70px;
-                padding: 18px 15px;
-                vertical-align: middle;
+                height: 90px !important;
+                max-height: 90px !important;
+                padding: 12px 15px !important;
+                vertical-align: middle !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
             }
 
     /* Пустые строки - полупрозрачные */
@@ -55,7 +66,10 @@
             font-style: italic;
         }
 
-/* Индикатор страниц */
+/* ===================================
+   ИНДИКАТОР СТРАНИЦ
+   =================================== */
+
 .pagination-indicator {
     display: flex;
     justify-content: space-between;
@@ -99,7 +113,10 @@
     font-style: italic;
 }
 
-/* Анимация смены страниц */
+/* ===================================
+   АНИМАЦИИ
+   =================================== */
+
 .data-row {
     animation: slideInUp 0.6s ease-out;
 }
@@ -116,7 +133,6 @@
     }
 }
 
-/* Мигание критических элементов */
 .priority-badge.critical {
     animation: criticalPulse 2s infinite;
 }
@@ -133,105 +149,110 @@
     }
 }
 
-/* Фиксированная ширина колонок для стабильности */
+/* ===================================
+   ФИКСИРОВАННАЯ ШИРИНА КОЛОНОК
+   =================================== */
+
 .equipment-fixed-height .equipment-table th:nth-child(1),
 .equipment-fixed-height .equipment-table td:nth-child(1) {
-    width: 80px;
+    width: 80px; /* ID */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(2),
 .equipment-fixed-height .equipment-table td:nth-child(2) {
-    width: 140px;
+    width: 150px; /* Тип */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(3),
 .equipment-fixed-height .equipment-table td:nth-child(3) {
-    width: 180px;
+    width: 180px; /* Модель */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(4),
 .equipment-fixed-height .equipment-table td:nth-child(4) {
-    width: 90px;
+    width: 150px; /* Факт */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(5),
 .equipment-fixed-height .equipment-table td:nth-child(5) {
-    width: 90px;
+    width: 150px; /* План */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(6),
 .equipment-fixed-height .equipment-table td:nth-child(6) {
-    width: 120px;
+    width: 100px; /* Задержка */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(7),
 .equipment-fixed-height .equipment-table td:nth-child(7) {
-    width: 110px;
+    width: 110px; /* Статус */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(8),
 .equipment-fixed-height .equipment-table td:nth-child(8) {
-    width: 200px;
+    width: 250px; /* Неисправность */
 }
 
 .equipment-fixed-height .equipment-table th:nth-child(9),
 .equipment-fixed-height .equipment-table td:nth-child(9) {
-    width: 140px;
+    width: 140px; /* Механик */
 }
 
-/* Предотвращение переноса текста */
-.equipment-fixed-height .equipment-table td {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+/* ===================================
+   СТИЛИ ДЛЯ КОНТЕНТА ЯЧЕЕК
+   =================================== */
 
-/* Блокировка масштабирования через CSS */
-body {
-    -webkit-text-size-adjust: 100%;
-    -moz-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-}
-
-/* Дополнительная защита от масштабирования */
-html {
-    -webkit-text-size-adjust: none;
-    -moz-text-size-adjust: none;
-    -ms-text-size-adjust: none;
-    text-size-adjust: none;
-}
-
-/* Плавный переход между страницами */
-.equipment-fixed-height .equipment-table tbody tr {
-    transition: all 0.3s ease;
-}
-
-/* Увеличенные шрифты для ID техники */
+/* ID техники */
 .equipment-fixed-height .equipment-id {
     font-size: 1.2rem;
     font-weight: bold;
     font-family: 'Courier New', monospace;
+    color: #ffd700;
 }
 
-/* Адаптация под разные размеры экрана но с сохранением пропорций */
-@media (max-width: 1600px) {
-    .dashboard-fixed {
-        min-width: 1366px;
-        transform: scale(0.95);
-        transform-origin: top left;
+/* Бейдж типа техники */
+.equipment-type-badge {
+    display: inline-block;
+    background: rgba(79, 172, 254, 0.15);
+    color: #4facfe;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    white-space: nowrap;
+}
+
+/* Модель техники */
+.equipment-model {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: 'Courier New', monospace;
+}
+
+/* ===================================
+   ВРЕМЯ (ФАКТ/ПЛАН) - КОМПАКТНЫЙ ФОРМАТ
+   =================================== */
+
+.time-info {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    max-height: 70px;
+    overflow: hidden;
+}
+
+    .time-info > div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
     }
-}
 
-@media (max-width: 1366px) {
-    .dashboard-fixed {
-        min-width: 1200px;
-        transform: scale(0.9);
-        transform-origin: top left;
-    }
-}
+/* ===================================
+   СТАТУСЫ И ПРИОРИТЕТЫ
+   =================================== */
 
-/* Цветовое кодирование для быстрого восприятия */
 .equipment-fixed-height .status-badge.critical,
 .equipment-fixed-height .priority-badge.critical {
     font-weight: 700;
@@ -248,4 +269,42 @@ html {
 
 .equipment-fixed-height .status-badge.waiting {
     box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+}
+
+/* ===================================
+   БЛОКИРОВКА МАСШТАБИРОВАНИЯ
+   =================================== */
+
+body {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+html {
+    -webkit-text-size-adjust: none;
+    -moz-text-size-adjust: none;
+    -ms-text-size-adjust: none;
+    text-size-adjust: none;
+}
+
+/* ===================================
+   АДАПТИВНЫЙ ДИЗАЙН
+   =================================== */
+
+@media (max-width: 1600px) {
+    .dashboard-fixed {
+        min-width: 1366px;
+        transform: scale(0.95);
+        transform-origin: top left;
+    }
+}
+
+@media (max-width: 1366px) {
+    .dashboard-fixed {
+        min-width: 1200px;
+        transform: scale(0.9);
+        transform-origin: top left;
+    }
 }

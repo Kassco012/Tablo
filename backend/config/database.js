@@ -34,15 +34,14 @@ async function initializeDatabase() {
                 last_login DATETIME
             );
 
-            -- Основная таблица оборудования
-            CREATE TABLE IF NOT EXISTS equipment_master (
+           CREATE TABLE IF NOT EXISTS equipment_master (
                 id TEXT PRIMARY KEY,
                 equipment_type TEXT NOT NULL,
                 model TEXT,
+                status TEXT NOT NULL DEFAULT 'Ready',
                 actual_start TEXT,
                 actual_end TEXT,
                 planned_hours REAL DEFAULT 0,
-                status TEXT NOT NULL DEFAULT 'Ready',
                 malfunction TEXT,
                 mechanic_name TEXT,
                 mssql_equipment_id INTEGER,
@@ -54,7 +53,7 @@ async function initializeDatabase() {
                 manually_edited INTEGER DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
+);     
 
             -- Таблица архива
             CREATE TABLE IF NOT EXISTS equipment_archive (

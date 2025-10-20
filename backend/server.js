@@ -9,6 +9,7 @@ const equipmentRoutes = require('./routes/equipment');
 const archiveRoutes = require('./routes/archive');
 const { initializeDatabase } = require('./config/database');
 const { startSyncJob } = require('./jobs/mssqlSyncJob');
+const statsRoutes = require('./routes/stats');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -55,6 +56,8 @@ const corsOptions = {
 
 // 1. CORS - САМЫЙ ПЕРВЫЙ!
 app.use(cors(corsOptions));
+
+app.use('/api/stats', statsRoutes);
 
 // 2. Preflight запросы
 app.options('*', cors(corsOptions));

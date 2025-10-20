@@ -1,4 +1,4 @@
-﻿// frontend/src/components/AdminPanel.js - БЕЗ УЧАСТКОВ
+﻿// frontend/src/components/AdminPanel.js - ИСПРАВЛЕННАЯ ВЕРСИЯ
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -25,9 +25,11 @@ const AdminPanel = () => {
 
     const [selectedEquipment, setSelectedEquipment] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+
+    // ✅ ИСПРАВЛЕНО: используем equipment_type вместо type
     const [newEquipment, setNewEquipment] = useState({
         id: '',
-        type: '',
+        equipment_type: '',  // ← БЫЛО: type
         model: '',
         status: '',
         planned_start: '',
@@ -35,6 +37,7 @@ const AdminPanel = () => {
         malfunction: '',
         mechanic_name: ''
     });
+
     const [activeTab, setActiveTab] = useState('equipment');
 
     useEffect(() => {
@@ -45,7 +48,8 @@ const AdminPanel = () => {
     const handleCreateEquipment = async (e) => {
         e.preventDefault();
 
-        if (!newEquipment.id || !newEquipment.type || !newEquipment.model) {
+        // ✅ ИСПРАВЛЕНО: проверяем equipment_type
+        if (!newEquipment.id || !newEquipment.equipment_type || !newEquipment.model) {
             toast.error('Заполните обязательные поля: ID, тип и модель');
             return;
         }
@@ -56,14 +60,13 @@ const AdminPanel = () => {
             setShowCreateModal(false);
             setNewEquipment({
                 id: '',
-                type: '',
+                equipment_type: '',  
                 model: '',
                 status: '',
                 planned_start: '',
                 planned_end: '',
                 malfunction: '',
                 mechanic_name: ''
-      
             });
         } catch (error) {
             toast.error(error.message || 'Ошибка создания оборудования');
@@ -85,24 +88,13 @@ const AdminPanel = () => {
 
     const getStatusColor = (status) => {
         const colors = {
-            'Down': '#dc3545', 
+            'Down': '#dc3545',
             'Ready': '#28a745',
-            'Delay': ' #4facfe',
+            'Delay': '#c9dc35',
             'Standby': '#ffc107',
             'Shiftchange': '#17a2b8'
         };
         return colors[status] || '#6c757d';
-    };
-
-    const getPriorityColor = (priority) => {
-        const colors = {
-            'low': '#28a745',
-            'normal': '#6c757d',
-            'medium': '#fd7e14',
-            'high': '#dc3545',
-            'critical': '#8B0000'
-        };
-        return colors[priority] || '#6c757d';
     };
 
     const formatTime = (timeString) => {
@@ -184,7 +176,8 @@ const AdminPanel = () => {
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Тип/Модель</th>
+                                        <th>Тип</th>        
+                                        <th>Модель</th>      
                                         <th>Статус</th>
                                         <th>Время</th>
                                         <th>Механик</th>
@@ -197,14 +190,31 @@ const AdminPanel = () => {
                                             <td>
                                                 <span className="equipment-id">{item.id}</span>
                                             </td>
+
+                                            {/* ✅ ТИП (отдельная колонка) */}
                                             <td>
-                                                <div className="type-model">
-                                                    <span className="type">
-                                                        {item.type === 'excavator' ? 'Экскаватор' : 'Погрузчик'}
-                                                    </span>
-                                                    <span className="model">{item.model}</span>
-                                                </div>
+                                                <span style={{
+                                                    background: 'rgba(79, 172, 254, 0.15)',
+                                                    color: '#4facfe',
+                                                    padding: '4px 10px',
+                                                    borderRadius: '6px',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {getEquipmentTypeText(item.equipment_type)}
+                                                </span>
                                             </td>
+
+                                            {/* ✅ МОДЕЛЬ (отдельная колонка) */}
+                                            <td>
+                                                <span className="model" style={{
+                                                    fontSize: '0.9rem',
+                                                    fontFamily: 'Courier New, monospace'
+                                                }}>
+                                                    {item.model}
+                                                </span>
+                                            </td>
+
                                             <td>
                                                 <span
                                                     className="status-indicator"
@@ -215,10 +225,48 @@ const AdminPanel = () => {
                                             </td>
                                             <td>
                                                 <div className="time-display">
-                                                    <div>План: {formatTime(item.planned_start)} - {formatTime(item.planned_end)}</div>
-                                                    <div>Факт: {formatTime(item.actual_start)} - {formatTime(item.actual_end)}</div>
-                                                    {item.delay_hours > 0 && (
-                                                        <div className="delay-info">+{item.delay_hours}ч</div>
+                                                    {/* ✅ ПЛАН (плановое время в часах) */}
+                                                    {item.planned_hours > 0 ? (
+                                                        <div style={{ marginBottom: '8px' }}>
+                                                            <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8rem' }}>
+                                                                План:
+                                                            </span>
+                                                            <span style={{ color: '#4facfe', fontWeight: '600', marginLeft: '5px', fontSize: '0.9rem' }}>
+                                                                {item.planned_hours}ч
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ marginBottom: '8px' }}>
+                                                            <span style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.75rem', fontStyle: 'italic' }}>
+                                                                План: не указан
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* ✅ ФАКТ (время начала) */}
+                                                    <div>
+                                                        <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.8rem' }}>
+                                                            Факт:
+                                                        </span>
+                                                        <span style={{ color: '#ffffff', fontWeight: '500', marginLeft: '5px', fontSize: '0.85rem' }}>
+                                                            {item.actual_start || '-'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* ✅ ЗАДЕРЖКА (если есть и если указан план) */}
+                                                    {item.planned_hours > 0 && item.delay_hours > 0 && (
+                                                        <div style={{
+                                                            color: '#dc3545',
+                                                            fontWeight: '600',
+                                                            fontSize: '0.75rem',
+                                                            background: 'rgba(220, 53, 69, 0.1)',
+                                                            padding: '3px 8px',
+                                                            borderRadius: '4px',
+                                                            marginTop: '5px',
+                                                            display: 'inline-block'
+                                                        }}>
+                                                            Задержка: +{item.delay_hours}ч
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>
@@ -425,20 +473,23 @@ const AdminPanel = () => {
                                     />
                                 </div>
 
+                                {/* ✅ ИСПРАВЛЕНО: используем equipment_type */}
                                 <div className="form-group">
                                     <label>Тип*</label>
                                     <select
-                                        value={newEquipment.type}
-                                        onChange={(e) => setNewEquipment({ ...newEquipment, type: e.target.value })}
+                                        value={newEquipment.equipment_type}
+                                        onChange={(e) => setNewEquipment({ ...newEquipment, equipment_type: e.target.value })}
                                         required
                                     >
-                                        <option value="excavator">Экскаватор</option>
-                                        <option value="loader">Погрузчик</option>
-                                        <option value="watertruck">Водовоз</option>
-                                        <option value="dozer">Бульдозер</option>
-                                        <option value="drill">Буровой станок</option>
-                                        <option value="grader">Автогрейдер</option>
-                                        <option value="truck">Самосвал</option>
+                                        <option value="">Выберите тип</option>
+                                        <option value="Экскаватор">Экскаватор</option>
+                                        <option value="Погрузчик">Погрузчик</option>
+                                        <option value="Водовоз">Водовоз</option>
+                                        <option value="Бульдозер">Бульдозер</option>
+                                        <option value="Буровой станок">Буровой станок</option>
+                                        <option value="Грейдер">Грейдер</option>
+                                        <option value="Самосвал">Самосвал</option>
+                                        <option value="Вспомогательное оборудование">Вспомогательное оборудование</option>
                                     </select>
                                 </div>
 
@@ -459,11 +510,11 @@ const AdminPanel = () => {
                                         value={newEquipment.status}
                                         onChange={(e) => setNewEquipment({ ...newEquipment, status: e.target.value })}
                                     >
-                                        <option value="ready">Ready</option>
-                                        <option value="down">Down</option>
-                                        <option value="delay">Delay</option>
-                                        <option value="standby">Standby</option>
-                                        <option value="shiftchange">Shiftchange</option>
+                                        <option value="Ready">Ready</option>
+                                        <option value="Down">Down</option>
+                                        <option value="Delay">Delay</option>
+                                        <option value="Standby">Standby</option>
+                                        <option value="Shiftchange">Shiftchange</option>
                                     </select>
                                 </div>
 
