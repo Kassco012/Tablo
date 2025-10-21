@@ -57,8 +57,6 @@ const corsOptions = {
 // 1. CORS - САМЫЙ ПЕРВЫЙ!
 app.use(cors(corsOptions));
 
-app.use('/api/stats', statsRoutes);
-
 // 2. Preflight запросы
 app.options('*', cors(corsOptions));
 
@@ -112,6 +110,7 @@ app.use('/api', limiter);
 // ============================================
 // ROUTES (ПОСЛЕ ВСЕХ MIDDLEWARE!)
 // ============================================
+app.use('/api/stats', statsRoutes); // ✅ ИСПРАВЛЕНО: Перемещено после body parsers
 app.use('/api/auth', authRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/archive', archiveRoutes);

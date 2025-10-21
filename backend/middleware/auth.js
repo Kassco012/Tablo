@@ -1,6 +1,12 @@
 ﻿const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// ВАЖНО: JWT_SECRET должен быть установлен в .env файле
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: JWT_SECRET не установлен в переменных окружения!');
+    throw new Error('JWT_SECRET must be set in environment variables');
+}
 
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];

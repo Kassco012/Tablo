@@ -4,6 +4,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 
+// Проверяем JWT_SECRET при загрузке модуля
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: JWT_SECRET не установлен!');
+    throw new Error('JWT_SECRET must be set in environment variables');
+}
+
 // ============================================
 // LOGIN ROUTE - ТОЛЬКО USERNAME
 // ============================================
@@ -71,7 +78,7 @@ router.post('/login', async (req, res) => {
                 username: user.username,
                 role: user.role
             },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+            JWT_SECRET,
             { expiresIn: '24h' }
         );
 
@@ -126,10 +133,7 @@ router.get('/verify', async (req, res) => {
             });
         }
 
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-        );
+        const decoded = jwt.verify(token, JWT_SECRET);
 
         const user = await db.get('SELECT * FROM users WHERE id = ?', [decoded.id]);
 

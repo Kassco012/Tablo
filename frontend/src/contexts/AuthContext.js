@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('user', JSON.stringify(response.data.user));
                 setUser(response.data.user);
                 setError(null);
-                console.log('✅ Token saved:', response.data.token.substring(0, 20) + '...');
+                console.log('✅ Token saved successfully'); // ✅ ИСПРАВЛЕНО: не логируем сам токен
                 return { success: true };
             } else {
                 throw new Error('Токен не получен от сервера');

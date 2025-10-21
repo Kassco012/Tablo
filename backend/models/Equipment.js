@@ -6,7 +6,7 @@ class Equipment {
         this.type = data.type;
         this.model = data.model;
         this.status = data.status || 'ready';
-        this.planned_hours = data.status;
+        this.planned_hours = data.planned_hours || 0; // ✅ ИСПРАВЛЕНО: было data.status
         this.actual_start = data.actual_start;
         this.actual_end = data.actual_end;
         this.delay_hours = data.delay_hours || 0;
@@ -116,14 +116,15 @@ class Equipment {
             } else {
                 // Create new
                 const query = `
-          INSERT INTO equipment 
-          (id, type, model, status, planned_hours, 
+          INSERT INTO equipment
+          (id, type, model, status, planned_hours,
            actual_start, actual_end, delay_hours, malfunction, mechanic_name)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
+                // ✅ ИСПРАВЛЕНО: 10 плейсхолдеров под 10 параметров (было 13)
 
                 db.run(query, [
-                    this.id, this.type, this.model, this.status, 
+                    this.id, this.type, this.model, this.status,
                     this.planned_hours, this.actual_start, this.actual_end,
                     this.delay_hours, this.malfunction, this.mechanic_name
                 ], function (err) {

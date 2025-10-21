@@ -179,7 +179,8 @@ class MSSQLSyncService {
                     const statusId = equipment.status_id;
                     const reasonName = equipment.reason_name;
 
-                    
+                    // ✅ ИСПРАВЛЕНО: Добавляем маппинг типа оборудования
+                    const typeInfo = TYPE_MAPPING[mssqlType] || { equipment_type: 'Неизвестный тип' };
 
                     // Маппинг статуса
                     const status = STATUS_MAPPING[statusId] || 'Down';
@@ -210,8 +211,7 @@ class MSSQLSyncService {
                             malfunction: malfunction,
                             actual_start: actual_start,
                             mechanic_name: existingRecord.mechanic_name || '', // Сохраняем механика
-                            planned_start: existingRecord.planned_start || '', // Сохраняем план
-                            planned_end: existingRecord.planned_end || '',
+                            planned_hours: existingRecord.planned_hours || 0, // ✅ ИСПРАВЛЕНО: было planned_start/planned_end
                             delay_hours: existingRecord.delay_hours || 0, // Сохраняем задержку
                             mssql_reason: reasonName,
                             last_sync_time: new Date().toISOString()
@@ -227,7 +227,7 @@ class MSSQLSyncService {
                             equipment_type: typeInfo.equipment_type,
                             model: equipment.equipment_model || '',
                             status: status,
-                            planned_hours: '',
+                            planned_hours: 0, // ✅ ИСПРАВЛЕНО: было пустая строка, теперь 0
                             actual_start: actual_start,
                             actual_end: '',
                             delay_hours: 0, // Ручной
@@ -299,16 +299,20 @@ class MSSQLSyncService {
 
     async updateEquipment(db, data) {
         return new Promise((resolve, reject) => {
+            // ✅ ИСПРАВЛЕНО: SQL теперь совпадает с параметрами
             const query = `
-            UPDATE equipment_master 
-            SET 
-  
+            UPDATE equipment_master
+            SET
+                mssql_equipment_id = ?,
+                mssql_type = ?,
+                mssql_status_id = ?,
+                equipment_type = ?,
+                model = ?,
                 status = ?,
                 malfunction = ?,
                 actual_start = ?,
                 mechanic_name = ?,
-                planned_start = ?,
-                planned_end = ?,
+                planned_hours = ?,
                 delay_hours = ?,
                 mssql_reason = ?,
                 last_sync_time = ?,
@@ -333,7 +337,7 @@ class MSSQLSyncService {
                     data.delay_hours,
                     data.mssql_reason,
                     data.last_sync_time,
-                    data.id
+                    data.id  // WHERE id = ?
                 ],
                 function (err) {
                     if (err) {
@@ -349,14 +353,15 @@ class MSSQLSyncService {
 
     async createEquipment(db, data) {
         return new Promise((resolve, reject) => {
+            // ✅ ИСПРАВЛЕНО: 17 полей = 17 плейсхолдеров = 17 параметров
             const query = `
                 INSERT INTO equipment_master (
                     id, mssql_equipment_id, mssql_type, mssql_status_id,
-                    equipment_type, model, status, 
-                    planned_start, planned_end, actual_start, actual_end,
-                    delay_hours, malfunction, mechanic_name, progress,
+                    equipment_type, model, status,
+                    planned_hours, actual_start, actual_end,
+                    delay_hours, malfunction, mechanic_name,
                     mssql_reason, last_sync_time, is_active, manually_edited
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
             db.run(
