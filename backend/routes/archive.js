@@ -10,7 +10,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
     const { completion_reason = 'launched' } = req.body;
 
     // Проверяем права доступа
-    if (req.user.role !== 'programmer' && req.user.role !== 'dispatcher' && req.user.role !== 'admin'  ) {
+    if (req.user.role !== 'programmer' && req.user.role !== 'dispatcher' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Недостаточно прав доступа' });
     }
 
@@ -32,34 +32,55 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
             });
         }
 
+        // ✅ Логируем данные для отладки
+        console.log(`\n🚀 Запуск техники в работу: ${equipment.id}`);
+        console.log(`   Механик: ${equipment.mechanic_name || 'НЕ УКАЗАН'}`);
+        console.log(`   Плановое время: ${equipment.planned_hours || 0}ч`);
+        console.log(`   Начало ремонта: ${equipment.actual_start || 'НЕ УКАЗАНО'}`);
+
         // Начинаем транзакцию
         db.serialize(() => {
             db.run('BEGIN TRANSACTION');
 
-            // Переносим в архив
+            // ✅ ИСПРАВЛЕННЫЙ SQL-запрос
             const archiveQuery = `
-                INSERT INTO equipment_archive 
-                (id, equipment_type, model, status, actual_start, actual_end, 
-                 delay_hours, malfunction, mechanic_name,
-                 created_at, updated_at, completed_date, completion_user, archive_reason) 
-                VALUES (?, ?, ?, ?, 'launched', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+                INSERT INTO equipment_archive (
+                    id, 
+                    equipment_type, 
+                    model, 
+                    status, 
+                    actual_start, 
+                    actual_end, 
+                    planned_hours,
+                    malfunction, 
+                    mechanic_name,
+                    created_at, 
+                    updated_at, 
+                    completed_date, 
+                    completion_user, 
+                    archive_reason
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
             `;
 
-            db.run(archiveQuery, [
-                equipment.id,
-                equipment.equipment_type,
-                equipment.model,
-                equipment.planned_hours, 
-                equipment.actual_start,
-                equipment.actual_end,
-                equipment.delay_hours || 0,
-                equipment.malfunction,
-                equipment.mechanic_name,
-                equipment.created_at,
-                equipment.updated_at,
-                req.user.userId,
-                completion_reason
-            ], function (archiveErr) {
+            // ✅ ИСПРАВЛЕННЫЙ массив значений (14 параметров)
+            const archiveValues = [
+                equipment.id,                           // id
+                equipment.equipment_type,               // equipment_type
+                equipment.model || '',                  // model
+                'Ready',                                // status (техника готова)
+                equipment.actual_start || null,         // actual_start
+                equipment.actual_end || null,           // actual_end
+                equipment.planned_hours || 0,           // planned_hours ✅
+                equipment.malfunction || '',            // malfunction
+                equipment.mechanic_name || null,        // mechanic_name ✅
+                equipment.created_at,                   // created_at
+                equipment.updated_at,                   // updated_at
+                // completed_date = CURRENT_TIMESTAMP   // ✅ Автоматически
+                req.user.userId,                        // completion_user
+                completion_reason                       // archive_reason
+            ];
+
+            db.run(archiveQuery, archiveValues, function (archiveErr) {
                 if (archiveErr) {
                     db.run('ROLLBACK');
                     console.error('❌ Ошибка архивирования:', archiveErr);
@@ -67,6 +88,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                 }
 
                 const archiveId = this.lastID;
+                console.log(`✅ Создана запись в архиве #${archiveId}`);
 
                 // Добавляем запись в историю
                 db.run(
@@ -97,11 +119,16 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                                     }
 
                                     console.log(`✅ Техника ${equipment.id} запущена в работу`);
+                                    console.log(`   📦 Архив ID: ${archiveId}`);
+                                    console.log(`   👤 Механик: ${equipment.mechanic_name || 'не указан'}`);
+                                    console.log(`   🕐 Время архивации: ${new Date().toLocaleString('ru-RU')}`);
 
                                     res.json({
                                         message: 'Техника успешно запущена в работу',
                                         equipment_id: equipment.id,
-                                        archive_id: archiveId
+                                        archive_id: archiveId,
+                                        mechanic_name: equipment.mechanic_name,
+                                        completed_date: new Date().toISOString()
                                     });
                                 });
                             }
@@ -113,6 +140,27 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
     });
 });
 
+router.get('/today', async (req, res) => {
+    try {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
+        const count = await Archive.countDocuments({
+            completed_date: {
+                $gte: todayStart,
+                $lte: todayEnd
+            }
+        });
+
+        res.json({ count });
+    } catch (error) {
+        console.error('Ошибка подсчета архива за сегодня:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
 router.get('/', authenticateToken, (req, res) => {
     // Проверяем права доступа

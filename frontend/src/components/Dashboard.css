@@ -1,212 +1,164 @@
-﻿.dashboard-fixed {
-    min-width: 1500px;
-    zoom: 1;
-    transform: scale(1);
-    transform-origin: top left;
-    user-select: none;
-}
-
-    /* Предотвращение масштабирования */
-    .dashboard-fixed * {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-
-/* ===================================
-   ФИКСИРОВАННАЯ ВЫСОТА ТАБЛИЦЫ
+﻿/* ===================================
+   ОСНОВНОЙ КОНТЕЙНЕР
    =================================== */
 
-.equipment-fixed-height {
-    height: 560px;
-    overflow: hidden;
+.dashboard {
+    width: 100%;
+    max-width: 2000px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-    .equipment-fixed-height .equipment-table {
-        width: 100%;
-        height: 100%;
-        table-layout: fixed;
-    }
-
-        .equipment-fixed-height .equipment-table tbody {
-            height: calc(100% - 60px);
-            display: table-row-group;
-        }
-
-            /* ✅ ЕДИНАЯ ВЫСОТА СТРОК - 90px */
-            .equipment-fixed-height .equipment-table tbody tr {
-                height: 90px !important;
-                max-height: 90px !important;
-                display: table-row;
-                transition: all 0.3s ease;
-            }
-
-            /* ✅ ЕДИНАЯ ВЫСОТА ЯЧЕЕК - 90px */
-            .equipment-fixed-height .equipment-table tbody td {
-                height: 90px !important;
-                max-height: 90px !important;
-                padding: 12px 15px !important;
-                vertical-align: middle !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-            }
-
-    /* Пустые строки - полупрозрачные */
-    .equipment-fixed-height .empty-row {
-        opacity: 0.2;
-        pointer-events: none;
-    }
-
-        .equipment-fixed-height .empty-row td {
-            color: rgba(255, 255, 255, 0.3);
-            text-align: center;
-            font-style: italic;
-        }
-
 /* ===================================
-   ИНДИКАТОР СТРАНИЦ
+   СЕКЦИЯ ТАБЛИЦЫ ОБОРУДОВАНИЯ
    =================================== */
 
-.pagination-indicator {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 30px;
-    background: rgba(255, 255, 255, 0.03);
+.equipment-section {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    margin: 0 auto;
+    padding: 0 10px;
+    background: rgba(255, 255, 255, 0.02);
     border-radius: 12px;
-    margin: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.page-info {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #4facfe;
-}
-
-.page-dots {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.page-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transition: all 0.3s ease;
-}
-
-    .page-dot.active {
-        background: linear-gradient(135deg, #4facfe, #00f2fe);
-        box-shadow: 0 0 15px rgba(79, 172, 254, 0.5);
-        transform: scale(1.3);
+    /* Стилизация скроллбара */
+    .equipment-section::-webkit-scrollbar {
+        height: 10px;
     }
 
-.auto-switch-info {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-style: italic;
-}
+    .equipment-section::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 5px;
+    }
+
+    .equipment-section::-webkit-scrollbar-thumb {
+        background: rgba(79, 172, 254, 0.5);
+        border-radius: 5px;
+    }
+
+        .equipment-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 172, 254, 0.8);
+        }
 
 /* ===================================
-   АНИМАЦИИ
+   ТАБЛИЦА ОБОРУДОВАНИЯ - УЛУЧШЕННАЯ
    =================================== */
 
-.data-row {
-    animation: slideInUp 0.6s ease-out;
+.equipment-table {
+    table-layout: fixed; 
+    width: 100%;
+    min-width: 1600px;
 }
 
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    /* Заголовки таблицы */
+    .equipment-table thead th {
+        padding: 18px 14px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 2px solid rgba(79, 172, 254, 0.3);
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.priority-badge.critical {
-    animation: criticalPulse 2s infinite;
-}
-
-@keyframes criticalPulse {
-    0%, 100% {
-        background: #8B0000;
-        box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+    /* Строки таблицы */
+    .equipment-table tbody tr {
+        height: auto;
+        min-height: 70px;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    50% {
-        background: #dc3545;
-        box-shadow: 0 0 20px rgba(220, 53, 69, 0.8);
+        .equipment-table tbody tr:hover {
+            background: rgba(79, 172, 254, 0.08);
+            transform: translateX(2px);
+        }
+
+    /* Ячейки таблицы - УЛУЧШЕННАЯ ЧИТАЕМОСТЬ */
+    .equipment-table tbody td {
+        height: auto !important;
+        padding: 16px 14px !important;
+        vertical-align: middle;
+        white-space: normal; /* ✅ Разрешаем перенос текста */
+        word-wrap: break-word;
+        overflow: visible;
+        font-size: 0.95rem;
     }
-}
 
-/* ===================================
-   ФИКСИРОВАННАЯ ШИРИНА КОЛОНОК
-   =================================== */
+    /* ID - короткие коды типа "MV47" */
+    .equipment-table th:nth-child(1),
+    .equipment-table td:nth-child(1) {
+        width: 80px;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(1),
-.equipment-fixed-height .equipment-table td:nth-child(1) {
-    width: 80px; /* ID */
-}
+    /* Тип - "Самосвал", "Водовоз", "Экскаватор" */
+    .equipment-table th:nth-child(2),
+    .equipment-table td:nth-child(2) {
+        width: 180px;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(2),
-.equipment-fixed-height .equipment-table td:nth-child(2) {
-    width: 150px; /* Тип */
-}
+    /* Модель - "Actros 3341", "Caterpillar 785C" */
+    .equipment-table th:nth-child(3),
+    .equipment-table td:nth-child(3) {
+        width: 200px;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(3),
-.equipment-fixed-height .equipment-table td:nth-child(3) {
-    width: 180px; /* Модель */
-}
+    /* Факт - дата "20.10.2025, 14:51" */
+    .equipment-table th:nth-child(4),
+    .equipment-table td:nth-child(4) {
+        width: 150px;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(4),
-.equipment-fixed-height .equipment-table td:nth-child(4) {
-    width: 150px; /* Факт */
-}
+    /* План - дата "21.10.2025, 14:51" + "(24ч)" */
+    .equipment-table th:nth-child(5),
+    .equipment-table td:nth-child(5) {
+        width: 150px;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(5),
-.equipment-fixed-height .equipment-table td:nth-child(5) {
-    width: 150px; /* План */
-}
+    /* Задержка - "0ч" или "+1639ч" */
+    .equipment-table th:nth-child(6),
+    .equipment-table td:nth-child(6) {
+        width: 100px;
+        text-align: center;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(6),
-.equipment-fixed-height .equipment-table td:nth-child(6) {
-    width: 100px; /* Задержка */
-}
+    /* Статус - "DOWN", "READY" */
+    .equipment-table th:nth-child(7),
+    .equipment-table td:nth-child(7) {
+        width: 110px;
+        text-align: center;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(7),
-.equipment-fixed-height .equipment-table td:nth-child(7) {
-    width: 110px; /* Статус */
-}
+    /* ✅ НЕИСПРАВНОСТЬ - самая важная колонка */
+    /* Должна вместить "HYDRAULIC SYSTEM-HOSE-PUMP-VALVE" */
+    .equipment-table th:nth-child(8),
+    .equipment-table td:nth-child(8) {
+        width: 450px; /* Достаточно для самого длинного текста */
+        white-space: normal; /* Разрешаем перенос */
+        word-wrap: break-word;
+        line-height: 1.6;
+    }
 
-.equipment-fixed-height .equipment-table th:nth-child(8),
-.equipment-fixed-height .equipment-table td:nth-child(8) {
-    width: 250px; /* Неисправность */
-}
-
-.equipment-fixed-height .equipment-table th:nth-child(9),
-.equipment-fixed-height .equipment-table td:nth-child(9) {
-    width: 140px; /* Механик */
-}
+    /* Механик - "Алимов К.Т.", "Назарбаев.С" */
+    .equipment-table th:nth-child(9),
+    .equipment-table td:nth-child(9) {
+        width: 160px;
+    }
 
 /* ===================================
    СТИЛИ ДЛЯ КОНТЕНТА ЯЧЕЕК
    =================================== */
 
 /* ID техники */
-.equipment-fixed-height .equipment-id {
-    font-size: 1.2rem;
+.equipment-id {
+    font-size: 1.1rem;
     font-weight: bold;
-    font-family: 'Courier New', monospace;
+    font-family: 'Roboto', monospace;
     color: #ffd700;
 }
 
@@ -228,47 +180,303 @@
     color: rgba(255, 255, 255, 0.9);
     font-size: 0.9rem;
     font-weight: 500;
-    font-family: 'Courier New', monospace;
+    font-family: 'Roboto', monospace;
 }
 
 /* ===================================
-   ВРЕМЯ (ФАКТ/ПЛАН) - КОМПАКТНЫЙ ФОРМАТ
+   ВРЕМЯ (ФАКТ/ПЛАН)
    =================================== */
 
 .time-info {
     font-size: 0.85rem;
-    line-height: 1.4;
-    max-height: 70px;
-    overflow: hidden;
+    line-height: 1.5;
 }
 
     .time-info > div {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
         margin-bottom: 2px;
     }
 
 /* ===================================
-   СТАТУСЫ И ПРИОРИТЕТЫ
+   ПУСТЫЕ СТРОКИ
    =================================== */
 
-.equipment-fixed-height .status-badge.critical,
-.equipment-fixed-height .priority-badge.critical {
-    font-weight: 700;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+.equipment-table .empty-row {
+    opacity: 0.1;
+    pointer-events: none;
 }
 
-.equipment-fixed-height .status-badge.ready {
-    box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+    .equipment-table .empty-row td {
+        color: rgba(255, 255, 255, 0.3);
+        text-align: center;
+        font-style: italic;
+    }
+
+/* ===================================
+   ИНДИКАТОР СТРАНИЦ
+   =================================== */
+
+.pagination-indicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    margin: 20px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.equipment-fixed-height .status-badge.in_repair {
-    box-shadow: 0 0 10px rgba(79, 172, 254, 0.3);
+.page-info {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #4facfe;
 }
 
-.equipment-fixed-height .status-badge.waiting {
-    box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+.page-dots {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.page-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+    .page-dot.active {
+        width: 32px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        box-shadow: 0 0 15px rgba(79, 172, 254, 0.5);
+    }
+
+.auto-switch-info {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}
+
+/* ===================================
+   АНИМАЦИИ
+   =================================== */
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+}
+
+@keyframes criticalPulse {
+    0%, 100% {
+        background: #8B0000;
+        box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+    }
+
+    50% {
+        background: #dc3545;
+        box-shadow: 0 0 25px rgba(220, 53, 69, 0.8);
+    }
+}
+
+/* ===================================
+   СТАТУСЫ И БЕЙДЖИ
+   =================================== */
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+    .status-badge.Down {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.4);
+    }
+
+    .status-badge.Ready {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.4);
+        box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+    }
+
+    .status-badge.Standby {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.4);
+    }
+
+    .status-badge.Delay {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.4);
+    }
+
+    .status-badge.Shiftchange {
+        background: rgba(79, 172, 254, 0.2);
+        color: #4facfe;
+        border: 1px solid rgba(79, 172, 254, 0.4);
+    }
+
+/* Задержка */
+.delay {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+    .delay.zero {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .delay.positive {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.4);
+        animation: criticalPulse 2s infinite;
+    }
+
+/* ===================================
+   КНОПКИ
+   =================================== */
+
+.compact-button {
+    transition: all 0.3s ease;
+}
+
+    .compact-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+.launch-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+}
+
+/* ===================================
+   АДАПТИВНЫЙ ДИЗАЙН
+   =================================== */
+
+@media (max-width: 1600px) {
+    .dashboard {
+        padding: 15px;
+    }
+
+    .equipment-table {
+        font-size: 0.9rem;
+    }
+
+        .equipment-table thead th {
+            padding: 14px 10px;
+            font-size: 0.85rem;
+        }
+
+        .equipment-table tbody td {
+            padding: 12px 10px !important;
+            font-size: 0.85rem;
+        }
+}
+
+@media (max-width: 1366px) {
+    .dashboard {
+        padding: 10px;
+    }
+
+    .equipment-table {
+        font-size: 0.85rem;
+        min-width: 1400px;
+    }
+
+        .equipment-table thead th {
+            padding: 12px 8px;
+            font-size: 0.8rem;
+        }
+
+        .equipment-table tbody td {
+            padding: 10px 8px !important;
+            font-size: 0.8rem;
+        }
+}
+
+@media (max-width: 1024px) {
+    .equipment-table {
+        min-width: 1200px;
+    }
+
+        .equipment-table tbody td {
+            padding: 8px 6px !important;
+        }
+}
+
+/* ===================================
+   БЛОКИРОВКА ВЫДЕЛЕНИЯ ТЕКСТА (ОПЦИОНАЛЬНО)
+   =================================== */
+
+.dashboard * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Разрешаем выделение в редактируемых полях */
+input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 /* ===================================
@@ -290,21 +498,13 @@ html {
 }
 
 /* ===================================
-   АДАПТИВНЫЙ ДИЗАЙН
+   ИНДИКАТОР СОСТОЯНИЯ
    =================================== */
 
-@media (max-width: 1600px) {
-    .dashboard-fixed {
-        min-width: 1366px;
-        transform: scale(0.95);
-        transform-origin: top left;
-    }
-}
-
-@media (max-width: 1366px) {
-    .dashboard-fixed {
-        min-width: 1200px;
-        transform: scale(0.9);
-        transform-origin: top left;
-    }
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #28a745;
+    animation: pulse 2s infinite;
 }

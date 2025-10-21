@@ -9,6 +9,56 @@ import {
     getEquipmentTypeText
 } from '../components/EquipmentTypes';
 
+
+
+
+
+const parseRussianDate = (dateString) => {
+    if (!dateString) return null;
+
+    try {
+        // Если уже в формате ISO - парсим как есть
+        if (dateString.includes('T') || dateString.includes('Z')) {
+            return new Date(dateString);
+        }
+
+        // Парсим русский формат: "14.10.2025 21:54"
+        const match = dateString.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+        if (match) {
+            const [, day, month, year, hour, minute] = match;
+            return new Date(year, month - 1, day, hour, minute);
+        }
+
+        // Пытаемся парсить как есть
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? null : date;
+    } catch (error) {
+        console.error('Error parsing date:', error);
+        return null;
+    }
+};
+
+
+const calculateReadyToday = (equipmentList) => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0); // 00:00:00
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59); // 23:59:59
+
+    return equipmentList.filter(item => {
+        // Проверяем, что статус = Ready
+        if (item.status !== 'Ready') return false;
+
+        // Проверяем, что actual_start (время начала ремонта) было СЕГОДНЯ
+        const startDate = parseRussianDate(item.actual_start);
+
+        if (!startDate) return false;
+
+        // Проверяем, что дата в диапазоне сегодняшнего дня
+        return startDate >= todayStart && startDate <= todayEnd;
+    }).length;
+};
+
+
 // Компонент пользовательского dropdown
 const UserProfileDropdown = ({ user }) => {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -63,8 +113,8 @@ const UserProfileDropdown = ({ user }) => {
                     background: 'rgba(255, 255, 255, 0.1)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     borderRadius: '50%',
-                    width: '60px',
-                    height: '60px',
+                    width: '70px',
+                    height: '70px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -202,7 +252,7 @@ const UserProfileDropdown = ({ user }) => {
                             animation: 'pulse 2s infinite'
                         }}></div>
                         <span style={{
-                            fontSize: '0.8rem',
+                            fontSize: '0.7rem',
                             color: '#28a745',
                             fontWeight: '500'
                         }}>
@@ -262,6 +312,8 @@ const Dashboard = ({ onLoginClick }) => {
     const [showLaunchConfirm, setShowLaunchConfirm] = useState(null);
     const [previousEquipment, setPreviousEquipment] = useState([]);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+
     // ПАГИНАЦИЯ - 9 записей на страницу
     const ITEMS_PER_PAGE = 9;
     const AUTO_SWITCH_INTERVAL = 15000; // 15 секунд
@@ -270,32 +322,10 @@ const Dashboard = ({ onLoginClick }) => {
     const [isPaused, setIsPaused] = useState(false);
 
     
-    // ✅ ИСПРАВЛЕНО: Парсинг русского формата даты
-    const parseRussianDate = (dateString) => {
-        if (!dateString) return null;
+  
+   
 
-        try {
-            // Если уже в формате ISO - парсим как есть
-            if (dateString.includes('T') || dateString.includes('Z')) {
-                return new Date(dateString);
-            }
-
-            // Парсим русский формат: "14.10.2025 21:54"
-            const match = dateString.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
-            if (match) {
-                const [, day, month, year, hour, minute] = match;
-                return new Date(year, month - 1, day, hour, minute);
-            }
-
-            // Пытаемся парсить как есть
-            const date = new Date(dateString);
-            return isNaN(date.getTime()) ? null : date;
-        } catch (error) {
-            console.error('Error parsing date:', error);
-            return null;
-        }
-    };
-
+   
     const sortEquipmentByDate = (equipmentList) => {
         return [...equipmentList].sort((a, b) => {
             const dateA = parseRussianDate(a.actual_start);
@@ -409,6 +439,29 @@ const Dashboard = ({ onLoginClick }) => {
         setPreviousEquipment(equipment);
 
     }, [equipment, loading]); // Срабатывает при изменении equipment
+
+    const [readyTodayCount, setReadyTodayCount] = useState(0);
+
+    useEffect(() => {
+        const fetchReadyToday = async () => {
+            try {
+                const response = await api.get('/stats/ready-today');
+                setReadyTodayCount(response.data.count || 0);
+            } catch (error) {
+                console.error('Ошибка загрузки статистики Ready:', error);
+                setReadyTodayCount(0);
+            }
+        };
+
+        if (user) {
+            fetchReadyToday();
+
+            // Обновляем каждые 30 секунд вместе с остальными данными
+            const interval = setInterval(fetchReadyToday, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
+  
 
     // ✅ ОБНОВЛЕННЫЙ ЭФФЕКТ: Автообновление каждые 30 секунд
     useEffect(() => {
@@ -693,12 +746,12 @@ const Dashboard = ({ onLoginClick }) => {
                             title={`Отремонтировано и запущено с 00:00 до ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`}
                         >
                             <h3>READY</h3>
-                            <div className="number">{stats.ready_today || 0}</div>
+                            <div className="number">{readyTodayCount || 0}</div>
                             <div style={{
                                 fontSize: '0.7rem',
                                 color: 'rgba(40, 167, 69, 0.8)',
                                 marginTop: '4px',
-                                fontStyle: 'italic',
+                                fontStyle: 'inter',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -785,7 +838,7 @@ const Dashboard = ({ onLoginClick }) => {
             </div>
 
             {/* ТАБЛИЦА ОБОРУДОВАНИЯ */}
-            <div className="equipment-section">
+            <div className="equipment-section equipment-container-optimized">
                 <table className="equipment-table">
                     <thead>
                         <tr>
@@ -851,7 +904,7 @@ const Dashboard = ({ onLoginClick }) => {
                                             <span style={{
                                                 color: 'rgba(255, 255, 255, 0.4)',
                                                 fontSize: '0.85rem',
-                                                fontStyle: 'italic'
+                                                fontStyle: 'inter'
                                             }}>
                                                 Не указано
                                             </span>
@@ -869,8 +922,8 @@ const Dashboard = ({ onLoginClick }) => {
                                     ) : (
                                         <span style={{
                                             color: 'rgba(255, 255, 255, 0.4)',
-                                            fontSize: '0.85rem',
-                                            fontStyle: 'italic'
+                                            fontSize: '0.9rem',
+                                            fontStyle: 'inter'
                                         }}>
                                             -
                                         </span>
@@ -935,7 +988,7 @@ const Dashboard = ({ onLoginClick }) => {
                                                     style={{
                                                         color: 'rgba(255,255,255,0.5)',
                                                         fontSize: '0.8rem',
-                                                        fontStyle: 'italic'
+                                                        fontStyle: 'inter'
                                                     }}
                                                     title="Нельзя запустить в текущем статусе"
                                                 >
@@ -1022,7 +1075,7 @@ const Dashboard = ({ onLoginClick }) => {
                             <div style={{
                                 fontSize: '0.85rem',
                                 color: 'rgba(255, 255, 255, 0.6)',
-                                fontStyle: 'italic'
+                                fontStyle: 'inter'
                             }}>
                                 {isPaused ? 'На паузе' : `Автосмена через ${AUTO_SWITCH_INTERVAL / 1000}с`}
                             </div>
@@ -1031,7 +1084,7 @@ const Dashboard = ({ onLoginClick }) => {
                         <div style={{
                             fontSize: '0.85rem',
                             color: 'rgba(255, 255, 255, 0.6)',
-                            fontStyle: 'italic'
+                            fontStyle: 'inter'
                         }}>
                             {isPaused ? 'На паузе' : `Автосмена через ${AUTO_SWITCH_INTERVAL / 1000}с`}
                         </div>
@@ -1073,7 +1126,7 @@ const Dashboard = ({ onLoginClick }) => {
                 <div style={{
                     fontSize: '0.7rem',
                     color: 'rgba(79, 172, 254, 0.8)',
-                    fontStyle: 'italic',
+                    fontStyle: 'inter',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px'

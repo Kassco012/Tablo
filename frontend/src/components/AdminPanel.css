@@ -228,7 +228,7 @@
     font-weight: bold;
     color: #ffd700;
     font-size: 1.1rem;
-    font-family: 'Courier New', monospace;
+    font-family: 'Roboto', monospace;
 }
 
 /* Type and Model */
@@ -247,7 +247,7 @@
     .type-model .model {
         font-size: 0.8rem;
         color: rgba(255, 255, 255, 0.7);
-        font-family: 'Courier New', monospace;
+        font-family: 'Roboto', monospace;
     }
 
 /* Status and Priority Indicators */

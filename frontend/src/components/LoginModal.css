@@ -20,7 +20,7 @@
     border-radius: 20px;
     padding: 0;
     width: 90%;
-    max-width: 600px; /* Увеличили с 450px */
+    max-width: 600px; 
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
@@ -105,7 +105,7 @@
         font-size: 1rem;
         transition: all 0.3s ease;
         backdrop-filter: blur(10px);
-        box-sizing: border-box; /* Исправляет проблемы с размерами */
+        box-sizing: border-box; 
     }
 
         .form-group input:focus {
@@ -201,9 +201,9 @@
 
 .account-info {
     background: rgba(255, 255, 255, 0.05);
-    padding: 20px; /* Увеличили отступы */
+    padding: 20px; 
     border-radius: 12px;
-    font-size: 0.9rem; /* Увеличили размер шрифта */
+    font-size: 0.9rem; 
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);

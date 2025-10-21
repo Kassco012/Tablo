@@ -1,4 +1,4 @@
-﻿// frontend/src/components/EquipmentTable.js - с улучшенным вводом планового времени
+﻿// frontend/src/components/EquipmentTable.js - ROLE-BASED EDITING
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
@@ -28,6 +28,11 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const [showIdChangeConfirm, setShowIdChangeConfirm] = useState(false);
     const [originalId, setOriginalId] = useState('');
 
+    // ✅ ОПРЕДЕЛЯЕМ ПРАВА ДОСТУПА
+    const canEditAllFields = user && (user.role === 'admin' || user.role === 'programmer');
+    const canEditLimitedFields = user && user.role === 'dispatcher';
+    const canViewHistory = user && (user.role === 'admin' || user.role === 'dispatcher' || user.role === 'programmer');
+
     useEffect(() => {
         if (equipment) {
             const equipmentData = {
@@ -43,7 +48,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             setFormData(equipmentData);
             setOriginalId(equipment.id);
 
-            if (user && (user.role === 'admin' || user.role === 'dispatcher' || user.role === 'programmer')) {
+            if (canViewHistory) {
                 loadHistory();
             }
         }
@@ -78,6 +83,11 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     };
 
     const handleIdChange = async () => {
+        if (!canEditAllFields) {
+            toast.error('Недостаточно прав для изменения ID');
+            return;
+        }
+
         if (!formData.id || formData.id.trim() === '') {
             toast.error('ID не может быть пустым');
             return;
@@ -111,28 +121,21 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const handlePlannedHoursChange = (e) => {
         const value = e.target.value.trim();
 
-        // Разрешаем пустое поле, цифры, точку и запятую
         if (value === '' || /^[\d.,]+$/.test(value)) {
-            // Заменяем запятую на точку для корректной работы
             const normalizedValue = value.replace(',', '.');
-
-            // Парсим значение
             const numValue = parseFloat(normalizedValue);
 
-            // Если значение корректное число
             if (!isNaN(numValue) && numValue >= 0 && numValue <= 1000) {
                 setFormData(prev => ({
                     ...prev,
                     planned_hours: numValue
                 }));
             } else if (value === '') {
-                // Если поле пустое, устанавливаем 0
                 setFormData(prev => ({
                     ...prev,
                     planned_hours: 0
                 }));
             } else {
-                // Показываем предупреждение только если число вне диапазона
                 if (!isNaN(numValue)) {
                     toast.warning('Плановое время должно быть от 0 до 1000 часов');
                 }
@@ -143,7 +146,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!user || (user.role !== 'admin' && user.role !== 'dispatcher' && user.role !== 'programmer')) {
+        if (!canEditAllFields && !canEditLimitedFields) {
             toast.error('Недостаточно прав для редактирования');
             return;
         }
@@ -156,7 +159,8 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             return;
         }
 
-        if (formData.id !== originalId) {
+        // ✅ Если изменен ID и это админ
+        if (formData.id !== originalId && canEditAllFields) {
             setShowIdChangeConfirm(true);
             return;
         }
@@ -170,14 +174,28 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         try {
             const currentId = formData.id || originalId;
 
-            const updateData = {
-                type: formData.type,
-                model: formData.model,
-                status: formData.status,
-                planned_hours: formData.planned_hours,
-                malfunction: formData.malfunction,
-                mechanic_name: formData.mechanic_name
-            };
+            // ✅ ДИСПЕТЧЕР - может менять только 2 поля
+            let updateData;
+
+            if (canEditLimitedFields && !canEditAllFields) {
+                updateData = {
+                    planned_hours: formData.planned_hours,
+                    mechanic_name: formData.mechanic_name
+                };
+                console.log('📝 Диспетчер обновляет только planned_hours и mechanic_name');
+            }
+            // ✅ АДМИН - может менять всё
+            else if (canEditAllFields) {
+                updateData = {
+                    type: formData.type,
+                    model: formData.model,
+                    status: formData.status,
+                    planned_hours: formData.planned_hours,
+                    malfunction: formData.malfunction,
+                    mechanic_name: formData.mechanic_name
+                };
+                console.log('🔧 Админ обновляет все поля');
+            }
 
             await api.put(`/equipment/${currentId}`, updateData);
             toast.success('Данные обновлены успешно!');
@@ -241,16 +259,25 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
         return actionMap[action] || action;
     };
 
-    // ✅ Функция для правильного склонения слова "час"
     const getHoursText = (hours) => {
         if (hours === 1) return 'час';
         if (hours >= 2 && hours <= 4) return 'часа';
         return 'часов';
     };
 
-    if (!isOpen || !equipment) return null;
+    // ✅ ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: проверка, можно ли редактировать поле
+    const canEditField = (fieldName) => {
+        if (canEditAllFields) return true; // Админ может всё
 
-    const canEdit = user && (user.role === 'admin' || user.role === 'dispatcher');
+        // Диспетчер может только эти 2 поля
+        if (canEditLimitedFields) {
+            return fieldName === 'planned_hours' || fieldName === 'mechanic_name';
+        }
+
+        return false;
+    };
+
+    if (!isOpen || !equipment) return null;
 
     return (
         <div className="modal-backdrop" onClick={handleBackdropClick}>
@@ -274,7 +301,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                     >
                         Просмотр
                     </button>
-                    {canEdit && (
+                    {(canEditAllFields || canEditLimitedFields) && (
                         <button
                             className={`tab ${activeTab === 'edit' ? 'active' : ''}`}
                             onClick={() => setActiveTab('edit')}
@@ -282,7 +309,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                             Редактирование
                         </button>
                     )}
-                    {canEdit && (
+                    {canViewHistory && (
                         <button
                             className={`tab ${activeTab === 'history' ? 'active' : ''}`}
                             onClick={() => setActiveTab('history')}
@@ -304,7 +331,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                 <div className="info-item">
                                     <label>Тип:</label>
                                     <span>{getEquipmentTypeText(equipment.type)}</span>
-                                    <span>{getEquipmentTypeOptions(equipment.type)}</span>
                                 </div>
 
                                 <div className="info-item">
@@ -319,7 +345,6 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     </span>
                                 </div>
 
-                                {/* ✅ Показываем плановое время с правильным склонением */}
                                 <div className="info-item">
                                     <label>Плановое время:</label>
                                     <span style={{
@@ -346,22 +371,62 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                         </div>
                     )}
 
-                    {activeTab === 'edit' && canEdit && (
+                    {activeTab === 'edit' && (canEditAllFields || canEditLimitedFields) && (
                         <form onSubmit={handleSubmit} className="edit-form">
+                            {/* ✅ ИНФОРМАЦИОННЫЙ БЛОК для диспетчера */}
+                            {canEditLimitedFields && !canEditAllFields && (
+                                <div style={{
+                                    background: 'rgba(79, 172, 254, 0.1)',
+                                    border: '1px solid rgba(79, 172, 254, 0.3)',
+                                    borderRadius: '8px',
+                                    padding: '15px',
+                                    marginBottom: '20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px'
+                                }}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#4facfe">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                                    </svg>
+                                    <div style={{ flex: 1, fontSize: '0.9rem', color: '#4facfe' }}>
+                                        <strong>Режим диспетчера:</strong> Вы можете редактировать только плановое время и механика.
+                                        Остальные данные синхронизируются из JMineOps.
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="form-grid">
+                                {/* ✅ ID - только для админа */}
                                 <div className="form-group">
-                                    <label>ID оборудования</label>
+                                    <label>
+                                        ID оборудования
+                                        {!canEditField('id') && (
+                                            <span style={{
+                                                marginLeft: '8px',
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(255, 193, 7, 0.8)'
+                                            }}>
+                                                🔒 Только для чтения
+                                            </span>
+                                        )}
+                                    </label>
                                     <div style={{ display: 'flex', gap: '10px' }}>
                                         <input
                                             type="text"
                                             name="id"
                                             value={formData.id}
                                             onChange={handleChange}
-                                            disabled={loading}
+                                            disabled={!canEditField('id') || loading}
                                             placeholder="Например: EX001, LD002"
-                                            style={{ flex: 1 }}
+                                            style={{
+                                                flex: 1,
+                                                background: !canEditField('id') ? 'rgba(255, 255, 255, 0.05)' : undefined,
+                                                cursor: !canEditField('id') ? 'not-allowed' : 'text',
+                                                opacity: !canEditField('id') ? 0.6 : 1
+                                            }}
+                                            title={!canEditField('id') ? 'Данные синхронизируются из JMineOps' : ''}
                                         />
-                                        {formData.id !== originalId && (
+                                        {canEditField('id') && formData.id !== originalId && (
                                             <button
                                                 type="button"
                                                 onClick={() => setShowIdChangeConfirm(true)}
@@ -380,20 +445,38 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                             </button>
                                         )}
                                     </div>
-                                    {formData.id !== originalId && (
+                                    {canEditField('id') && formData.id !== originalId && (
                                         <small style={{ color: '#ffc107', fontSize: '0.8rem' }}>
                                             ⚠️ ID будет изменен. Нажмите "Изменить ID" для подтверждения.
                                         </small>
                                     )}
                                 </div>
 
+                                {/* ✅ ТИП - только для админа */}
                                 <div className="form-group">
-                                    <label>Тип</label>
+                                    <label>
+                                        Тип
+                                        {!canEditField('type') && (
+                                            <span style={{
+                                                marginLeft: '8px',
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(255, 193, 7, 0.8)'
+                                            }}>
+                                                🔒
+                                            </span>
+                                        )}
+                                    </label>
                                     <select
                                         name="type"
                                         value={formData.type}
                                         onChange={handleChange}
-                                        disabled={loading}
+                                        disabled={!canEditField('type') || loading}
+                                        style={{
+                                            background: !canEditField('type') ? 'rgba(255, 255, 255, 0.05)' : undefined,
+                                            cursor: !canEditField('type') ? 'not-allowed' : 'pointer',
+                                            opacity: !canEditField('type') ? 0.6 : 1
+                                        }}
+                                        title={!canEditField('type') ? 'Данные синхронизируются из JMineOps' : ''}
                                     >
                                         <option value="shovel">Экскаватор</option>
                                         <option value="loader">Погрузчик</option>
@@ -401,30 +484,66 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         <option value="dozer">Бульдозер</option>
                                         <option value="drill">Буровой станок</option>
                                         <option value="grader">Автогрейдер</option>
-                                        <option value="truck">Самосвал</option>  
-                                        <option value="auxequipment">Вспомогательное оборудование</option> 
+                                        <option value="truck">Самосвал</option>
+                                        <option value="auxequipment">Вспомогательное оборудование</option>
                                     </select>
                                 </div>
 
+                                {/* ✅ МОДЕЛЬ - только для админа */}
                                 <div className="form-group">
-                                    <label>Модель</label>
+                                    <label>
+                                        Модель
+                                        {!canEditField('model') && (
+                                            <span style={{
+                                                marginLeft: '8px',
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(255, 193, 7, 0.8)'
+                                            }}>
+                                                🔒
+                                            </span>
+                                        )}
+                                    </label>
                                     <input
                                         type="text"
                                         name="model"
                                         value={formData.model}
                                         onChange={handleChange}
-                                        disabled={loading}
+                                        disabled={!canEditField('model') || loading}
                                         placeholder="Например: CAT 320D, Volvo L120H"
+                                        style={{
+                                            background: !canEditField('model') ? 'rgba(255, 255, 255, 0.05)' : undefined,
+                                            cursor: !canEditField('model') ? 'not-allowed' : 'text',
+                                            opacity: !canEditField('model') ? 0.6 : 1
+                                        }}
+                                        title={!canEditField('model') ? 'Данные синхронизируются из JMineOps' : ''}
                                     />
                                 </div>
 
+                                {/* ✅ СТАТУС - только для админа */}
                                 <div className="form-group">
-                                    <label>Статус</label>
+                                    <label>
+                                        Статус
+                                        {!canEditField('status') && (
+                                            <span style={{
+                                                marginLeft: '8px',
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(255, 193, 7, 0.8)'
+                                            }}>
+                                                🔒
+                                            </span>
+                                        )}
+                                    </label>
                                     <select
                                         name="status"
                                         value={formData.status}
                                         onChange={handleChange}
-                                        disabled={loading}
+                                        disabled={!canEditField('status') || loading}
+                                        style={{
+                                            background: !canEditField('status') ? 'rgba(255, 255, 255, 0.05)' : undefined,
+                                            cursor: !canEditField('status') ? 'not-allowed' : 'pointer',
+                                            opacity: !canEditField('status') ? 0.6 : 1
+                                        }}
+                                        title={!canEditField('status') ? 'Данные синхронизируются из JMineOps' : ''}
                                     >
                                         <option value="Ready">Ready</option>
                                         <option value="Down">Down</option>
@@ -434,9 +553,20 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     </select>
                                 </div>
 
-                                {/* ✅ УЛУЧШЕННОЕ ПОЛЕ: Плановое время с текстовым вводом */}
+                                {/* ✅ ПЛАНОВОЕ ВРЕМЯ - для всех */}
                                 <div className="form-group">
-                                    <label>Плановое время (часы)</label>
+                                    <label>
+                                        Плановое время (часы)
+                                        {canEditField('planned_hours') && (
+                                            <span style={{
+                                                marginLeft: '8px',
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(40, 167, 69, 0.8)'
+                                            }}>
+                                                ✏️ Можно редактировать
+                                            </span>
+                                        )}
+                                    </label>
 
                                     {/* Быстрый выбор часто используемых значений */}
                                     <div style={{
@@ -453,7 +583,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                                     ...prev,
                                                     planned_hours: hours
                                                 }))}
-                                                disabled={loading}
+                                                disabled={!canEditField('planned_hours') || loading}
                                                 style={{
                                                     background: formData.planned_hours === hours
                                                         ? 'rgba(79, 172, 254, 0.3)'
@@ -464,10 +594,11 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                                     color: '#ffffff',
                                                     padding: '6px 12px',
                                                     borderRadius: '6px',
-                                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                                    cursor: (!canEditField('planned_hours') || loading) ? 'not-allowed' : 'pointer',
                                                     fontSize: '0.85rem',
                                                     transition: 'all 0.2s ease',
-                                                    fontWeight: formData.planned_hours === hours ? '600' : '400'
+                                                    fontWeight: formData.planned_hours === hours ? '600' : '400',
+                                                    opacity: (!canEditField('planned_hours') || loading) ? 0.5 : 1
                                                 }}
                                             >
                                                 {hours}ч
@@ -481,44 +612,76 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         name="planned_hours"
                                         value={formData.planned_hours || ''}
                                         onChange={handlePlannedHoursChange}
-                                        disabled={loading}
+                                        disabled={!canEditField('planned_hours') || loading}
                                         placeholder="Или введите вручную: 1.5, 6.5, 8..."
                                         style={{
                                             fontFamily: 'monospace',
-                                            fontSize: '1rem'
+                                            fontSize: '1rem',
+                                            background: !canEditField('planned_hours') ? 'rgba(255, 255, 255, 0.05)' : undefined,
+                                            cursor: !canEditField('planned_hours') ? 'not-allowed' : 'text',
+                                            opacity: !canEditField('planned_hours') ? 0.6 : 1,
+                                            border: canEditField('planned_hours') ? '2px solid rgba(40, 167, 69, 0.3)' : undefined
                                         }}
                                     />
-                                    <small style={{
-                                        color: 'rgba(255, 255, 255, 0.6)',
-                                        fontSize: '0.8rem',
-                                        display: 'block',
-                                        marginTop: '5px'
-                                    }}>
-                                        
-                                    </small>
                                 </div>
 
+                                {/* ✅ НЕИСПРАВНОСТЬ - только для админа */}
                                 <div className="form-group full-width">
-                                    <label>Неисправность</label>
+                                    <label>
+                                        Неисправность
+                                        {!canEditField('malfunction') && (
+                                            <span style={{
+                                                marginLeft: '8px',
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(255, 193, 7, 0.8)'
+                                            }}>
+                                                🔒 Только для чтения
+                                            </span>
+                                        )}
+                                    </label>
                                     <textarea
                                         name="malfunction"
                                         value={formData.malfunction}
                                         onChange={handleChange}
                                         rows="3"
                                         placeholder="Описание неисправности..."
-                                        disabled={loading}
+                                        disabled={!canEditField('malfunction') || loading}
+                                        style={{
+                                            background: !canEditField('malfunction') ? 'rgba(255, 255, 255, 0.05)' : undefined,
+                                            cursor: !canEditField('malfunction') ? 'not-allowed' : 'text',
+                                            opacity: !canEditField('malfunction') ? 0.6 : 1
+                                        }}
+                                        title={!canEditField('malfunction') ? 'Данные синхронизируются из JMineOps' : ''}
                                     />
                                 </div>
 
+                                {/* ✅ МЕХАНИК - для всех */}
                                 <div className="form-group full-width">
-                                    <label>Механик</label>
+                                    <label>
+                                        Механик
+                                        {canEditField('mechanic_name') && (
+                                            <span style={{
+                                                marginLeft: '8px',
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(40, 167, 69, 0.8)'
+                                            }}>
+                                                ✏️ Можно редактировать
+                                            </span>
+                                        )}
+                                    </label>
                                     <input
                                         type="text"
                                         name="mechanic_name"
                                         value={formData.mechanic_name}
                                         onChange={handleChange}
                                         placeholder="ФИО механика"
-                                        disabled={loading}
+                                        disabled={!canEditField('mechanic_name') || loading}
+                                        style={{
+                                            background: !canEditField('mechanic_name') ? 'rgba(255, 255, 255, 0.05)' : undefined,
+                                            cursor: !canEditField('mechanic_name') ? 'not-allowed' : 'text',
+                                            opacity: !canEditField('mechanic_name') ? 0.6 : 1,
+                                            border: canEditField('mechanic_name') ? '2px solid rgba(40, 167, 69, 0.3)' : undefined
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -537,13 +700,13 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     className="save-button"
                                     disabled={loading}
                                 >
-                                    {loading ? 'Сохранение...' : 'Сохранить'}
+                                    {loading ? 'Сохранение...' : 'Сохранить изменения'}
                                 </button>
                             </div>
                         </form>
                     )}
 
-                    {activeTab === 'history' && canEdit && (
+                    {activeTab === 'history' && canViewHistory && (
                         <div className="history-content">
                             {historyLoading ? (
                                 <div style={{
@@ -555,8 +718,8 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                     color: 'rgba(255, 255, 255, 0.7)'
                                 }}>
                                     <div style={{
-                                        width: '40px',
-                                        height: '40px',
+                                        width: '80px',
+                                        height: '80px',
                                         border: '4px solid rgba(79, 172, 254, 0.2)',
                                         borderTop: '4px solid #4facfe',
                                         borderRadius: '50%',
@@ -603,6 +766,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                     )}
                 </div>
 
+                {/* МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ИЗМЕНЕНИЯ ID */}
                 {showIdChangeConfirm && (
                     <div className="modal-backdrop" onClick={(e) => {
                         if (e.target === e.currentTarget) setShowIdChangeConfirm(false);

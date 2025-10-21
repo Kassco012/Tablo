@@ -1,9 +1,9 @@
-﻿// backend/services/JMineOpsDataService.js - ИСПРАВЛЕННАЯ ВЕРСИЯ
+﻿// backend/services/JMineOpsDataService.js - ФИНАЛЬНАЯ ВЕРСИЯ
 
 const { getPool, sql } = require('../config/mssqlDatabase');
 const { getDatabase } = require('../config/database');
 
-// Маппинг статусов
+// ✅ Маппинг статусов
 const STATUS_MAPPING = {
     331: 'Down',
     332: 'Ready',
@@ -12,22 +12,39 @@ const STATUS_MAPPING = {
     335: 'Shiftchange',
 };
 
-// ✅ Маппинг типов (по symbol из HpEquipmentType)
+// ✅ ПРОСТОЙ маппинг типов из equipment.type
 const TYPE_MAPPING = {
-    'hydraulic_excavator': 'Экскаватор',
-    'shovel': 'Экскаватор',
-    'front_end_loader': 'Погрузчик',
-    'loader': 'Погрузчик',
+    'Drill': 'Буровой станок',
+    'Dozer': 'Бульдозер',
+    'Shovel': 'Экскаватор',
+    'Grader': 'Грейдер',
+    'Truck': 'Самосвал',
+    'Loader': 'Погрузчик',
+    'WaterTruck': 'Водовоз',
+    'AuxEquipment': 'Вспомогательное оборудование',
+
+    // Для совместимости (lowercase)
     'drill': 'Буровой станок',
-    'track_dozer': 'Бульдозер',
-    'tire_dozer': 'Бульдозер',
-    'cable_shovel': 'Экскаватор',
-    'hydraulic_shovel': 'Экскаватор',
+    'dozer': 'Бульдозер',
+    'shovel': 'Экскаватор',
     'grader': 'Грейдер',
     'truck': 'Самосвал',
+    'loader': 'Погрузчик',
     'watertruck': 'Водовоз',
-    'watertruck': 'Поливочная машина',
+    'auxequipment': 'Вспомогательное оборудование'
 };
+
+// ✅ Белый список разрешенных типов техники
+const ALLOWED_EQUIPMENT_TYPES = [
+    'Drill',
+    'Dozer',
+    'Shovel',
+    'Grader',
+    'Truck',
+    'Loader',
+    'WaterTruck',
+    'AuxEquipment'
+];
 
 class JMineOpsDataService {
     constructor() {
@@ -82,7 +99,7 @@ class JMineOpsDataService {
     }
 
     /**
-     * ✅ SQL-запрос для получения данных из MSSQL
+     * ✅ SQL запрос с использованием equipment.type
      */
     async fetchFromMSSQL() {
         try {
@@ -134,16 +151,13 @@ class JMineOpsDataService {
                     ld.down_time,
                     ld.down_comment,
                     
-                    -- Имя техники
+                    -- ✅ ГЛАВНОЕ: Берём type напрямую из equipment!
+                    e.type as equipment_type,
                     e.name as equipment_name,
                     
                     -- Модель техники
                     model_enum.name as equipment_model,
                     model_enum.symbol as equipment_model_symbol,
-                    
-                    -- Категория (Drill, Shovel, Loader...)
-                    hp_type.name as equipment_category_name,
-                    hp_type.symbol as equipment_category_symbol,
                     
                     -- Статус
                     status_enum.name as status_name,
@@ -161,7 +175,7 @@ class JMineOpsDataService {
                     ON ld.equipment_id = rad.equipment_id
                     AND ld.down_shift_id = rad.down_shift_id
                 
-                -- Основная таблица техники
+                -- ✅ Основная таблица техники (ГЛАВНЫЙ ИСТОЧНИК ТИПА!)
                 INNER JOIN dbo.equipment e 
                     ON ld.equipment_id = e.id
                 
@@ -169,11 +183,6 @@ class JMineOpsDataService {
                 LEFT JOIN dbo.enum_tables model_enum
                     ON e.equipment_type_id = model_enum.id
                     AND model_enum.type = 'EquipmentType'
-                
-                -- Категория техники
-                LEFT JOIN dbo.enum_tables hp_type
-                    ON e.hp_equipment_type_id = hp_type.id
-                    AND hp_type.type = 'HpEquipmentType'
                     
                 -- Статус
                 LEFT JOIN dbo.enum_tables status_enum 
@@ -187,31 +196,46 @@ class JMineOpsDataService {
                 WHERE 
                     ld.rn = 1
                     AND e.deleted_at IS NULL
+                    AND e.type IS NOT NULL  -- ✅ Пропускаем записи без типа
                     
                 ORDER BY ld.down_time DESC
             `;
 
             const result = await pool.request().query(query);
 
-            console.log(`📊 Обработано техники: ${result.recordset.length}`);
+            // ✅ Фильтруем только разрешённые типы
+            const filteredData = result.recordset.filter(row => {
+                const equipmentType = row.equipment_type;
+                const isAllowed = ALLOWED_EQUIPMENT_TYPES.includes(equipmentType);
 
-            const onDashboard = result.recordset.filter(r => !r.ready_time).length;
-            const toArchive = result.recordset.filter(r => r.ready_time).length;
+                if (!isAllowed) {
+                    console.log(`⏭️ Пропущена техника: ${row.equipment_name} (Тип: ${equipmentType || 'NULL'})`);
+                }
+
+                return isAllowed;
+            });
+
+            console.log(`📊 Всего записей из MSSQL: ${result.recordset.length}`);
+            console.log(`✅ После фильтрации: ${filteredData.length}`);
+
+            const onDashboard = filteredData.filter(r => !r.ready_time).length;
+            const toArchive = filteredData.filter(r => r.ready_time).length;
 
             console.log(`   - На дашборде (еще в ремонте): ${onDashboard}`);
             console.log(`   - В архив (уже готовы): ${toArchive}`);
 
             // Примеры для отладки
-            if (result.recordset.length > 0) {
+            if (filteredData.length > 0) {
                 console.log('\n📋 Примеры типов техники:');
-                result.recordset.slice(0, 3).forEach((record, index) => {
+                filteredData.slice(0, 5).forEach((record, index) => {
                     console.log(`${index + 1}. ${record.equipment_name}`);
-                    console.log(`   Категория: ${record.equipment_category_symbol || 'НЕТ'}`);
+                    console.log(`   Тип из equipment: ${record.equipment_type}`);
                     console.log(`   Модель: ${record.equipment_model || 'НЕТ'}`);
+                    console.log(`   Маппится как: ${this.mapEquipmentType(record.equipment_type)}`);
                 });
             }
 
-            return result.recordset;
+            return filteredData;
 
         } catch (error) {
             console.error('❌ Ошибка запроса к MSSQL:', error.message);
@@ -220,7 +244,7 @@ class JMineOpsDataService {
     }
 
     /**
-     * Обработка данных: дашборд или архив
+     * ✅ Обработка данных: дашборд или архив
      */
     async processSyncData(mssqlData) {
         return new Promise((resolve, reject) => {
@@ -235,7 +259,10 @@ class JMineOpsDataService {
                 mssqlData.forEach(row => {
                     try {
                         const equipmentId = row.equipment_name;
-                        const equipmentType = this.mapEquipmentType(row.equipment_category_symbol);
+
+                        // ✅ ТЕПЕРЬ ПРОСТО ПЕРЕДАЁМ equipment_type из БД
+                        const equipmentType = this.mapEquipmentType(row.equipment_type);
+
                         const model = row.equipment_model || '';
                         const status = row.ready_time ? 'Ready' : 'Down';
                         const malfunction = this.formatReason(row.reason_name) || row.down_comment || '';
@@ -260,7 +287,7 @@ class JMineOpsDataService {
                                 actual_end: actual_end
                             });
                             archived++;
-                            console.log(`📦 В архив: ${equipmentId} (${equipmentType}) ${actual_start} → ${actual_end}`);
+                            console.log(`📦 В архив: ${equipmentId} (${equipmentType})`);
 
                         } else {
                             // На дашборд
@@ -276,7 +303,7 @@ class JMineOpsDataService {
                                 mssql_reason: row.reason_name
                             });
                             created++;
-                            console.log(`✅ На дашборд: ${equipmentId} (${equipmentType}) ${actual_start}`);
+                            console.log(`✅ На дашборд: ${equipmentId} (${equipmentType})`);
                         }
 
                     } catch (error) {
@@ -298,29 +325,27 @@ class JMineOpsDataService {
     }
 
     /**
-     * Маппинг типа по symbol
+     * ✅ УПРОЩЁННАЯ функция маппинга типа
+     * Берём тип прямо из таблицы equipment!
      */
-    mapEquipmentType(symbol) {
-        if (!symbol) {
-            console.warn('⚠️ Тип техники не указан (symbol пустой)');
-            return 'Техника';
+    mapEquipmentType(equipmentType) {
+        if (!equipmentType) {
+            console.warn('⚠️ Тип техники пустой');
+            return 'Вспомогательное оборудование';
         }
 
-        const normalized = symbol.toLowerCase().trim();
-        const mapped = TYPE_MAPPING[normalized];
+        const mapped = TYPE_MAPPING[equipmentType];
 
         if (!mapped) {
-            console.warn(`⚠️ Неизвестный тип: "${symbol}"`);
-            return 'Техника';
+            console.warn(`⚠️ Неизвестный тип: "${equipmentType}"`);
+            return 'Вспомогательное оборудование';
         }
 
         return mapped;
     }
 
     /**
-     * ✅ ИСПРАВЛЕНО: Создание/обновление записи на дашборде
-     * Количество плейсхолдеров: 9
-     * Количество значений: 9
+     * ✅ Создание/обновление записи на дашборде
      */
     updateOrCreateEquipment(db, data) {
         const query = `
@@ -343,31 +368,27 @@ class JMineOpsDataService {
         `;
 
         const values = [
-            data.id,                    // 1
-            data.equipment_type,        // 2
-            data.model || '',           // 3
-            data.status,                // 4
-            data.malfunction || '',     // 5
-            data.actual_start || '',    // 6
-            data.mssql_equipment_id,    // 7
-            data.mssql_status_id,       // 8
-            data.mssql_reason || ''     // 9
+            data.id,
+            data.equipment_type,
+            data.model || '',
+            data.status,
+            data.malfunction || '',
+            data.actual_start || '',
+            data.mssql_equipment_id,
+            data.mssql_status_id,
+            data.mssql_reason || ''
         ];
 
         db.run(query, values, function (err) {
             if (err) {
                 console.error(`❌ Ошибка updateOrCreateEquipment для ${data.id}:`, err.message);
-                console.error('📦 Values:', values);
             }
         });
     }
 
-    /**
-     * ✅ ИСПРАВЛЕНО: Перенос в архив
-     * Количество плейсхолдеров: 6
-     * Количество значений: 6
-     */
+
     moveToArchive(db, data) {
+        // ✅ ШАГ 1: Проверяем, нет ли уже в архиве
         db.get(
             'SELECT archive_id FROM equipment_archive WHERE id = ? AND actual_start = ? AND actual_end = ?',
             [data.id, data.actual_start, data.actual_end],
@@ -378,43 +399,84 @@ class JMineOpsDataService {
                 }
 
                 if (existing) {
-                    return; // Уже в архиве
+                    console.log(`⏭️ ${data.id} уже в архиве (пропускаем)`);
+                    return;
                 }
 
-                const insertQuery = `
-                    INSERT INTO equipment_archive (
-                        id, equipment_type, model, status,
-                        actual_start, actual_end, malfunction
-                    ) VALUES (?, ?, ?, 'Ready', ?, ?, ?)
-                `;
-
-                const insertValues = [
-                    data.id,                    // 1
-                    data.equipment_type,        // 2
-                    data.model || '',           // 3
-                    // 'Ready' встроено в SQL   // 4
-                    data.actual_start || '',    // 4 (параметр)
-                    data.actual_end || '',      // 5
-                    data.malfunction || ''      // 6
-                ];
-
-                db.run(insertQuery, insertValues, function (err) {
-                    if (err) {
-                        console.error(`❌ Ошибка архивирования ${data.id}:`, err.message);
-                        console.error('📦 Values:', insertValues);
-                        return;
-                    }
-
-                    // Деактивируем на дашборде
-                    db.run('UPDATE equipment_master SET is_active = 0 WHERE id = ?', [data.id], (err) => {
+                // ✅ ШАГ 2: Получаем mechanic_name и planned_hours из equipment_master
+                db.get(
+                    'SELECT mechanic_name, planned_hours FROM equipment_master WHERE id = ? AND is_active = 1',
+                    [data.id],
+                    (err, equipment) => {
                         if (err) {
-                            console.error(`❌ Ошибка деактивации ${data.id}:`, err.message);
+                            console.error(`❌ Ошибка получения данных ${data.id}:`, err.message);
+                            return;
                         }
-                    });
-                });
+
+                        // ✅ ШАГ 3: Берём заполненные вручную данные или NULL
+                        const mechanicName = equipment?.mechanic_name || null;
+                        const plannedHours = equipment?.planned_hours || 0;
+
+                        console.log(`📦 Архивирование ${data.id}:`);
+                        console.log(`   Механик: ${mechanicName || 'не указан'}`);
+                        console.log(`   План: ${plannedHours}ч`);
+                        console.log(`   Факт начала: ${data.actual_start}`);
+                        console.log(`   Факт окончания: ${data.actual_end}`);
+
+                        // ✅ ШАГ 4: Вставляем в архив с ПРАВИЛЬНЫМИ данными
+                        const insertQuery = `
+                        INSERT INTO equipment_archive (
+                            id, 
+                            equipment_type, 
+                            model, 
+                            status,
+                            actual_start, 
+                            actual_end, 
+                            planned_hours,
+                            malfunction,
+                            mechanic_name,
+                            completed_date
+                        ) VALUES (?, ?, ?, 'Ready', ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    `;
+
+                        const insertValues = [
+                            data.id,
+                            data.equipment_type,
+                            data.model || '',
+                            data.actual_start || '',
+                            data.actual_end || '',
+                            plannedHours,              // ✅ Из equipment_master
+                            data.malfunction || '',
+                            mechanicName               // ✅ Из equipment_master
+                        ];
+
+                        db.run(insertQuery, insertValues, function (err) {
+                            if (err) {
+                                console.error(`❌ Ошибка архивирования ${data.id}:`, err.message);
+                                return;
+                            }
+
+                            console.log(`✅ ${data.id} добавлен в архив (ID: ${this.lastID})`);
+
+                            // ✅ ШАГ 5: Деактивируем на дашборде
+                            db.run(
+                                'UPDATE equipment_master SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                                [data.id],
+                                (err) => {
+                                    if (err) {
+                                        console.error(`❌ Ошибка деактивации ${data.id}:`, err.message);
+                                    } else {
+                                        console.log(`✅ ${data.id} деактивирован на дашборде`);
+                                    }
+                                }
+                            );
+                        });
+                    }
+                );
             }
         );
     }
+
 
     /**
      * Форматирование причины на русский
@@ -446,7 +508,6 @@ class JMineOpsDataService {
         if (!dateTime) return '';
 
         const date = new Date(dateTime);
-
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();

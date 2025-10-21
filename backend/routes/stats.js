@@ -1,113 +1,184 @@
-﻿// backend/routes/stats.js
+﻿// backend/routes/stats.js - API ДЛЯ СТАТИСТИКИ
+
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getDatabase } = require('../config/database');
 
 /**
+ * ✅ Получить количество техники, ставшей Ready сегодня
  * GET /api/stats/ready-today
- * Возвращает количество техники, отремонтированной и запущенной СЕГОДНЯ
  */
-router.get('/ready-today', async (req, res) => {
-    try {
-        // Получаем начало сегодняшнего дня в формате SQLite
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const todayStartStr = todayStart.toISOString();
+router.get('/ready-today', (req, res) => {
+    const db = getDatabase();
 
-        console.log(`📊 Запрос READY TODAY с ${todayStartStr}`);
+    // Начало и конец сегодняшнего дня
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayISO = today.toISOString();
 
-        // Считаем записи в архиве, созданные сегодня
-        const query = `
-            SELECT COUNT(*) as count
-            FROM equipment_archive
-            WHERE completed_date >= ?
-        `;
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowISO = tomorrow.toISOString();
 
-        const result = await db.get(query, [todayStartStr]);
-        const readyCount = result?.count || 0;
+    const query = `
+        SELECT 
+            COUNT(DISTINCT equipment_id) as count,
+            GROUP_CONCAT(DISTINCT equipment_id) as equipment_ids
+        FROM equipment_status_history
+        WHERE 
+            new_status = 'Ready'
+            AND changed_at >= ?
+            AND changed_at < ?
+    `;
 
-        console.log(`✅ READY сегодня: ${readyCount}`);
+    db.get(query, [todayISO, tomorrowISO], (err, result) => {
+        if (err) {
+            console.error('❌ Ошибка подсчета Ready сегодня:', err.message);
+            return res.status(500).json({ error: 'Ошибка получения статистики' });
+        }
+
+        const equipmentIds = result.equipment_ids
+            ? result.equipment_ids.split(',')
+            : [];
 
         res.json({
-            success: true,
-            ready_today: readyCount,
-            date: todayStart.toISOString().split('T')[0],
-            timestamp: new Date().toISOString()
+            count: result.count || 0,
+            date: today.toISOString().split('T')[0],
+            equipment_ids: equipmentIds
         });
-
-    } catch (error) {
-        console.error('❌ Ошибка получения READY TODAY:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-            ready_today: 0
-        });
-    }
+    });
 });
 
 /**
- * GET /api/stats/dashboard
- * Возвращает все статистики для dashboard (DOWN + READY TODAY)
+ * ✅ Получить количество техники, ставшей Ready за определенную дату
+ * GET /api/stats/ready-by-date?date=2025-10-21
  */
-router.get('/dashboard', async (req, res) => {
-    try {
-        // Начало сегодняшнего дня
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const todayStartStr = todayStart.toISOString();
+router.get('/ready-by-date', (req, res) => {
+    const db = getDatabase();
+    const { date } = req.query;
 
-        // DOWN - текущие активные простои
-        const downQuery = `
-            SELECT COUNT(*) as count
-            FROM equipment_master
-            WHERE status = 'Down' AND is_active = 1
-        `;
-        const downResult = await db.get(downQuery);
-        const downCount = downResult?.count || 0;
+    if (!date) {
+        return res.status(400).json({ error: 'Параметр date обязателен' });
+    }
 
-        // READY TODAY - из архива за сегодня
-        const readyQuery = `
-            SELECT COUNT(*) as count
-            FROM equipment_archive
-            WHERE completed_date >= ?
-        `;
-        const readyResult = await db.get(readyQuery, [todayStartStr]);
-        const readyToday = readyResult?.count || 0;
+    // Начало и конец указанного дня
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const startISO = startDate.toISOString();
 
-        // Всего активной техники
-        const totalQuery = `
-            SELECT COUNT(*) as count
-            FROM equipment_master
-            WHERE is_active = 1
-        `;
-        const totalResult = await db.get(totalQuery);
-        const totalCount = totalResult?.count || 0;
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+    const endISO = endDate.toISOString();
 
-        console.log(`📊 Dashboard stats: DOWN=${downCount}, READY TODAY=${readyToday}, TOTAL=${totalCount}`);
+    const query = `
+        SELECT 
+            COUNT(DISTINCT equipment_id) as count,
+            GROUP_CONCAT(DISTINCT equipment_id) as equipment_ids
+        FROM equipment_status_history
+        WHERE 
+            new_status = 'Ready'
+            AND changed_at >= ?
+            AND changed_at < ?
+    `;
+
+    db.get(query, [startISO, endISO], (err, result) => {
+        if (err) {
+            console.error('❌ Ошибка подсчета Ready по дате:', err.message);
+            return res.status(500).json({ error: 'Ошибка получения статистики' });
+        }
+
+        const equipmentIds = result.equipment_ids
+            ? result.equipment_ids.split(',')
+            : [];
 
         res.json({
-            success: true,
-            stats: {
-                down: downCount,
-                ready_today: readyToday,
-                total: totalCount
-            },
-            date: todayStart.toISOString().split('T')[0],
-            timestamp: new Date().toISOString()
+            count: result.count || 0,
+            date: date,
+            equipment_ids: equipmentIds
         });
+    });
+});
 
-    } catch (error) {
-        console.error('❌ Ошибка получения dashboard stats:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-            stats: {
-                down: 0,
-                ready_today: 0,
-                total: 0
-            }
+/**
+ * ✅ Получить детальную историю изменений статусов за сегодня
+ * GET /api/stats/status-changes-today
+ */
+router.get('/status-changes-today', (req, res) => {
+    const db = getDatabase();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayISO = today.toISOString();
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowISO = tomorrow.toISOString();
+
+    const query = `
+        SELECT 
+            h.*,
+            e.equipment_type,
+            e.model
+        FROM equipment_status_history h
+        LEFT JOIN equipment_master e ON h.equipment_id = e.id
+        WHERE 
+            h.changed_at >= ?
+            AND h.changed_at < ?
+        ORDER BY h.changed_at DESC
+    `;
+
+    db.all(query, [todayISO, tomorrowISO], (err, rows) => {
+        if (err) {
+            console.error('❌ Ошибка получения истории:', err.message);
+            return res.status(500).json({ error: 'Ошибка получения истории' });
+        }
+
+        res.json({
+            date: today.toISOString().split('T')[0],
+            changes: rows
         });
-    }
+    });
+});
+
+/**
+ * ✅ Получить статистику по часам за сегодня
+ * GET /api/stats/ready-by-hour
+ */
+router.get('/ready-by-hour', (req, res) => {
+    const db = getDatabase();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayISO = today.toISOString();
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowISO = tomorrow.toISOString();
+
+    const query = `
+        SELECT 
+            strftime('%H', changed_at) as hour,
+            COUNT(DISTINCT equipment_id) as count
+        FROM equipment_status_history
+        WHERE 
+            new_status = 'Ready'
+            AND changed_at >= ?
+            AND changed_at < ?
+        GROUP BY hour
+        ORDER BY hour
+    `;
+
+    db.all(query, [todayISO, tomorrowISO], (err, rows) => {
+        if (err) {
+            console.error('❌ Ошибка получения статистики по часам:', err.message);
+            return res.status(500).json({ error: 'Ошибка получения статистики' });
+        }
+
+        res.json({
+            date: today.toISOString().split('T')[0],
+            by_hour: rows
+        });
+    });
 });
 
 module.exports = router;

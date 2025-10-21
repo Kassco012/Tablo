@@ -5,7 +5,7 @@
     grader: { value: 'grader', label: 'Грейдер' },
     truck: { value: 'truck', label: 'Самосвал' },
     loader: { value: 'loader', label: 'Погрузчик' },
-    watertruck: { value: 'watertruck', label: 'Водовоз' },
+    watertruck: { value: 'watertruck', label: 'Водовоз' }, 
     auxequipment: { value: 'auxequipment', label: 'Вспомогательное оборудование' }
 };
 
@@ -71,7 +71,7 @@ export const getEquipmentTypeText = (type) => {
 
     // Если ничего не нашли - показываем как есть, но с предупреждением
     console.warn(`⚠️ Неизвестный тип техники: "${type}"`);
-    return `❓ ${type}`;
+    return ` ${type}`;
 };
 
 // ✅ Получение иконки (опционально)
@@ -82,14 +82,14 @@ export const getEquipmentTypeIcon = (type) => {
     const mappedType = TYPE_MAP[normalizedType] || TYPE_MAP[normalizedType.toLowerCase()];
 
     const icons = {
-        'drill': '⚙️',
-        'dozer': '🚜',
-        'shovel': '🏗️',
-        'grader': '🛤️',
-        'truck': '🚛',
-        'loader': '🏋️',
-        'watertruck': '💧',
-        'auxequipment': '📦'
+        'drill': '',
+        'dozer': '',
+        'shovel': '',
+        'grader': '',
+        'truck': '',
+        'loader': '',
+        'watertruck': '',
+        'auxequipment': ''
     };
 
     return icons[mappedType] || '';
