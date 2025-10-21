@@ -182,7 +182,17 @@ router.get('/', authenticateToken, (req, res) => {
         SELECT 
             ea.*,
             u.username as completion_username,
-            u.full_name as completion_user_name
+            u.full_name as completion_user_name,
+            -- ✅ Получаем время, когда статус стал Ready
+            (
+                SELECT eh.timestamp 
+                FROM equipment_history eh 
+                WHERE eh.equipment_id = ea.id 
+                AND eh.action = 'update_status' 
+                AND eh.new_value = 'Ready'
+                ORDER BY eh.timestamp DESC 
+                LIMIT 1
+            ) as ready_time
         FROM equipment_archive ea
         LEFT JOIN users u ON ea.completion_user = u.id
         WHERE 1=1
@@ -224,6 +234,11 @@ router.get('/', authenticateToken, (req, res) => {
             console.error('❌ Ошибка получения архива:', err);
             return res.status(500).json({ message: 'Ошибка получения архивных данных' });
         }
+
+        const formattedArchives = archives.map(item => ({
+            ...item,
+            ready_date: item.ready_time || item.completed_date // Используем ready_time, если есть
+        }));
 
         // Получаем общее количество для пагинации
         let countQuery = 'SELECT COUNT(*) as total FROM equipment_archive ea WHERE 1=1';

@@ -1,17 +1,84 @@
-﻿// backend/routes/stats.js - API ДЛЯ СТАТИСТИКИ
+﻿// backend/routes/stats.js - ИСПРАВЛЕННАЯ ВЕРСИЯ
 
 const express = require('express');
 const router = express.Router();
 const { getDatabase } = require('../config/database');
 
 /**
- * ✅ Получить количество техники, ставшей Ready сегодня
- * GET /api/stats/ready-today
+ * ✅ GET /api/stats/dashboard
+ * Главная статистика для Dashboard:
+ * - DOWN: текущее количество техники в простое
+ * - READY_TODAY: количество техники, получившей статус Ready сегодня
+ */
+router.get('/dashboard', (req, res) => {
+    const db = getDatabase();
+
+    // ✅ 1. DOWN - текущее количество из equipment_master
+    db.get(
+        'SELECT COUNT(*) as count FROM equipment_master WHERE status = "Down" AND is_active = 1',
+        [],
+        (err, downResult) => {
+            if (err) {
+                console.error('❌ Ошибка подсчета DOWN:', err.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'Ошибка получения статистики'
+                });
+            }
+
+            const downCount = downResult?.count || 0;
+
+            // ✅ 2. READY TODAY - из equipment_history
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayISO = today.toISOString();
+
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowISO = tomorrow.toISOString();
+
+            const query = `
+                SELECT COUNT(DISTINCT equipment_id) as count
+                FROM equipment_history
+                WHERE action = 'update_status'
+                AND new_value = 'Ready'
+                AND timestamp >= ?
+                AND timestamp < ?
+            `;
+
+            db.get(query, [todayISO, tomorrowISO], (err, readyResult) => {
+                if (err) {
+                    console.error('❌ Ошибка подсчета Ready сегодня:', err.message);
+                    return res.status(500).json({
+                        success: false,
+                        error: 'Ошибка получения статистики'
+                    });
+                }
+
+                const readyTodayCount = readyResult?.count || 0;
+
+                console.log(`📊 Dashboard Stats: DOWN=${downCount}, READY_TODAY=${readyTodayCount}`);
+
+                res.json({
+                    success: true,
+                    stats: {
+                        down: downCount,
+                        ready_today: readyTodayCount,
+                        total: downCount + readyTodayCount
+                    }
+                });
+            });
+        }
+    );
+});
+
+/**
+ * ✅ GET /api/stats/ready-today
+ * Получить количество техники, ставшей Ready сегодня
  */
 router.get('/ready-today', (req, res) => {
     const db = getDatabase();
 
-    // Начало и конец сегодняшнего дня
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayISO = today.toISOString();
@@ -24,11 +91,11 @@ router.get('/ready-today', (req, res) => {
         SELECT 
             COUNT(DISTINCT equipment_id) as count,
             GROUP_CONCAT(DISTINCT equipment_id) as equipment_ids
-        FROM equipment_status_history
-        WHERE 
-            new_status = 'Ready'
-            AND changed_at >= ?
-            AND changed_at < ?
+        FROM equipment_history
+        WHERE action = 'update_status'
+        AND new_value = 'Ready'
+        AND timestamp >= ?
+        AND timestamp < ?
     `;
 
     db.get(query, [todayISO, tomorrowISO], (err, result) => {
@@ -50,8 +117,8 @@ router.get('/ready-today', (req, res) => {
 });
 
 /**
- * ✅ Получить количество техники, ставшей Ready за определенную дату
- * GET /api/stats/ready-by-date?date=2025-10-21
+ * ✅ GET /api/stats/ready-by-date?date=2025-10-21
+ * Получить количество техники, ставшей Ready за определенную дату
  */
 router.get('/ready-by-date', (req, res) => {
     const db = getDatabase();
@@ -61,7 +128,6 @@ router.get('/ready-by-date', (req, res) => {
         return res.status(400).json({ error: 'Параметр date обязателен' });
     }
 
-    // Начало и конец указанного дня
     const startDate = new Date(date);
     startDate.setHours(0, 0, 0, 0);
     const startISO = startDate.toISOString();
@@ -74,11 +140,11 @@ router.get('/ready-by-date', (req, res) => {
         SELECT 
             COUNT(DISTINCT equipment_id) as count,
             GROUP_CONCAT(DISTINCT equipment_id) as equipment_ids
-        FROM equipment_status_history
-        WHERE 
-            new_status = 'Ready'
-            AND changed_at >= ?
-            AND changed_at < ?
+        FROM equipment_history
+        WHERE action = 'update_status'
+        AND new_value = 'Ready'
+        AND timestamp >= ?
+        AND timestamp < ?
     `;
 
     db.get(query, [startISO, endISO], (err, result) => {
@@ -100,8 +166,8 @@ router.get('/ready-by-date', (req, res) => {
 });
 
 /**
- * ✅ Получить детальную историю изменений статусов за сегодня
- * GET /api/stats/status-changes-today
+ * ✅ GET /api/stats/status-changes-today
+ * Получить детальную историю изменений статусов за сегодня
  */
 router.get('/status-changes-today', (req, res) => {
     const db = getDatabase();
@@ -119,12 +185,11 @@ router.get('/status-changes-today', (req, res) => {
             h.*,
             e.equipment_type,
             e.model
-        FROM equipment_status_history h
+        FROM equipment_history h
         LEFT JOIN equipment_master e ON h.equipment_id = e.id
-        WHERE 
-            h.changed_at >= ?
-            AND h.changed_at < ?
-        ORDER BY h.changed_at DESC
+        WHERE h.timestamp >= ?
+        AND h.timestamp < ?
+        ORDER BY h.timestamp DESC
     `;
 
     db.all(query, [todayISO, tomorrowISO], (err, rows) => {
@@ -141,8 +206,8 @@ router.get('/status-changes-today', (req, res) => {
 });
 
 /**
- * ✅ Получить статистику по часам за сегодня
- * GET /api/stats/ready-by-hour
+ * ✅ GET /api/stats/ready-by-hour
+ * Получить статистику по часам за сегодня
  */
 router.get('/ready-by-hour', (req, res) => {
     const db = getDatabase();
@@ -157,13 +222,13 @@ router.get('/ready-by-hour', (req, res) => {
 
     const query = `
         SELECT 
-            strftime('%H', changed_at) as hour,
+            strftime('%H', timestamp) as hour,
             COUNT(DISTINCT equipment_id) as count
-        FROM equipment_status_history
-        WHERE 
-            new_status = 'Ready'
-            AND changed_at >= ?
-            AND changed_at < ?
+        FROM equipment_history
+        WHERE action = 'update_status'
+        AND new_value = 'Ready'
+        AND timestamp >= ?
+        AND timestamp < ?
         GROUP BY hour
         ORDER BY hour
     `;
