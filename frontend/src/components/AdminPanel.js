@@ -29,7 +29,7 @@ const AdminPanel = () => {
     // ✅ ИСПРАВЛЕНО: используем equipment_type вместо type
     const [newEquipment, setNewEquipment] = useState({
         id: '',
-        equipment_type: '',  // ← БЫЛО: type
+        equipment_type: '',  
         model: '',
         status: '',
         planned_start: '',
@@ -209,7 +209,7 @@ const AdminPanel = () => {
                                             <td>
                                                 <span className="model" style={{
                                                     fontSize: '0.9rem',
-                                                    fontFamily: 'Courier New, monospace'
+                                                    fontFamily: 'Roboto, monospace'
                                                 }}>
                                                     {item.model}
                                                 </span>

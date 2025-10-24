@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Contexts
@@ -16,7 +17,22 @@ import AdminPanel from './components/AdminPanel';
 // Styles
 import './App.css';
 
-// ProtectedRoute компонент
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 20000,
+            cacheTime: 10 * 60 * 1000,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+            retry: 1,
+            retryDelay: 1000,
+        },
+        mutations: {
+            retry: false,
+        },
+    },
+});
+
 const ProtectedRoute = ({ children, requiredRoles }) => {
     const userStr = localStorage.getItem('user');
     const user = userStr ? JSON.parse(userStr) : null;
@@ -62,84 +78,77 @@ function App() {
     const [showLogin, setShowLogin] = useState(false);
 
     return (
-        <AuthProvider>
-            <EquipmentProvider>  {/* ✅ ОБЕРНУЛИ ВСЁ ПРИЛОЖЕНИЕ */}
-                <Router>
-                    <div className="App">
-                        <Routes>
-                            {/* Главная страница */}
-                            <Route
-                                path="/"
-                                element={
-                                    <Dashboard onLoginClick={() => setShowLogin(true)} />
-                                }
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+                <EquipmentProvider>
+                    <Router>
+                        <div className="App">
+                            <Routes>
+                                <Route
+                                    path="/"
+                                    element={<Dashboard onLoginClick={() => setShowLogin(true)} />}
+                                />
+
+                                <Route
+                                    path="/login"
+                                    element={
+                                        <LoginModal
+                                            isOpen={true}
+                                            onClose={() => window.history.back()}
+                                            onSuccess={() => window.location.href = '/'}
+                                        />
+                                    }
+                                />
+
+                                <Route
+                                    path="/admin"
+                                    element={
+                                        <ProtectedRoute requiredRoles={['admin', 'dispatcher', 'programmer']}>
+                                            <AdminPanel />
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                <Route
+                                    path="/archive"
+                                    element={
+                                        <ProtectedRoute requiredRoles={['admin', 'dispatcher', 'programmer']}>
+                                            <Archive />
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                <Route path="*" element={<Navigate to="/" replace />} />
+                            </Routes>
+
+                            <ToastContainer
+                                position="top-right"
+                                autoClose={3000}
+                                hideProgressBar={false}
+                                newestOnTop
+                                closeOnClick
+                                rtl={false}
+                                pauseOnFocusLoss
+                                draggable
+                                pauseOnHover
+                                theme="dark"
                             />
 
-                            {/* Страница входа */}
-                            <Route
-                                path="/login"
-                                element={
-                                    <LoginModal
-                                        isOpen={true}
-                                        onClose={() => window.history.back()}
-                                        onSuccess={() => window.location.href = '/'}
-                                    />
-                                }
-                            />
-
-                            {/* Админ-панель */}
-                            <Route
-                                path="/admin"
-                                element={
-                                    <ProtectedRoute requiredRoles={['admin', 'dispatcher']}>
-                                        <AdminPanel />
-                                    </ProtectedRoute>
-                                }
-                            />
-
-                            {/* Архив */}
-                            <Route
-                                path="/archive"
-                                element={
-                                    <ProtectedRoute requiredRoles={['admin', 'dispatcher']}>
-                                        <Archive />
-                                    </ProtectedRoute>
-                                }
-                            />
-
-                            {/* Несуществующие маршруты */}
-                            <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
-
-                        {/* Toast уведомления */}
-                        <ToastContainer
-                            position="top-right"
-                            autoClose={3000}
-                            hideProgressBar={false}
-                            newestOnTop
-                            closeOnClick
-                            rtl={false}
-                            pauseOnFocusLoss
-                            draggable
-                            pauseOnHover
-                            theme="dark"
-                        />
-
-                        {/* Модальное окно входа */}
-                        {showLogin && (
-                            <LoginModal
-                                isOpen={showLogin}
-                                onClose={() => setShowLogin(false)}
-                                onSuccess={() => {
-                                    setShowLogin(false);
-                                    window.location.reload();
-                                }}
-                            />
-                        )}
-                    </div>
-                </Router>
-            </EquipmentProvider>  {/* ✅ ЗАКРЫЛИ ПРОВАЙДЕР */}
-        </AuthProvider>
+                            {showLogin && (
+                                <LoginModal
+                                    isOpen={showLogin}
+                                    onClose={() => setShowLogin(false)}
+                                    onSuccess={() => {
+                                        setShowLogin(false);
+                                        window.location.reload();
+                                    }}
+                                />
+                            )}
+                        </div>
+                    </Router>
+                </EquipmentProvider>
+            </AuthProvider>
+        </QueryClientProvider>
     );
 }
 

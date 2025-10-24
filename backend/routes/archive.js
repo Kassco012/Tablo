@@ -4,6 +4,24 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+/**
+ * Получить текущую дату/время в часовом поясе Астаны
+ */
+function getAlmatyDateTime() {
+    const now = new Date();
+    // Преобразуем в формат Астаны
+    const almatyTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Almaty' }));
+    
+    const year = almatyTime.getFullYear();
+    const month = String(almatyTime.getMonth() + 1).padStart(2, '0');
+    const day = String(almatyTime.getDate()).padStart(2, '0');
+    const hours = String(almatyTime.getHours()).padStart(2, '0');
+    const minutes = String(almatyTime.getMinutes()).padStart(2, '0');
+    const seconds = String(almatyTime.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 router.post('/launch/:id', authenticateToken, (req, res) => {
     const db = getDatabase();
     const { id } = req.params;
@@ -32,17 +50,18 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
             });
         }
 
-        // ✅ Логируем данные для отладки
+        // ✅ Получаем текущее время в Астане
+        const completedDateTime = getAlmatyDateTime();
         console.log(`\n🚀 Запуск техники в работу: ${equipment.id}`);
         console.log(`   Механик: ${equipment.mechanic_name || 'НЕ УКАЗАН'}`);
         console.log(`   Плановое время: ${equipment.planned_hours || 0}ч`);
-        console.log(`   Начало ремонта: ${equipment.actual_start || 'НЕ УКАЗАНО'}`);
+        console.log(`   Время архивации (Астана): ${completedDateTime}`);
 
         // Начинаем транзакцию
         db.serialize(() => {
             db.run('BEGIN TRANSACTION');
 
-            // ✅ ИСПРАВЛЕННЫЙ SQL-запрос
+            // ✅ ИСПРАВЛЕННЫЙ SQL-запрос - используем явное время вместо CURRENT_TIMESTAMP
             const archiveQuery = `
                 INSERT INTO equipment_archive (
                     id, 
@@ -59,10 +78,10 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                     completed_date, 
                     completion_user, 
                     archive_reason
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
-            // ✅ ИСПРАВЛЕННЫЙ массив значений (14 параметров)
+            // ✅ ИСПРАВЛЕННЫЙ массив значений - используем completedDateTime
             const archiveValues = [
                 equipment.id,                           // id
                 equipment.equipment_type,               // equipment_type
@@ -70,17 +89,17 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                 'Ready',                                // status (техника готова)
                 equipment.actual_start || null,         // actual_start
                 equipment.actual_end || null,           // actual_end
-                equipment.planned_hours || 0,           // planned_hours ✅
+                equipment.planned_hours || 0,           // planned_hours
                 equipment.malfunction || '',            // malfunction
-                equipment.mechanic_name || null,        // mechanic_name ✅
+                equipment.mechanic_name || null,        // mechanic_name
                 equipment.created_at,                   // created_at
                 equipment.updated_at,                   // updated_at
-                // completed_date = CURRENT_TIMESTAMP   // ✅ Автоматически
+                completedDateTime,                      // completed_date ✅ ВРЕМЯ АСТАНЫ
                 req.user.userId,                        // completion_user
                 completion_reason                       // archive_reason
             ];
 
-            db.run(archiveQuery, archiveValues, function (archiveErr) {
+            db.run(archiveQuery, archiveValues, function(archiveErr) {
                 if (archiveErr) {
                     db.run('ROLLBACK');
                     console.error('❌ Ошибка архивирования:', archiveErr);
@@ -95,7 +114,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                     `INSERT INTO equipment_history (equipment_id, user_id, action, new_value) 
                      VALUES (?, ?, ?, ?)`,
                     [equipment.id, req.user.userId, 'launch', completion_reason],
-                    function (historyErr) {
+                    function(historyErr) {
                         if (historyErr) {
                             console.error('⚠️ Ошибка записи в историю:', historyErr);
                         }
@@ -104,7 +123,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                         db.run(
                             'UPDATE equipment_master SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
                             [id],
-                            function (updateErr) {
+                            function(updateErr) {
                                 if (updateErr) {
                                     db.run('ROLLBACK');
                                     console.error('❌ Ошибка обновления статуса:', updateErr);
@@ -112,7 +131,7 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                                 }
 
                                 // Коммитим транзакцию
-                                db.run('COMMIT', function (commitErr) {
+                                db.run('COMMIT', function(commitErr) {
                                     if (commitErr) {
                                         console.error('❌ Ошибка коммита:', commitErr);
                                         return res.status(500).json({ message: 'Ошибка сохранения изменений' });
@@ -121,14 +140,13 @@ router.post('/launch/:id', authenticateToken, (req, res) => {
                                     console.log(`✅ Техника ${equipment.id} запущена в работу`);
                                     console.log(`   📦 Архив ID: ${archiveId}`);
                                     console.log(`   👤 Механик: ${equipment.mechanic_name || 'не указан'}`);
-                                    console.log(`   🕐 Время архивации: ${new Date().toLocaleString('ru-RU')}`);
 
                                     res.json({
                                         message: 'Техника успешно запущена в работу',
                                         equipment_id: equipment.id,
                                         archive_id: archiveId,
                                         mechanic_name: equipment.mechanic_name,
-                                        completed_date: new Date().toISOString()
+                                        completed_date: completedDateTime
                                     });
                                 });
                             }
@@ -164,7 +182,7 @@ router.get('/today', async (req, res) => {
 
 router.get('/', authenticateToken, (req, res) => {
     // Проверяем права доступа
-    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher' && req.user.role !== 'programmer' ) {
+    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher' && req.user.role !== 'programmer') {
         return res.status(403).json({ message: 'Недостаточно прав доступа' });
     }
 
@@ -183,7 +201,6 @@ router.get('/', authenticateToken, (req, res) => {
             ea.*,
             u.username as completion_username,
             u.full_name as completion_user_name,
-            -- ✅ Получаем время, когда статус стал Ready
             (
                 SELECT eh.timestamp 
                 FROM equipment_history eh 
@@ -199,8 +216,6 @@ router.get('/', authenticateToken, (req, res) => {
     `;
 
     const params = [];
-
-    
 
     if (equipment_type) {
         query += ' AND ea.equipment_type LIKE ?';
@@ -237,14 +252,13 @@ router.get('/', authenticateToken, (req, res) => {
 
         const formattedArchives = archives.map(item => ({
             ...item,
-            ready_date: item.ready_time || item.completed_date // Используем ready_time, если есть
+            ready_date: item.ready_time || item.completed_date
         }));
 
         // Получаем общее количество для пагинации
         let countQuery = 'SELECT COUNT(*) as total FROM equipment_archive ea WHERE 1=1';
-        const countParams = params.slice(0, -2); // Убираем LIMIT и OFFSET
+        const countParams = params.slice(0, -2);
 
-        // Добавляем те же условия фильтрации
         if (equipment_type) countQuery += ' AND ea.equipment_type LIKE ?';
         if (mechanic) countQuery += ' AND ea.mechanic_name LIKE ?';
         if (date_from) countQuery += ' AND DATE(ea.completed_date) >= ?';
@@ -270,22 +284,19 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 router.get('/stats', authenticateToken, (req, res) => {
-    // Проверяем права доступа
-    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher' && req.user.role !== 'programmer' ) {
+    if (req.user.role !== 'admin' && req.user.role !== 'dispatcher' && req.user.role !== 'programmer') {
         return res.status(403).json({ message: 'Недостаточно прав доступа' });
     }
 
     const db = getDatabase();
     const { date_from, date_to } = req.query;
 
-    // Статистика по типам оборудования
     let query = `
         SELECT 
             COUNT(*) as total_archived,
             SUM(CASE WHEN archive_reason = 'launched' THEN 1 ELSE 0 END) as launched,
             SUM(CASE WHEN archive_reason = 'completed' THEN 1 ELSE 0 END) as completed,
             SUM(CASE WHEN archive_reason = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
-            AVG(progress) as avg_progress,
             equipment_type
         FROM equipment_archive
         WHERE 1=1
@@ -316,14 +327,12 @@ router.get('/stats', authenticateToken, (req, res) => {
             return res.status(500).json({ message: 'Ошибка получения статистики архива' });
         }
 
-        // Получаем общую статистику
         let summaryQuery = `
             SELECT 
                 COUNT(*) as total_archived,
                 SUM(CASE WHEN archive_reason = 'launched' THEN 1 ELSE 0 END) as launched,
                 SUM(CASE WHEN archive_reason = 'completed' THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN archive_reason = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
-                AVG(progress) as avg_progress
+                SUM(CASE WHEN archive_reason = 'cancelled' THEN 1 ELSE 0 END) as cancelled
             FROM equipment_archive
             WHERE 1=1
         `;
@@ -343,8 +352,7 @@ router.get('/stats', authenticateToken, (req, res) => {
                     total_archived: summary.total_archived || 0,
                     launched: summary.launched || 0,
                     completed: summary.completed || 0,
-                    cancelled: summary.cancelled || 0,
-                    avg_progress: Math.round(summary.avg_progress || 0)
+                    cancelled: summary.cancelled || 0
                 },
                 by_type: typeStats
             });

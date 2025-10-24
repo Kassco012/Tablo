@@ -36,7 +36,7 @@ const Archive = () => {
 
     useEffect(() => {
         applyFilters();
-    }, [archives, filters]);
+    },    [archives, filters]);
 
 
     const fetchArchives = async () => {
@@ -199,7 +199,15 @@ const Archive = () => {
 
     const formatDateTime = (dateString) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleString('ru-RU');
+        return new Date(dateString).toLocaleString('ru-RU', {
+            timeZone: 'Asia/Almaty',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
     };
 
     const getUniqueValues = (data, key) => {
@@ -584,7 +592,7 @@ const Archive = () => {
                 </div>
             </div>
 
-            {/* Содержимое */}
+       
             {/* Содержимое */}
             {loading ? (
                 <div style={{

@@ -1,4 +1,4 @@
-﻿// backend/services/JMineOpsDataService.js - ФИНАЛЬНАЯ ВЕРСИЯ
+﻿// backend/services/JMineOpsDataService.js - ВЕРСИЯ С ACTUAL_END ДЛЯ READY
 
 const { getPool, sql } = require('../config/mssqlDatabase');
 const { getDatabase } = require('../config/database');
@@ -276,7 +276,7 @@ class JMineOpsDataService {
                             : '';
 
                         if (row.ready_time) {
-                            // В архив
+                            // ✅ ТЕХНИКА READY - В АРХИВ
                             this.moveToArchive(db, {
                                 id: equipmentId,
                                 equipment_type: equipmentType,
@@ -284,13 +284,13 @@ class JMineOpsDataService {
                                 status: 'Ready',
                                 malfunction: malfunction,
                                 actual_start: actual_start,
-                                actual_end: actual_end
+                                actual_end: actual_end  // ✅ Время когда стала Ready
                             });
                             archived++;
                             console.log(`📦 В архив: ${equipmentId} (${equipmentType})`);
 
                         } else {
-                            // На дашборд
+                            // ✅ ТЕХНИКА DOWN - НА ДАШБОРД (actual_end = NULL)
                             this.updateOrCreateEquipment(db, {
                                 id: equipmentId,
                                 equipment_type: equipmentType,
@@ -298,6 +298,7 @@ class JMineOpsDataService {
                                 status: 'Down',
                                 malfunction: malfunction,
                                 actual_start: actual_start,
+                                actual_end: null,  // ✅ Еще не Ready
                                 mssql_equipment_id: row.equipment_id,
                                 mssql_status_id: row.down_status_id,
                                 mssql_reason: row.reason_name
@@ -346,20 +347,22 @@ class JMineOpsDataService {
 
     /**
      * ✅ Создание/обновление записи на дашборде
+     * ИЗМЕНЕНО: Добавлено поле actual_end
      */
     updateOrCreateEquipment(db, data) {
         const query = `
             INSERT INTO equipment_master (
-                id, equipment_type, model, status, malfunction, actual_start,
+                id, equipment_type, model, status, malfunction, actual_start, actual_end,
                 mssql_equipment_id, mssql_status_id, mssql_reason,
                 is_active, manually_edited
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)
             ON CONFLICT(id) DO UPDATE SET
                 equipment_type = CASE WHEN manually_edited = 1 THEN equipment_type ELSE excluded.equipment_type END,
                 model = CASE WHEN manually_edited = 1 THEN model ELSE excluded.model END,
                 status = CASE WHEN manually_edited = 1 THEN status ELSE excluded.status END,
                 malfunction = CASE WHEN manually_edited = 1 THEN malfunction ELSE excluded.malfunction END,
                 actual_start = excluded.actual_start,
+                actual_end = excluded.actual_end,
                 mssql_equipment_id = excluded.mssql_equipment_id,
                 mssql_status_id = excluded.mssql_status_id,
                 mssql_reason = excluded.mssql_reason,
@@ -374,6 +377,7 @@ class JMineOpsDataService {
             data.status,
             data.malfunction || '',
             data.actual_start || '',
+            data.actual_end || null,  // ✅ NULL если еще Down, заполнено если Ready
             data.mssql_equipment_id,
             data.mssql_status_id,
             data.mssql_reason || ''
@@ -382,11 +386,17 @@ class JMineOpsDataService {
         db.run(query, values, function (err) {
             if (err) {
                 console.error(`❌ Ошибка updateOrCreateEquipment для ${data.id}:`, err.message);
+            } else {
+                console.log(`💾 ${data.id}: actual_start=${data.actual_start}, actual_end=${data.actual_end || 'NULL'}`);
             }
         });
     }
 
 
+    /**
+     * ✅ Перемещение в архив
+     * actual_end уже заполнен, просто копируем
+     */
     moveToArchive(db, data) {
         // ✅ ШАГ 1: Проверяем, нет ли уже в архиве
         db.get(
@@ -444,10 +454,10 @@ class JMineOpsDataService {
                             data.equipment_type,
                             data.model || '',
                             data.actual_start || '',
-                            data.actual_end || '',
-                            plannedHours,              // ✅ Из equipment_master
+                            data.actual_end || '',  // ✅ Время Ready из MSSQL
+                            plannedHours,           // ✅ Из equipment_master
                             data.malfunction || '',
-                            mechanicName               // ✅ Из equipment_master
+                            mechanicName            // ✅ Из equipment_master
                         ];
 
                         db.run(insertQuery, insertValues, function (err) {

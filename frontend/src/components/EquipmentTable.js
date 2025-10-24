@@ -6,8 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import './EquipmentTable.css';
 import {
-    getEquipmentTypeText,
-    getEquipmentTypeOptions
+    getEquipmentTypeText
+    
 } from '../components/EquipmentTypes';
 
 const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
@@ -29,8 +29,8 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
     const [originalId, setOriginalId] = useState('');
 
     // ✅ ОПРЕДЕЛЯЕМ ПРАВА ДОСТУПА
-    const canEditAllFields = user && (user.role === 'admin' || user.role === 'programmer');
-    const canEditLimitedFields = user && user.role === 'dispatcher';
+    const canEditAllFields = user && (user.role === 'admin' || user.role === 'dispatcher' || user.role === 'programmer');
+    const canEditLimitedFields = user && (user.role === 'admin' || user.role === 'dispatcher' || user.role === 'programmer');
     const canViewHistory = user && (user.role === 'admin' || user.role === 'dispatcher' || user.role === 'programmer');
 
     useEffect(() => {
@@ -180,9 +180,10 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
             if (canEditLimitedFields && !canEditAllFields) {
                 updateData = {
                     planned_hours: formData.planned_hours,
-                    mechanic_name: formData.mechanic_name
+                    mechanic_name: formData.mechanic_name,
+                    malfunction: formData.malfunction // ✅ Добавляем неисправность для диспетчера
                 };
-                console.log('📝 Диспетчер обновляет только planned_hours и mechanic_name');
+                console.log('📝 Диспетчер обновляет planned_hours, mechanic_name и malfunction');
             }
             // ✅ АДМИН - может менять всё
             else if (canEditAllFields) {
@@ -575,7 +576,7 @@ const EquipmentTable = ({ equipment, isOpen, onClose, onSave }) => {
                                         marginBottom: '10px',
                                         flexWrap: 'wrap'
                                     }}>
-                                        {[1, 2, 4, 6, 8, 12, 24].map(hours => (
+                                        {[1, 2, 4, 6, 8, 12, 24 , 48 , 96].map(hours => (
                                             <button
                                                 key={hours}
                                                 type="button"
